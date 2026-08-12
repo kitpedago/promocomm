@@ -10,3 +10,13 @@ export async function requireSession() {
   if (!session?.user) throw new Error('Non authentifié')
   return session
 }
+
+// Garde des mutations : le service Consultation est en lecture seule sur
+// toute l'application (les autres services écrivent ; droits fins par
+// contrôle — table legacy Droit — reportés à une phase ultérieure)
+export async function requireEcriture() {
+  const session = await requireSession()
+  if (session.user.service === 'consultation')
+    throw new Error('Service Consultation : lecture seule')
+  return session
+}
