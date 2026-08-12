@@ -3,7 +3,6 @@
 // de la tranche (Stade d'avancement, Terrain, Subventions, Informations diverses).
 // Références : migration_windev/captures_ecrans/Opérations.png,
 // Opération_OngletTerrain.png, Opération_OngletInfoDiverses.png.
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronDown } from 'lucide-react'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
@@ -19,6 +18,7 @@ import {
   getStadesFn,
   getSubventionsFn,
 } from '#/lib/operations.ts'
+import { usePref } from '#/lib/preferences.ts'
 import { getService } from '#/lib/services'
 import { fmtDate, fmtEuro } from '#/lib/utils.ts'
 
@@ -351,7 +351,9 @@ const pourcent = (n: number | null | undefined) =>
   n != null ? `${(n * 100).toFixed(2).replace('.', ',')} %` : null
 
 function OngletsTranche({ tranche: t }: { tranche: LigneTranche }) {
-  const [onglet, setOnglet] = useState<Onglet>("Stade d'avancement")
+  const [ongletStocke, setOnglet] = usePref<Onglet>('onglet:operations', ONGLETS[0])
+  // un onglet renommé depuis l'enregistrement ne doit pas laisser la page vide
+  const onglet = ONGLETS.includes(ongletStocke) ? ongletStocke : ONGLETS[0]
 
   const stades = useQuery({
     queryKey: ['stades', t.id],

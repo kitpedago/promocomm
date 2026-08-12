@@ -14,6 +14,7 @@ import {
   getLotsCommFn,
   getOperationCommFn,
 } from '#/lib/commercialisation.ts'
+import { usePref } from '#/lib/preferences.ts'
 import { getService } from '#/lib/services'
 import { fmtDate, fmtEuro } from '#/lib/utils.ts'
 
@@ -348,7 +349,11 @@ const COLONNES: Record<
 }
 
 function DetailLot({ lotId }: { lotId: number }) {
-  const [onglet, setOnglet] = useState<Onglet>('Commercialisation')
+  const [ongletStocke, setOnglet] = usePref<Onglet>(
+    'onglet:commercialisation',
+    ONGLETS[0],
+  )
+  const onglet = ONGLETS.includes(ongletStocke) ? ongletStocke : ONGLETS[0]
   // ligne sélectionnée dans les tables d'onglet (défaut : commercialisation
   // courante) — pilote les versements et l'onglet Livraison
   const [commId, setCommId] = useState<number | null>(null)
