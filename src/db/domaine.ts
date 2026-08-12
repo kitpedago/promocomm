@@ -365,6 +365,57 @@ export const tranche = pgTable('tranche', {
     () => missionMoeInterne.id,
   ),
   commentaireAvancement: text('commentaire_avancement'),
+  // --- Compta & Finances : Suivi résultat (grille PSLA / VEFA réduit /
+  // VEFA normal / Autre — le coût VEFA est unique, cellule fusionnée WinDev)
+  cahtPrevPsla: montant('caht_prev_psla'),
+  cahtPrevVefaReduit: montant('caht_prev_vefa_reduit'),
+  cahtPrevVefa: montant('caht_prev_vefa'),
+  cahtPrevAutre: montant('caht_prev_autre'),
+  cahtPrevCommentaire: text('caht_prev_commentaire'),
+  cahtActua: montant('caht_actua'),
+  cahtReel: montant('caht_reel'),
+  subvPrevPsla: montant('subv_prev_psla'),
+  subvPrevVefaReduit: montant('subv_prev_vefa_reduit'),
+  subvPrevVefaNormal: montant('subv_prev_vefa_normal'),
+  subvPrevAutre: montant('subv_prev_autre'),
+  honoCommPsla: montant('hono_comm_psla'),
+  honoCommVefaReduit: montant('hono_comm_vefa_reduit'),
+  honoCommVefaNormal: montant('hono_comm_vefa_normal'),
+  honoCommAutre: montant('hono_comm_autre'),
+  coutPrevPsla: montant('cout_prev_psla'),
+  coutPrevVefa: montant('cout_prev_vefa'),
+  coutPrevAutre: montant('cout_prev_autre'),
+  coutPrevCommentaire: text('cout_prev_commentaire'),
+  coutReelPsla: montant('cout_reel_psla'),
+  coutReelVefa: montant('cout_reel_vefa'),
+  coutReelAutre: montant('cout_reel_autre'),
+  coutReelCommentaire: text('cout_reel_commentaire'),
+  quotePartPsla: montant('quote_part_psla'),
+  quotePartVefaReduit: montant('quote_part_vefa_reduit'),
+  quotePartVefaNormal: montant('quote_part_vefa_normal'),
+  quotePartAutre: montant('quote_part_autre'),
+  quotePartCommentaire: text('quote_part_commentaire'),
+  modeRepartQuotePartId: integer('mode_repart_quote_part_id').references(
+    () => modeRepartQuotePart.id,
+  ),
+  nbLvoPrev: integer('nb_lvo_prev'),
+  nbLvoPrevAnnee: integer('nb_lvo_prev_annee'),
+  // --- Compta & Finances : Suivi détaillé frais / budget
+  fraisBudgetDate: timestamp('frais_budget_date'),
+  fraisBudgetCommentaire: text('frais_budget_commentaire'),
+  fraisActuaDate: timestamp('frais_actua_date'),
+  fraisActuaCommentaire: text('frais_actua_commentaire'),
+  fraisConsommeDate: timestamp('frais_consomme_date'),
+  fraisConsommeCommentaire: text('frais_consomme_commentaire'),
+  fraisReelDate: timestamp('frais_reel_date'),
+  fraisReelCommentaire: text('frais_reel_commentaire'),
+  listeBudgetFraisStadeId: integer('liste_budget_frais_stade_id').references(
+    () => listeBudget.id,
+  ),
+  typeMissionBudgetArchitecteId: integer(
+    'type_mission_budget_architecte_id',
+  ).references(() => typeMissionBudgetArchitecte.id),
+  dateContratArchitecte: timestamp('date_contrat_architecte'),
 })
 
 // Onglet « Stade d'avancement » : un jalon daté par tranche (6 935 lignes).
@@ -709,4 +760,346 @@ export const tma = pgTable('tma', {
   montantVersement1: montant('montant_versement1'),
   montantVersement2: montant('montant_versement2'),
   commentaires: text(),
+})
+
+// ---------------------------------------------------------------------------
+// Dimension financière (phase 6 — FEN_Compta) : nomenclatures
+// ---------------------------------------------------------------------------
+
+// (banque et indexTaux sont définis plus haut avec le module SCCV)
+
+export const typeFinancement = pgTable('type_financement', {
+  id: id(),
+  libelle: text().notNull(),
+  categorie: text(),
+})
+
+export const finPret = pgTable('fin_pret', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const statutPartSociale = pgTable('statut_part_sociale', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const actionAlerte = pgTable('action_alerte', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const statutApport = pgTable('statut_apport', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const mandatHypothequer = pgTable('mandat_hypothequer', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const statutCoutMandat = pgTable('statut_cout_mandat', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const periodeTauxGfa = pgTable('periode_taux_gfa', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const actionFinGfaType = pgTable('action_fin_gfa_type', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const statutApportPromoteurGfa = pgTable('statut_apport_promoteur_gfa', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const banqueActionType = pgTable('banque_action_type', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const garantieEmpruntActionType = pgTable(
+  'garantie_emprunt_action_type',
+  {
+    id: id(),
+    libelle: text().notNull(),
+  },
+)
+
+export const organismeAgrement = pgTable('organisme_agrement', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const organismeGarantieEmprunt = pgTable('organisme_garantie_emprunt', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const modeRepartQuotePart = pgTable('mode_repart_quote_part', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const listeBudget = pgTable('liste_budget', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const usageFrais = pgTable('usage_frais', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const categorieFrais = pgTable('categorie_frais', {
+  id: id(),
+  libelle: text().notNull(),
+  estPublicite: boolean('est_publicite'),
+  ordre: integer(),
+  usageFraisId: integer('usage_frais_id').references(() => usageFrais.id),
+})
+
+export const typeMissionBudgetArchitecte = pgTable(
+  'type_mission_budget_architecte',
+  {
+    id: id(),
+    libelle: text().notNull(),
+  },
+)
+
+// ---------------------------------------------------------------------------
+// Dimension financière : tables métier
+// ---------------------------------------------------------------------------
+
+// Déblocages d'une subvention (accordéon Subventions de FEN_Compta)
+export const deblocageSubvention = pgTable('deblocage_subvention', {
+  id: id(),
+  subventionId: integer('subvention_id').references(() => subvention.id),
+  dateDemande: timestamp('date_demande'),
+  montant: montant('montant'),
+  datePaiement: timestamp('date_paiement'),
+  commentaire: text(),
+})
+
+// Suivi détaillé frais/budget par catégorie (legacy FraisFinancierPub)
+export const fraisFinancier = pgTable('frais_financier', {
+  id: id(),
+  trancheId: integer('tranche_id').references(() => tranche.id),
+  categorieFraisId: integer('categorie_frais_id').references(
+    () => categorieFrais.id,
+  ),
+  budgetMontant: montant('budget_montant'),
+  actuaMontant: montant('actua_montant'),
+  consommeMontant: montant('consomme_montant'),
+  reelMontant: montant('reel_montant'),
+  ordre: integer(),
+})
+
+// Validations de budget de la tranche (legacy tBudget — pas d'écran dans
+// FEN_Compta, repris pour l'ETL phase 6)
+export const budget = pgTable('budget', {
+  id: id(),
+  trancheId: integer('tranche_id').references(() => tranche.id),
+  listeBudgetId: integer('liste_budget_id').references(() => listeBudget.id),
+  dateValidation: timestamp('date_validation'),
+  dateSaisiePromoges: timestamp('date_saisie_promoges'),
+  commentaire: text(),
+})
+
+// Financements de la tranche (onglets Financements / Financements PSLA /
+// Suivi Prêt 1 % — colonnes *_old exclues)
+export const financement = pgTable('financement', {
+  id: id(),
+  trancheId: integer('tranche_id').references(() => tranche.id),
+  typeFinancementId: integer('type_financement_id').references(
+    () => typeFinancement.id,
+  ),
+  banqueId: integer('banque_id').references(() => banque.id),
+  surOpe: boolean('sur_ope'),
+  montantFinancement: montant('montant_financement'),
+  montantPrevi: montant('montant_previ'),
+  infosPretPrevi: text('infos_pret_previ'),
+  dateEnvoiDossier: timestamp('date_envoi_dossier'),
+  dateSignature: timestamp('date_signature'),
+  dateButoir: timestamp('date_butoir'),
+  actionAlerteId: integer('action_alerte_id').references(() => actionAlerte.id),
+  dateDebutMobilisation: timestamp('date_debut_mobilisation'),
+  dateFinMobilisation: timestamp('date_fin_mobilisation'),
+  dureeMoisMobPsla: integer('duree_mois_mob_psla'),
+  finPretId: integer('fin_pret_id').references(() => finPret.id),
+  indexTauxId: integer('index_taux_id').references(() => indexTaux.id),
+  indexTauxFloore: boolean('index_taux_floore'),
+  margeBanque: real('marge_banque'),
+  tauxPret: real('taux_pret'),
+  periodicite: text(),
+  commissionEngagementPourc: real('commission_engagement_pourc'),
+  fraisDossier: montant('frais_dossier'),
+  estPrlvFraisDossier: boolean('est_prlv_frais_dossier'),
+  estPhaseAmortissement: boolean('est_phase_amortissement'),
+  estSolde: boolean('est_solde'),
+  numContrat: text('num_contrat'),
+  partSocialeMontant: montant('part_sociale_montant'),
+  statutPartSocialeId: integer('statut_part_sociale_id').references(
+    () => statutPartSociale.id,
+  ),
+  dateStatutPartSociale: timestamp('date_statut_part_sociale'),
+  apportPromoteur: montant('apport_promoteur'),
+  statutApportId: integer('statut_apport_id').references(() => statutApport.id),
+  blocageHonoOcMontant: montant('blocage_hono_oc_montant'),
+  blocageHonoOcFin: text('blocage_hono_oc_fin'),
+  blocageHonoOcComment: text('blocage_hono_oc_comment'),
+  estHfCautionOc: boolean('est_hf_caution_oc'),
+  mandatHypothequerId: integer('mandat_hypothequer_id').references(
+    () => mandatHypothequer.id,
+  ),
+  mandatCoutMontant: montant('mandat_cout_montant'),
+  statutCoutMandatId: integer('statut_cout_mandat_id').references(
+    () => statutCoutMandat.id,
+  ),
+  prevMtOc: integer('prev_mt_oc'),
+  contratMontant: montant('contrat_montant'),
+  contratNbLogt: integer('contrat_nb_logt'),
+  dateDebutEcheance: timestamp('date_debut_echeance'),
+  dateFinEcheance: timestamp('date_fin_echeance'),
+  montantEcheance: montant('montant_echeance'),
+  dateVerstPret: timestamp('date_verst_pret'),
+  pretEmployeurNumeroModifEcheance: integer(
+    'pret_employeur_numero_modif_echeance',
+  ),
+  pretEmployeurDateDebutAmort: timestamp('pret_employeur_date_debut_amort'),
+  estAmortDiffere: boolean('est_amort_differe'),
+  amortissementDiffereDuree: real('amortissement_differe_duree'),
+  amortissementDiffereFinDate: timestamp('amortissement_differe_fin_date'),
+  commentaire: text(),
+})
+
+// Déblocages d'un financement / PSLA (onglets Financements PSLA & Suivi Prêt 1 %)
+export const deblocagePsla = pgTable('deblocage_psla', {
+  id: id(),
+  financementId: integer('financement_id').references(() => financement.id),
+  pslaId: integer('psla_id').references(() => psla.id),
+  numero: integer(),
+  montant: montant('montant'),
+  dateDemande: timestamp('date_demande'),
+  dateVersement: timestamp('date_versement'),
+  commentaire: text(),
+})
+
+export const remboursementAnticipe = pgTable('remboursement_anticipe', {
+  id: id(),
+  financementId: integer('financement_id').references(() => financement.id),
+  numero: integer(),
+  montant: montant('montant'),
+  date: timestamp('date'),
+  nbLogt: integer('nb_logt'),
+  commentaire: text(),
+})
+
+// Dossier PSLA de la tranche (onglets Admin PSLA & Contrats PSLA —
+// colonnes old_* exclues)
+export const psla = pgTable('psla', {
+  id: id(),
+  trancheId: integer('tranche_id').references(() => tranche.id),
+  estimPsla: integer('estim_psla'),
+  montantPsla: montant('montant_psla'),
+  coutTotal: montant('cout_total'),
+  nbLogtAgrement: integer('nb_logt_agrement'),
+  numAgrement: text('num_agrement'),
+  dateAgrementProvisoire: timestamp('date_agrement_provisoire'),
+  dureeAnneePsla: integer('duree_annee_psla'),
+  organismeAgrementId: integer('organisme_agrement_id').references(
+    () => organismeAgrement.id,
+  ),
+  previAgrement: timestamp('previ_agrement'),
+  dateDepotDossierAgrement: timestamp('date_depot_dossier_agrement'),
+  dateReceptionAgrement: timestamp('date_reception_agrement'),
+  dateDecisionAgrement: timestamp('date_decision_agrement'),
+  dateConventionEngagementReciproque: timestamp(
+    'date_convention_engagement_reciproque',
+  ),
+  cffFiClient: timestamp('cff_fi_client'),
+  banqueOperateurId: integer('banque_operateur_id').references(() => banque.id),
+  banqueOperateurDate: timestamp('banque_operateur_date'),
+  banqueClientId: integer('banque_client_id').references(() => banque.id),
+  banqueClientDate: timestamp('banque_client_date'),
+  organismeGarantieEmpruntId: integer(
+    'organisme_garantie_emprunt_id',
+  ).references(() => organismeGarantieEmprunt.id),
+  dateDeliberationGarantie: timestamp('date_deliberation_garantie'),
+  numBureauGarantie: text('num_bureau_garantie'),
+  numConventionGarantie: text('num_convention_garantie'),
+  dateSignatureGarant: timestamp('date_signature_garant'),
+  garantieEmpruntActionDate: timestamp('garantie_emprunt_action_date'),
+  garantieEmpruntActionTypeId: integer(
+    'garantie_emprunt_action_type_id',
+  ).references(() => garantieEmpruntActionType.id),
+  banqueActionDate: timestamp('banque_action_date'),
+  banqueActionTypeId: integer('banque_action_type_id').references(
+    () => banqueActionType.id,
+  ),
+  dateInfoAnnuelle: timestamp('date_info_annuelle'),
+  dateInfoFin: timestamp('date_info_fin'),
+  finSuivi: boolean('fin_suivi'),
+  commentaire: text(),
+  // « Commemtaires » legacy (sic) — second champ libre, affiché sur Contrats PSLA
+  commentaires: text(),
+})
+
+// Garantie financière d'achèvement de la tranche (onglet GFA)
+export const gfa = pgTable('gfa', {
+  id: id(),
+  trancheId: integer('tranche_id').references(() => tranche.id),
+  surOpe: boolean('sur_ope'),
+  banqueId: integer('banque_id').references(() => banque.id),
+  estIntrinseque: boolean('est_intrinseque'),
+  dateValidation: timestamp('date_validation'),
+  dateDossier: timestamp('date_dossier'),
+  dateAccord: timestamp('date_accord'),
+  dateAttestation: timestamp('date_attestation'),
+  apportPromoteur: montant('apport_promoteur'),
+  statutApportPromoteurGfaId: integer(
+    'statut_apport_promoteur_gfa_id',
+  ).references(() => statutApportPromoteurGfa.id),
+  actionFinDate: timestamp('action_fin_date'),
+  actionFinTypeId: integer('action_fin_type_id').references(
+    () => actionFinGfaType.id,
+  ),
+  finGfa: boolean('fin_gfa'),
+  fondsGarantieMontant: montant('fonds_garantie_montant'),
+  fondsGarantieDateDemandeRemb: timestamp('fonds_garantie_date_demande_remb'),
+  fondsGarantieDateRemb: timestamp('fonds_garantie_date_remb'),
+  partSocialeMontant: montant('part_sociale_montant'),
+  partSocialeDateDemandeRemb: timestamp('part_sociale_date_demande_remb'),
+  partSocialeDateRemb: timestamp('part_sociale_date_remb'),
+  partSocialeCommentaire: text('part_sociale_commentaire'),
+  // conditions financières
+  hfCaution: boolean('hf_caution'),
+  taux: real(),
+  periodeTauxGfaId: integer('periode_taux_gfa_id').references(
+    () => periodeTauxGfa.id,
+  ),
+  dureeMois: integer('duree_mois'),
+  commentaireTaux: text('commentaire_taux'),
+  baseInitiale: montant('base_initiale'),
+  commissionCautionMontant: montant('commission_caution_montant'),
+  datePremierPrlvt: timestamp('date_premier_prlvt'),
+  fraisDossier: montant('frais_dossier'),
+  precomPourc: real('precom_pourc'),
+  caTtcMin: montant('ca_ttc_min'),
+  commentaireConditions: text('commentaire_conditions'),
+  commentaires: text(),
+})
+
+export const reducGfa = pgTable('reduc_gfa', {
+  id: id(),
+  gfaId: integer('gfa_id').references(() => gfa.id),
+  montant: montant('montant'),
+  dateReduc: timestamp('date_reduc'),
+  commentaire: text(),
 })
