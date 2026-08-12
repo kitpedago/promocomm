@@ -343,10 +343,12 @@ export const saveSccvFn = createServerFn({ method: 'POST' })
       dateMandatSie: versDate(data.dateMandatSie),
     }
     if (data.id) {
-      await db
+      const touchees = await db
         .update(structureJuridique)
         .set(valeurs)
         .where(eq(structureJuridique.id, data.id))
+        .returning({ id: structureJuridique.id })
+      if (touchees.length === 0) throw new Error('Fiche introuvable')
       return { id: data.id }
     }
     const [cree] = await db
@@ -394,10 +396,12 @@ export const saveParticipationFn = createServerFn({ method: 'POST' })
       commentaires: data.commentaires || null,
     }
     if (data.id) {
-      await db
+      const touchees = await db
         .update(participation)
         .set(valeurs)
         .where(eq(participation.id, data.id))
+        .returning({ id: participation.id })
+      if (touchees.length === 0) throw new Error('Fiche introuvable')
       return { id: data.id }
     }
     const [cree] = await db
@@ -443,10 +447,12 @@ export const saveCompteBanqueFn = createServerFn({ method: 'POST' })
       commentaires: data.commentaires || null,
     }
     if (data.id) {
-      await db
+      const touchees = await db
         .update(compteBanque)
         .set(valeurs)
         .where(eq(compteBanque.id, data.id))
+        .returning({ id: compteBanque.id })
+      if (touchees.length === 0) throw new Error('Fiche introuvable')
       return { id: data.id }
     }
     const [cree] = await db
