@@ -64,6 +64,13 @@
       "when": 1786549868144,
       "tag": "0008_lumpy_speed_demon",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1786565496159,
+      "tag": "0009_many_silver_centurion",
+      "breakpoints": true
     }
   ]
 }
