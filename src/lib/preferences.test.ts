@@ -1,6 +1,11 @@
 import { expect, test } from 'vitest'
 
-import { resoudrePref } from './preferences.ts'
+import {
+  LIMITE_CLE,
+  LIMITE_VALEUR,
+  resoudrePref,
+  verifierEntree,
+} from './preferences.ts'
 
 test('rien de stocké → le défaut', () => {
   expect(resoudrePref(undefined, { pageSize: 50 })).toEqual({ pageSize: 50 })
@@ -28,4 +33,32 @@ test('tableau stocké → remplacement, pas de fusion index par index', () => {
 
 test('défaut objet, valeur stockée tableau → pas de fusion', () => {
   expect(resoudrePref(['a'], { pageSize: 50 })).toEqual(['a'])
+})
+
+test('entrée valide acceptée', () => {
+  expect(() =>
+    verifierEntree('table:operations-stades', { pageSize: 50 }),
+  ).not.toThrow()
+})
+
+test('clé vide ou trop longue rejetée', () => {
+  expect(() => verifierEntree('', {})).toThrow('Clé de préférence invalide')
+  expect(() => verifierEntree('x'.repeat(LIMITE_CLE + 1), {})).toThrow(
+    'Clé de préférence invalide',
+  )
+})
+
+test('valeur trop volumineuse rejetée', () => {
+  const gros = { texte: 'x'.repeat(LIMITE_VALEUR) }
+  expect(() => verifierEntree('table:x', gros)).toThrow(
+    'Préférence trop volumineuse',
+  )
+})
+
+test('valeur non sérialisable rejetée', () => {
+  const cyclique: Record<string, unknown> = {}
+  cyclique.moi = cyclique
+  expect(() => verifierEntree('table:x', cyclique)).toThrow(
+    'Préférence trop volumineuse',
+  )
 })
