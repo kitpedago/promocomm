@@ -2,6 +2,7 @@
 // chargées une fois par le beforeLoad de _authed, lues et écrites par usePref.
 // Pas de localStorage : la valeur serveur est là dès le rendu SSR.
 
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createServerFn } from '@tanstack/react-start'
 import { eq } from 'drizzle-orm'
 
@@ -76,3 +77,51 @@ export const setPrefFn = createServerFn({ method: 'POST' })
         set: { valeur: data.valeur, updatedAt: new Date() },
       })
   })
+
+export const CLE_PREFS = ['prefs'] as const
+
+// Une minuterie par clé : un glissement de colonne émet des dizaines
+// d'événements onChange et ne doit produire qu'un seul UPDATE.
+const minuteries = new Map<string, ReturnType<typeof setTimeout>>()
+
+function pousser(cle: string, valeur: unknown) {
+  clearTimeout(minuteries.get(cle))
+  minuteries.set(
+    cle,
+    setTimeout(() => {
+      minuteries.delete(cle)
+      // échec avalé : la session reste correcte, seule la persistance est
+      // perdue — pas de bandeau d'erreur pour une largeur de colonne
+      void setPrefFn({ data: { cle, valeur } }).catch(() => {})
+    }, 500),
+  )
+}
+
+/**
+ * Préférence mémorisée par utilisateur. Lecture depuis le cache alimenté par le
+ * beforeLoad de _authed (jamais de fetch ici), écriture optimiste puis push
+ * serveur en debounce.
+ */
+export function usePref<T>(
+  cle: string,
+  defaut: T,
+): [T, (v: T | ((prec: T) => T)) => void] {
+  const queryClient = useQueryClient()
+  const { data } = useQuery<Prefs>({
+    queryKey: CLE_PREFS,
+    queryFn: () => getPrefsFn(),
+    staleTime: Infinity,
+  })
+  const valeur = resoudrePref(data?.[cle], defaut)
+
+  const ecrire = (v: T | ((prec: T) => T)) => {
+    const prec = queryClient.getQueryData<Prefs>(CLE_PREFS)
+    const courant = resoudrePref(prec?.[cle], defaut)
+    const suivant =
+      typeof v === 'function' ? (v as (p: T) => T)(courant) : v
+    queryClient.setQueryData<Prefs>(CLE_PREFS, { ...prec, [cle]: suivant })
+    pousser(cle, suivant)
+  }
+
+  return [valeur, ecrire]
+}
