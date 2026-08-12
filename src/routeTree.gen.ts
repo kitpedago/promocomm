@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as AuthedIndexRouteImport } from './routes/_authed/index'
+import { Route as AuthedSccvRouteImport } from './routes/_authed/sccv'
 import { Route as AuthedOperationsRouteImport } from './routes/_authed/operations'
 import { Route as AuthedCommercialisationRouteImport } from './routes/_authed/commercialisation'
 import { Route as AuthedAcquereursRouteImport } from './routes/_authed/acquereurs'
@@ -31,6 +32,11 @@ const AuthedRoute = AuthedRouteImport.update({
 const AuthedIndexRoute = AuthedIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedSccvRoute = AuthedSccvRouteImport.update({
+  id: '/sccv',
+  path: '/sccv',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedOperationsRoute = AuthedOperationsRouteImport.update({
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/acquereurs': typeof AuthedAcquereursRoute
   '/commercialisation': typeof AuthedCommercialisationRoute
   '/operations': typeof AuthedOperationsRoute
+  '/sccv': typeof AuthedSccvRoute
   '/admin/import': typeof AuthedAdminImportRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/acquereurs': typeof AuthedAcquereursRoute
   '/commercialisation': typeof AuthedCommercialisationRoute
   '/operations': typeof AuthedOperationsRoute
+  '/sccv': typeof AuthedSccvRoute
   '/': typeof AuthedIndexRoute
   '/admin/import': typeof AuthedAdminImportRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/_authed/acquereurs': typeof AuthedAcquereursRoute
   '/_authed/commercialisation': typeof AuthedCommercialisationRoute
   '/_authed/operations': typeof AuthedOperationsRoute
+  '/_authed/sccv': typeof AuthedSccvRoute
   '/_authed/': typeof AuthedIndexRoute
   '/_authed/admin/import': typeof AuthedAdminImportRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/acquereurs'
     | '/commercialisation'
     | '/operations'
+    | '/sccv'
     | '/admin/import'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
     | '/acquereurs'
     | '/commercialisation'
     | '/operations'
+    | '/sccv'
     | '/'
     | '/admin/import'
     | '/api/auth/$'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
     | '/_authed/acquereurs'
     | '/_authed/commercialisation'
     | '/_authed/operations'
+    | '/_authed/sccv'
     | '/_authed/'
     | '/_authed/admin/import'
     | '/api/auth/$'
@@ -157,6 +169,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthedIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/sccv': {
+      id: '/_authed/sccv'
+      path: '/sccv'
+      fullPath: '/sccv'
+      preLoaderRoute: typeof AuthedSccvRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/operations': {
@@ -209,6 +228,7 @@ interface AuthedRouteChildren {
   AuthedAcquereursRoute: typeof AuthedAcquereursRoute
   AuthedCommercialisationRoute: typeof AuthedCommercialisationRoute
   AuthedOperationsRoute: typeof AuthedOperationsRoute
+  AuthedSccvRoute: typeof AuthedSccvRoute
   AuthedIndexRoute: typeof AuthedIndexRoute
   AuthedAdminImportRoute: typeof AuthedAdminImportRoute
 }
@@ -218,6 +238,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedAcquereursRoute: AuthedAcquereursRoute,
   AuthedCommercialisationRoute: AuthedCommercialisationRoute,
   AuthedOperationsRoute: AuthedOperationsRoute,
+  AuthedSccvRoute: AuthedSccvRoute,
   AuthedIndexRoute: AuthedIndexRoute,
   AuthedAdminImportRoute: AuthedAdminImportRoute,
 }

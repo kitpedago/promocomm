@@ -41,6 +41,7 @@ const ROUTES_IMPLEMENTEES = {
   commercialisation: '/commercialisation',
   operations: '/operations',
   acquereurs: '/acquereurs',
+  sccv: '/sccv',
 } as const satisfies Partial<Record<Module, string>>
 
 function ModuleLink({ module }: { module: Module }) {
