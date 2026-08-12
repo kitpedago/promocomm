@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- **Pas de dépôt git dans `/opt/promocomm`** — aucune étape `git commit` dans ce plan. Chaque tâche se termine par une vérification exécutable. Si vous voulez des commits, faites `git init` avant de démarrer et ajoutez vos propres commits en fin de tâche.
+- **Dépôt git initialisé le 2026-08-12** (commit initial `9ff88af`, branche de travail `feat/preferences-utilisateur`, distant privé `github.com/kitpedago/promocomm` pas encore relié). Chaque tâche se termine par les vérifications listées **puis un commit** de ses fichiers, message en français, préfixe `feat:` ou `chore:`.
 - **Ligne de base du typage : 8 erreurs pré-existantes**, dans `src/router.tsx` (3), `src/db/domaine.ts` (3), `src/lib/etl/import.ts` (1), `drizzle.config.ts` (1). La barrière de chaque tâche est `npx tsc --noEmit 2>&1 | grep -c "error TS"` → **8**. Toute valeur supérieure signale une régression introduite par la tâche.
 - **La table `user_pref` va dans `src/db/schema.ts`, jamais dans `src/db/domaine.ts`** : `scripts/transform-legacy.ts` reconstruit le schéma métier à chaque réimport `.bak` et effacerait les préférences.
 - **Aucun `userId` ne transite par le client.** Les deux server functions le lisent depuis `requireSession()` (`src/lib/session.server.ts`).
