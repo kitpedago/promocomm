@@ -169,6 +169,100 @@ export const missionMoeInterne = pgTable('mission_moe_interne', {
   libelle: text().notNull(),
 })
 
+// --- module SCCV (phase 4) ---
+export const structureJuridiqueStade = pgTable('structure_juridique_stade', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const gestionnaireSccv = pgTable('gestionnaire_sccv', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const partenariat = pgTable('partenariat', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const indexTaux = pgTable('index_taux', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const motifRemunerationAssocie = pgTable('motif_remuneration_associe', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const typeCompteBanque = pgTable('type_compte_banque', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const utilisationCompte = pgTable('utilisation_compte', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+// Service des impôts des entreprises
+export const sie = pgTable('sie', {
+  id: id(),
+  libelle: text().notNull(),
+  adresse: text(),
+  cp: text(),
+  commune: text(),
+})
+
+// Collaborateurs internes (legacy tPersonne) — seuls les comptables
+// (fonction_id = 1) sont utilisés par le module SCCV ; fonction_id et
+// equipe_personne_id repris bruts, sans table de référence (pas d'écran)
+export const personne = pgTable('personne', {
+  id: id(),
+  patronyme: text(),
+  prenom: text(),
+  estPresent: boolean('est_present'),
+  fonctionId: integer('fonction_id'),
+  equipePersonneId: integer('equipe_personne_id'),
+  email: text(),
+})
+
+// Banques (contacts Compte courant / Prêt — utilisés par la phase 6)
+export const banque = pgTable('banque', {
+  id: id(),
+  libelle: text().notNull(),
+  ccNom: text('cc_nom'),
+  ccAdresse: text('cc_adresse'),
+  ccCp: text('cc_cp'),
+  ccCommune: text('cc_commune'),
+  ccTel: text('cc_tel'),
+  ccEmail: text('cc_email'),
+  pretNom: text('pret_nom'),
+  pretAdresse: text('pret_adresse'),
+  pretCp: text('pret_cp'),
+  pretCommune: text('pret_commune'),
+  pretTel: text('pret_tel'),
+  pretEmail: text('pret_email'),
+})
+
+// Associés des SCCV (personnes morales)
+export const associe = pgTable('associe', {
+  id: id(),
+  rs: text().notNull(),
+  formeJuridique: text('forme_juridique'),
+  siren: text(),
+  adresse1: text(),
+  adresse2: text(),
+  cp: text(),
+  commune: text(),
+  tel: text(),
+  estHlm: boolean('est_hlm'),
+  contactNomComplet: text('contact_nom_complet'),
+  contactFonction: text('contact_fonction'),
+  email: text(),
+  commentaire: text(),
+})
+
 export const categorieSubvention = pgTable('categorie_subvention', {
   id: id(),
   libelle: text().notNull(),
@@ -207,6 +301,74 @@ export const structureJuridique = pgTable('structure_juridique', {
   montantPart: integer('montant_part'),
   sccvHf: boolean('sccv_hf'),
   sccvHlm: boolean('sccv_hlm'),
+  // volet gestion (phase 4)
+  stadeId: integer('stade_id').references(() => structureJuridiqueStade.id),
+  personneComptableId: integer('personne_comptable_id').references(
+    () => personne.id,
+  ),
+  gestionnaireSccvId: integer('gestionnaire_sccv_id').references(
+    () => gestionnaireSccv.id,
+  ),
+  partenariatId: integer('partenariat_id').references(() => partenariat.id),
+  hfsga: boolean(),
+  dateBilanDebutPremierExercice: timestamp('date_bilan_debut_premier_exercice'),
+  dateBilanFinPremierExercice: timestamp('date_bilan_fin_premier_exercice'),
+  // texte en legacy (saisies libres), repris tels quels
+  dateModifCloture: text('date_modif_cloture'),
+  datePlanningCloture: text('date_planning_cloture'),
+  dateLiberationCapital: timestamp('date_liberation_capital'),
+  // volet Centre des impôts
+  ediTva: boolean('edi_tva'),
+  ediLiasse: boolean('edi_liasse'),
+  cpteFiscal: boolean('cpte_fiscal'),
+  sieId: integer('sie_id').references(() => sie.id),
+  civiliteId: integer('civilite_id').references(() => civilite.id),
+  interlocuteurSie: text('interlocuteur_sie'),
+  dateMandatSie: timestamp('date_mandat_sie'),
+})
+
+// Parts des associés dans les SCCV (onglet Associés)
+export const participation = pgTable('participation', {
+  id: id(),
+  structureJuridiqueId: integer('structure_juridique_id')
+    .notNull()
+    .references(() => structureJuridique.id),
+  associeId: integer('associe_id').references(() => associe.id),
+  pourcentage: real(), // fraction 0–1 (iso-legacy), affichée en %
+  commentaires: text(),
+  convTreso: boolean('conv_treso'),
+  motifRemunerationAssocieId: integer('motif_remuneration_associe_id').references(
+    () => motifRemunerationAssocie.id,
+  ),
+  dateSignatureConv: timestamp('date_signature_conv'),
+  dateApplication: timestamp('date_application'),
+  dateFinRemuneration: timestamp('date_fin_remuneration'),
+  indexTauxRemunerationId: integer('index_taux_remuneration_id').references(
+    () => indexTaux.id,
+  ),
+  infoTauxRemuneration: text('info_taux_remuneration'),
+  // legacy IDPeriodicite_Versement : 100 % à 0 → code texte ANNUEL/TRIM
+  periodiciteVersement: text('periodicite_versement'),
+})
+
+// Comptes bancaires des SCCV (onglet Comptes bancaires)
+export const compteBanque = pgTable('compte_banque', {
+  id: id(),
+  structureJuridiqueId: integer('structure_juridique_id')
+    .notNull()
+    .references(() => structureJuridique.id),
+  banqueId: integer('banque_id').references(() => banque.id),
+  typeCompteBanqueId: integer('type_compte_banque_id').references(
+    () => typeCompteBanque.id,
+  ),
+  utilisationCompteId: integer('utilisation_compte_id').references(
+    () => utilisationCompte.id,
+  ),
+  numCompte: text('num_compte'),
+  iban: text(),
+  bic: text(),
+  estCloture: boolean('est_cloture'),
+  commentaires: text(),
 })
 
 // Interlocuteurs externes d'une opération : études notaires (et leurs
