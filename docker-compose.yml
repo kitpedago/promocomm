@@ -1,0 +1,88 @@
+# PromoComm — migration WinDev + SQL Server → TanStack Start + PostgreSQL
+#
+# Services :
+#   promocomm-db     PostgreSQL 16 — toujours actif (dev sur l'hôte via 127.0.0.1:5443)
+#   promocomm-app    build de prod — profil "app" (instance consultable par le client via Caddy)
+#   promocomm-mssql  SQL Server 2022 — profil "etl", uniquement pour restaurer le .bak client
+#                    pendant la phase de dev. Ne sera JAMAIS déployé chez le client.
+#
+# Démarrage :
+#   docker compose up -d                          # db seule
+#   docker compose --profile etl up -d            # + mssql pour un import .bak
+#   docker compose --profile app up -d --build    # + app de prod
+services:
+  promocomm-db:
+    image: postgres:16-alpine
+    container_name: promocomm-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "127.0.0.1:5443:5432"
+    volumes:
+      - promocomm-db-data:/var/lib/postgresql/data
+    networks:
+      - promocomm-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  promocomm-app:
+    build:
+      context: .
+      network: host
+    container_name: promocomm-app
+    restart: unless-stopped
+    profiles: ["app"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@promocomm-db:5432/${POSTGRES_DB}
+      BETTER_AUTH_URL: ${APP_URL}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      MSSQL_URL: ${MSSQL_URL_DOCKER}
+    ports:
+      # Accès interne via WireGuard uniquement (pas de Caddy/DNS pour l'instant,
+      # changement de VPS prévu le 2026-07-05) — convention outils internes : bind 10.66.66.1
+      - "10.66.66.1:3020:3000"
+    volumes:
+      # La page /admin/import liste les .bak depuis $CWD/data/bak
+      - ./data/bak:/app/data/bak:ro
+    depends_on:
+      promocomm-db:
+        condition: service_healthy
+    networks:
+      promocomm-net:
+        # IP statique référencée par caddy-central (extra_hosts) — ne pas changer sans MAJ Caddy
+        ipv4_address: 10.24.0.10
+
+  promocomm-mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: promocomm-mssql
+    restart: unless-stopped
+    profiles: ["etl"]
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+      MSSQL_PID: Developer
+    ports:
+      - "127.0.0.1:14330:1433"
+    volumes:
+      - promocomm-mssql-data:/var/opt/mssql
+      # Déposer les .bak du client ici (scp/rsync), ils apparaissent dans /bak côté conteneur
+      - ./data/bak:/bak:ro
+    networks:
+      - promocomm-net
+
+networks:
+  promocomm-net:
+    name: promocomm-net
+    ipam:
+      config:
+        - subnet: 10.24.0.0/16
+
+volumes:
+  promocomm-db-data:
+  promocomm-mssql-data:

@@ -1,0 +1,684 @@
+- generic [ref=f3e1]:
+  - banner [ref=f3e2]:
+    - navigation [ref=f3e3]:
+      - link [ref=f3e4] [cursor=pointer]:
+        - /url: /
+        - img "Keredes — PromoComm" [ref=f3e5]
+      - generic [ref=f3e7]:
+        - generic [ref=f3e69]: C
+        - generic [ref=f3e71]: Consultation
+        - button "Déconnexion" [ref=f3e72] [cursor=pointer]
+  - generic [ref=f3e8]:
+    - complementary [ref=f3e9]:
+      - navigation [ref=f3e10]:
+        - link "Accueil" [ref=f3e11] [cursor=pointer]:
+          - /url: /
+      - paragraph [ref=f3e15]: Modules
+      - navigation [ref=f3e16]:
+        - link "Commercialisation" [ref=f3e17] [cursor=pointer]:
+          - /url: /commercialisation
+        - link "Opérations" [ref=f3e22] [cursor=pointer]:
+          - /url: /operations
+        - link "SAV Promotion" [ref=f3e28] [cursor=pointer]:
+          - /url: /sav
+        - link "Acquéreurs" [ref=f3e31] [cursor=pointer]:
+          - /url: /acquereurs
+        - link "SCCV" [ref=f3e37] [cursor=pointer]:
+          - /url: /sccv
+      - generic [ref=f3e40]:
+        - paragraph [ref=f3e41]: Administration
+        - navigation [ref=f3e42]:
+          - link "Import .bak" [ref=f3e43] [cursor=pointer]:
+            - /url: /admin/import
+    - generic [ref=f3e49]:
+      - complementary [ref=f3e50]:
+        - generic [ref=f3e51]:
+          - heading "Opérations" [level=2] [ref=f3e52]
+          - button "Replier la liste des opérations" [ref=f3e53] [cursor=pointer]
+        - generic [ref=f3e57]:
+          - generic [ref=f3e58]:
+            - generic [ref=f3e59]: Contient (nom, SCCV, commune)
+            - textbox "Contient (nom, SCCV, commune)" [ref=f3e60]:
+              - /placeholder: Au moins 3 caract., sans accent
+          - generic [ref=f3e61]:
+            - switch "Inclure les « Masquer commercial »" [ref=f3e62]
+            - text: Inclure les « Masquer commercial »
+          - paragraph [ref=f3e63]: 58 opérations
+        - navigation [ref=f3e64]:
+          - button "GARDENIA ACIGNÉ" [ref=f3e73] [cursor=pointer]:
+            - generic [ref=f3e74]: GARDENIA
+            - generic [ref=f3e75]: ACIGNÉ
+          - button "LE GARREC AURAY" [ref=f3e76] [cursor=pointer]:
+            - generic [ref=f3e77]: LE GARREC
+            - generic [ref=f3e78]: AURAY
+          - button "COCON BRETEIL" [ref=f3e79] [cursor=pointer]:
+            - generic [ref=f3e80]: COCON
+            - generic [ref=f3e81]: BRETEIL
+          - button "PAPILLONS BRETEIL" [ref=f3e82] [cursor=pointer]:
+            - generic [ref=f3e83]: PAPILLONS
+            - generic [ref=f3e84]: BRETEIL
+          - button "BRUZ ARCHIPEL LES PLANCHES BRUZ" [ref=f3e85] [cursor=pointer]:
+            - generic [ref=f3e86]: BRUZ ARCHIPEL LES PLANCHES
+            - generic [ref=f3e87]: BRUZ
+          - button "DOMAINE DES PLANCHES BRUZ" [ref=f3e88] [cursor=pointer]:
+            - generic [ref=f3e89]: DOMAINE DES PLANCHES
+            - generic [ref=f3e90]: BRUZ
+          - button "KREI'ZEN BRUZ" [ref=f3e91] [cursor=pointer]:
+            - generic [ref=f3e92]: KREI'ZEN
+            - generic [ref=f3e93]: BRUZ
+          - button "LE CLOS METAIRIE ET LE DOMAINE DE LA CLOSERIE BRÉCÉ" [ref=f3e94] [cursor=pointer]:
+            - generic [ref=f3e95]: LE CLOS METAIRIE ET LE DOMAINE DE LA CLOSERIE
+            - generic [ref=f3e96]: BRÉCÉ
+          - button "MEVEN (S4.13.1) & CABESTAN (S4.2/3) CANCALE" [ref=f3e97] [cursor=pointer]:
+            - generic [ref=f3e98]: MEVEN (S4.13.1) & CABESTAN (S4.2/3)
+            - generic [ref=f3e99]: CANCALE
+          - button "BELLEVUE CARNAC" [ref=f3e100] [cursor=pointer]:
+            - generic [ref=f3e101]: BELLEVUE
+            - generic [ref=f3e102]: CARNAC
+          - button "ALDEA CESSON-SÉVIGNÉ" [ref=f3e103] [cursor=pointer]:
+            - generic [ref=f3e104]: ALDEA
+            - generic [ref=f3e105]: CESSON-SÉVIGNÉ
+          - button "CESSON ARCHIPEL MIKADO CESSON-SÉVIGNÉ" [ref=f3e106] [cursor=pointer]:
+            - generic [ref=f3e107]: CESSON ARCHIPEL MIKADO
+            - generic [ref=f3e108]: CESSON-SÉVIGNÉ
+          - button "VILLA AMALFI CESSON-SÉVIGNÉ" [ref=f3e109] [cursor=pointer]:
+            - generic [ref=f3e110]: VILLA AMALFI
+            - generic [ref=f3e111]: CESSON-SÉVIGNÉ
+          - button "VILLA POSITANO CESSON-SÉVIGNÉ" [ref=f3e112] [cursor=pointer]:
+            - generic [ref=f3e113]: VILLA POSITANO
+            - generic [ref=f3e114]: CESSON-SÉVIGNÉ
+          - button "AU NATUREL CHANTEPIE" [ref=f3e115] [cursor=pointer]:
+            - generic [ref=f3e116]: AU NATUREL
+            - generic [ref=f3e117]: CHANTEPIE
+          - button "HALLOUVRY CHANTEPIE" [ref=f3e118] [cursor=pointer]:
+            - generic [ref=f3e119]: HALLOUVRY
+            - generic [ref=f3e120]: CHANTEPIE
+          - button "CHAVAGNE ARCHIPEL LA TOUCHE CHAVAGNE" [ref=f3e121] [cursor=pointer]:
+            - generic [ref=f3e122]: CHAVAGNE ARCHIPEL LA TOUCHE
+            - generic [ref=f3e123]: CHAVAGNE
+          - button "CLOS KAVAN CHAVAGNE" [ref=f3e124] [cursor=pointer]:
+            - generic [ref=f3e125]: CLOS KAVAN
+            - generic [ref=f3e126]: CHAVAGNE
+          - button "SYMB'IOZ CHAVAGNE" [ref=f3e127] [cursor=pointer]:
+            - generic [ref=f3e128]: SYMB'IOZ
+            - generic [ref=f3e129]: CHAVAGNE
+          - button "LES 3 HETRES DINAN" [ref=f3e130] [cursor=pointer]:
+            - generic [ref=f3e131]: LES 3 HETRES
+            - generic [ref=f3e132]: DINAN
+          - button "CHEMIN DE LA MER - PIERRE PROMOTION DINARD" [ref=f3e133] [cursor=pointer]:
+            - generic [ref=f3e134]: CHEMIN DE LA MER - PIERRE PROMOTION
+            - generic [ref=f3e135]: DINARD
+          - button "LA SCENE ET LES ECLUSES DINARD" [ref=f3e136] [cursor=pointer]:
+            - generic [ref=f3e137]: LA SCENE ET LES ECLUSES
+            - generic [ref=f3e138]: DINARD
+          - button "GUIPRY LOTISSEMENT GUIPRY" [ref=f3e139] [cursor=pointer]:
+            - generic [ref=f3e140]: GUIPRY LOTISSEMENT
+            - generic [ref=f3e141]: GUIPRY
+          - button "TYGUEZH GÉVEZÉ" [ref=f3e142] [cursor=pointer]:
+            - generic [ref=f3e143]: TYGUEZH
+            - generic [ref=f3e144]: GÉVEZÉ
+          - button "DOMAINE DU VERGER LAILLÉ" [ref=f3e145] [cursor=pointer]:
+            - generic [ref=f3e146]: DOMAINE DU VERGER
+            - generic [ref=f3e147]: LAILLÉ
+          - button "TINTEO LE RHEU" [ref=f3e148] [cursor=pointer]:
+            - generic [ref=f3e149]: TINTEO
+            - generic [ref=f3e150]: LE RHEU
+          - button "INFLUENCES LIFFRÉ" [ref=f3e151] [cursor=pointer]:
+            - generic [ref=f3e152]: INFLUENCES
+            - generic [ref=f3e153]: LIFFRÉ
+          - button "KERSANTIA LIFFRÉ" [ref=f3e154] [cursor=pointer]:
+            - generic [ref=f3e155]: KERSANTIA
+            - generic [ref=f3e156]: LIFFRÉ
+          - button "COURS OLIVET MONTGERMONT" [ref=f3e157] [cursor=pointer]:
+            - generic [ref=f3e158]: COURS OLIVET
+            - generic [ref=f3e159]: MONTGERMONT
+          - button "BELLES AU BOIS ORGÈRES" [ref=f3e160] [cursor=pointer]:
+            - generic [ref=f3e161]: BELLES AU BOIS
+            - generic [ref=f3e162]: ORGÈRES
+          - button "L'ORÉE DU TER PLOEMEUR" [ref=f3e163] [cursor=pointer]:
+            - generic [ref=f3e164]: L'ORÉE DU TER
+            - generic [ref=f3e165]: PLOEMEUR
+          - button "LES ORMES PLOEMEUR" [ref=f3e166] [cursor=pointer]:
+            - generic [ref=f3e167]: LES ORMES
+            - generic [ref=f3e168]: PLOEMEUR
+          - button "AIR - SNC 41 BD TASSIGNY RENNES" [ref=f3e169] [cursor=pointer]:
+            - generic [ref=f3e170]: AIR - SNC 41 BD TASSIGNY
+            - generic [ref=f3e171]: RENNES
+          - button "ALKIMIA RENNES" [ref=f3e172] [cursor=pointer]:
+            - generic [ref=f3e173]: ALKIMIA
+            - generic [ref=f3e174]: RENNES
+          - button "ARABESQUE - ARCHIPEL RENNES" [ref=f3e175] [cursor=pointer]:
+            - generic [ref=f3e176]: ARABESQUE - ARCHIPEL
+            - generic [ref=f3e177]: RENNES
+          - button "ARBORETUM QUINCE RENNES" [ref=f3e178] [cursor=pointer]:
+            - generic [ref=f3e179]: ARBORETUM QUINCE
+            - generic [ref=f3e180]: RENNES
+          - button "DARIUS - ARCHIPEL RENNES RENNES" [ref=f3e181] [cursor=pointer]:
+            - generic [ref=f3e182]: DARIUS - ARCHIPEL RENNES
+            - generic [ref=f3e183]: RENNES
+          - button "ECLIPSE RENNES" [ref=f3e184] [cursor=pointer]:
+            - generic [ref=f3e185]: ECLIPSE
+            - generic [ref=f3e186]: RENNES
+          - button "EPONA RENNES" [ref=f3e187] [cursor=pointer]:
+            - generic [ref=f3e188]: EPONA
+            - generic [ref=f3e189]: RENNES
+          - button "LE KASTELLAN - VINCI RENNES" [ref=f3e190] [cursor=pointer]:
+            - generic [ref=f3e191]: LE KASTELLAN - VINCI
+            - generic [ref=f3e192]: RENNES
+          - button "LE PATIO - ARCHIPEL RENNES" [ref=f3e193] [cursor=pointer]:
+            - generic [ref=f3e194]: LE PATIO - ARCHIPEL
+            - generic [ref=f3e195]: RENNES
+          - button "LES GABARRES - ARCHIPEL HABITAT RENNES" [ref=f3e196] [cursor=pointer]:
+            - generic [ref=f3e197]: LES GABARRES - ARCHIPEL HABITAT
+            - generic [ref=f3e198]: RENNES
+          - button "LES PARTITIONS RENNES" [ref=f3e199] [cursor=pointer]:
+            - generic [ref=f3e200]: LES PARTITIONS
+            - generic [ref=f3e201]: RENNES
+          - button "LES VILLAS INKERMANN RENNES" [ref=f3e202] [cursor=pointer]:
+            - generic [ref=f3e203]: LES VILLAS INKERMANN
+            - generic [ref=f3e204]: RENNES
+          - button "NOLA RENNES" [active] [ref=f3e205] [cursor=pointer]:
+            - generic [ref=f3e206]: NOLA
+            - generic [ref=f3e207]: RENNES
+          - button "QUAI 80 RENNES" [ref=f3e208] [cursor=pointer]:
+            - generic [ref=f3e209]: QUAI 80
+            - generic [ref=f3e210]: RENNES
+          - button "SCCV DU LANDRY-GREEN ACADEMY - LAMOTTE - BOUYGUES RENNES" [ref=f3e211] [cursor=pointer]:
+            - generic [ref=f3e212]: SCCV DU LANDRY-GREEN ACADEMY - LAMOTTE - BOUYGUES
+            - generic [ref=f3e213]: RENNES
+          - button "SESAME-SCCV ALMA RIVE OUEST RENNES" [ref=f3e214] [cursor=pointer]:
+            - generic [ref=f3e215]: SESAME-SCCV ALMA RIVE OUEST
+            - generic [ref=f3e216]: RENNES
+          - button "SQUARE INKERMANN RENNES" [ref=f3e217] [cursor=pointer]:
+            - generic [ref=f3e218]: SQUARE INKERMANN
+            - generic [ref=f3e219]: RENNES
+          - button "VILLA LEONIE - ARCHIPEL RENNES RENNES" [ref=f3e220] [cursor=pointer]:
+            - generic [ref=f3e221]: VILLA LEONIE - ARCHIPEL RENNES
+            - generic [ref=f3e222]: RENNES
+          - button "SYLLA BAIE SAINT-LUNAIRE" [ref=f3e223] [cursor=pointer]:
+            - generic [ref=f3e224]: SYLLA BAIE
+            - generic [ref=f3e225]: SAINT-LUNAIRE
+          - button "ENJOY SAINT-MALO" [ref=f3e226] [cursor=pointer]:
+            - generic [ref=f3e227]: ENJOY
+            - generic [ref=f3e228]: SAINT-MALO
+          - button "KERLORETTE SAINT-MALO" [ref=f3e229] [cursor=pointer]:
+            - generic [ref=f3e230]: KERLORETTE
+            - generic [ref=f3e231]: SAINT-MALO
+          - button "RIVAGE ET VILLAS DES PINS SAINT-PHILIBERT" [ref=f3e232] [cursor=pointer]:
+            - generic [ref=f3e233]: RIVAGE ET VILLAS DES PINS
+            - generic [ref=f3e234]: SAINT-PHILIBERT
+          - button "KOADIG VANNES" [ref=f3e235] [cursor=pointer]:
+            - generic [ref=f3e236]: KOADIG
+            - generic [ref=f3e237]: VANNES
+          - button "LES COTTAGES VANNES" [ref=f3e238] [cursor=pointer]:
+            - generic [ref=f3e239]: LES COTTAGES
+            - generic [ref=f3e240]: VANNES
+          - button "LIMOGES SUD VANNES" [ref=f3e241] [cursor=pointer]:
+            - generic [ref=f3e242]: LIMOGES SUD
+            - generic [ref=f3e243]: VANNES
+          - button "LES JARDINS DU CLOS SOTTIN VERN-SUR-SEICHE" [ref=f3e244] [cursor=pointer]:
+            - generic [ref=f3e245]: LES JARDINS DU CLOS SOTTIN
+            - generic [ref=f3e246]: VERN-SUR-SEICHE
+      - generic [ref=f3e65]:
+        - generic [ref=f3e249]:
+          - heading "NOLA — RENNES" [level=1] [ref=f3e250]
+          - generic [ref=f3e251]: HLM
+        - generic [ref=f3e252]:
+          - heading "Détails opération" [level=2] [ref=f3e254]
+          - generic [ref=f3e255]:
+            - generic [ref=f3e256]:
+              - generic [ref=f3e257]: SCCV
+              - generic [ref=f3e258]: SCCV KERNOLA
+            - generic [ref=f3e259]:
+              - generic [ref=f3e260]: Siret SCCV
+              - generic [ref=f3e261]: "88775501500013"
+            - generic [ref=f3e262]:
+              - generic [ref=f3e263]: Code réservé
+              - generic [ref=f3e264]: —
+            - generic [ref=f3e265]:
+              - generic [ref=f3e266]: Année DGD
+              - generic [ref=f3e267]: "0"
+            - generic [ref=f3e268]:
+              - generic [ref=f3e269]: Adresse
+              - generic [ref=f3e270]: —
+            - generic [ref=f3e271]:
+              - generic [ref=f3e272]: Code postal
+              - generic [ref=f3e273]: "35000"
+            - generic [ref=f3e274]:
+              - generic [ref=f3e275]: Commune
+              - generic [ref=f3e276]: RENNES
+            - generic [ref=f3e277]:
+              - generic [ref=f3e278]: ZAC
+              - generic [ref=f3e279]: ZAC BAUD CHARDONNET - G2
+            - generic [ref=f3e280]:
+              - generic [ref=f3e281]: Secteur géographique
+              - generic [ref=f3e282]: Rennes Agglomération
+            - generic [ref=f3e283]:
+              - generic [ref=f3e284]: Rennes Métropole
+              - generic [ref=f3e285]: Oui
+            - generic [ref=f3e286]:
+              - generic [ref=f3e287]: ANRU
+              - generic [ref=f3e288]: Non
+            - generic [ref=f3e289]:
+              - generic [ref=f3e290]: Validation engagement
+              - generic [ref=f3e291]: —
+            - generic [ref=f3e292]:
+              - generic [ref=f3e293]: Possibilité investisseur
+              - generic [ref=f3e294]: Non
+            - generic [ref=f3e295]:
+              - generic [ref=f3e296]: Taux investisseur autorisé
+              - generic [ref=f3e297]: —
+            - generic [ref=f3e298]:
+              - generic [ref=f3e299]: Commentaire investisseur
+              - generic [ref=f3e300]: —
+            - generic [ref=f3e301]:
+              - generic [ref=f3e302]: Commentaire
+              - generic [ref=f3e303]: —
+        - heading "Tranches (2)" [level=2] [ref=f3e304]
+        - generic [ref=f3e305]:
+          - generic [ref=f3e306]:
+            - generic [ref=f3e307]: 2 tranches au total
+            - textbox [ref=f3e312]:
+              - /placeholder: Filtrer…
+            - button "Affichage" [ref=f3e313] [cursor=pointer]
+          - table [ref=f3e318]:
+            - rowgroup [ref=f3e319]:
+              - row [ref=f3e320]:
+                - columnheader [ref=f3e321]:
+                  - button "Tranche" [ref=f3e322] [cursor=pointer]
+                - columnheader [ref=f3e328]:
+                  - button "Concept" [ref=f3e329] [cursor=pointer]
+                - columnheader [ref=f3e335]:
+                  - button "Adresse" [ref=f3e336] [cursor=pointer]
+                - columnheader [ref=f3e342]:
+                  - button "Situation" [ref=f3e343] [cursor=pointer]
+                - columnheader [ref=f3e349]:
+                  - button "Lots" [ref=f3e350] [cursor=pointer]
+                - columnheader [ref=f3e356]:
+                  - button "Coll." [ref=f3e357] [cursor=pointer]
+                - columnheader [ref=f3e363]:
+                  - button "dont PSLA" [ref=f3e364] [cursor=pointer]
+                - columnheader [ref=f3e370]:
+                  - button "dont BRS" [ref=f3e371] [cursor=pointer]
+                - columnheader [ref=f3e377]:
+                  - button "Indiv." [ref=f3e378] [cursor=pointer]
+                - columnheader [ref=f3e384]:
+                  - button "Autres locaux" [ref=f3e385] [cursor=pointer]
+                - columnheader [ref=f3e391]:
+                  - button "Terrains" [ref=f3e392] [cursor=pointer]
+                - columnheader [ref=f3e398]:
+                  - button "Convention" [ref=f3e399] [cursor=pointer]
+                - columnheader [ref=f3e405]:
+                  - button "Livraison contractuelle" [ref=f3e406] [cursor=pointer]
+            - rowgroup [ref=f3e412]:
+              - row [ref=f3e413] [cursor=pointer]:
+                - cell "G2 - KPI" [ref=f3e414]
+                - cell [ref=f3e415]
+                - cell "23,25 et 27 Rue Raymonde FOREVILLE" [ref=f3e416]
+                - cell "TRAVAUX" [ref=f3e417]
+                - cell "35" [ref=f3e418]
+                - cell "34" [ref=f3e420]
+                - cell "0" [ref=f3e422]
+                - cell "14" [ref=f3e424]
+                - cell "0" [ref=f3e426]
+                - cell "0" [ref=f3e428]
+                - cell "0" [ref=f3e430]
+                - cell "—" [ref=f3e432]
+                - cell "—" [ref=f3e433]
+              - row [ref=f3e434] [cursor=pointer]:
+                - cell "G2 - LLI CDC" [ref=f3e435]
+                - cell [ref=f3e436]
+                - cell "29 rue Raymonde FOREVILLE" [ref=f3e437]
+                - cell "TRAVAUX" [ref=f3e438]
+                - cell "1" [ref=f3e439]
+                - cell "20" [ref=f3e441]
+                - cell "0" [ref=f3e443]
+                - cell "0" [ref=f3e445]
+                - cell "0" [ref=f3e447]
+                - cell "0" [ref=f3e449]
+                - cell "0" [ref=f3e451]
+                - cell "—" [ref=f3e453]
+                - cell "—" [ref=f3e454]
+            - rowgroup [ref=f3e455]:
+              - row [ref=f3e456]:
+                - cell "Total" [ref=f3e457]
+                - cell [ref=f3e458]
+                - cell [ref=f3e459]
+                - cell [ref=f3e460]
+                - cell "36" [ref=f3e461]
+                - cell "54" [ref=f3e462]
+                - cell [ref=f3e463]
+                - cell [ref=f3e464]
+                - cell "0" [ref=f3e465]
+                - cell [ref=f3e466]
+                - cell [ref=f3e467]
+                - cell [ref=f3e468]
+                - cell [ref=f3e469]
+          - generic [ref=f3e470]:
+            - generic [ref=f3e471]:
+              - text: Lignes par page
+              - combobox "Lignes par page" [ref=f3e472]:
+                - generic: "50"
+            - generic [ref=f3e473]: 1–2 sur 2 tranches
+        - heading "Lots de la tranche G2 - KPI (35)" [level=2] [ref=f3e474]
+        - generic [ref=f3e475]:
+          - generic [ref=f3e476]:
+            - generic [ref=f3e477]: 35 lots au total
+            - textbox [ref=f3e482]:
+              - /placeholder: Filtrer…
+            - button "Affichage" [ref=f3e483] [cursor=pointer]
+          - table [ref=f3e488]:
+            - rowgroup [ref=f3e489]:
+              - row [ref=f3e490]:
+                - columnheader [ref=f3e491]:
+                  - button "Num lot" [ref=f3e492] [cursor=pointer]
+                - columnheader [ref=f3e498]:
+                  - button "Destination" [ref=f3e499] [cursor=pointer]
+                - columnheader [ref=f3e505]:
+                  - button "Famille de bien" [ref=f3e506] [cursor=pointer]
+                - columnheader [ref=f3e512]:
+                  - button "Type de bien" [ref=f3e513] [cursor=pointer]
+                - columnheader [ref=f3e519]:
+                  - button "Surf. hab." [ref=f3e520] [cursor=pointer]
+                - columnheader [ref=f3e526]:
+                  - button "Prix grille TTC" [ref=f3e527] [cursor=pointer]
+                - columnheader [ref=f3e533]:
+                  - button "Acquéreur" [ref=f3e534] [cursor=pointer]
+            - rowgroup [ref=f3e540]:
+              - row [ref=f3e541] [cursor=pointer]:
+                - cell "0101/PC01" [ref=f3e542]
+                - cell "BRS" [ref=f3e543]
+                - cell "APPARTEMENT" [ref=f3e544]
+                - cell "T2" [ref=f3e545]
+                - cell "48.4 m²" [ref=f3e546]
+                - cell "123 000,00 €" [ref=f3e548]
+                - cell "M. GUINARD Yann" [ref=f3e550]
+              - row [ref=f3e551] [cursor=pointer]:
+                - cell "0102/PC07" [ref=f3e552]
+                - cell "BRS" [ref=f3e553]
+                - cell "APPARTEMENT" [ref=f3e554]
+                - cell "T4" [ref=f3e555]
+                - cell "89.1 m²" [ref=f3e556]
+                - cell "197 000,00 €" [ref=f3e558]
+                - cell "Mme SERIEYS Julie" [ref=f3e560]
+              - row [ref=f3e561] [cursor=pointer]:
+                - cell "0103/PC03" [ref=f3e562]
+                - cell "BRS" [ref=f3e563]
+                - cell "APPARTEMENT" [ref=f3e564]
+                - cell "T3" [ref=f3e565]
+                - cell "69.7 m²" [ref=f3e566]
+                - cell "149 000,00 €" [ref=f3e568]
+                - cell "M. et Mme ARLOT Antoine et LALLEMENT Clémentine" [ref=f3e570]
+              - row [ref=f3e571] [cursor=pointer]:
+                - cell "0201/PC04" [ref=f3e572]
+                - cell "BRS" [ref=f3e573]
+                - cell "APPARTEMENT" [ref=f3e574]
+                - cell "T2" [ref=f3e575]
+                - cell "48.5 m²" [ref=f3e576]
+                - cell "126 000,00 €" [ref=f3e578]
+                - cell "Mme LEAL ROJAS Lida" [ref=f3e580]
+              - row [ref=f3e581] [cursor=pointer]:
+                - cell "0202/PC05" [ref=f3e582]
+                - cell "BRS" [ref=f3e583]
+                - cell "APPARTEMENT" [ref=f3e584]
+                - cell "T3" [ref=f3e585]
+                - cell "65 m²" [ref=f3e586]
+                - cell "149 000,00 €" [ref=f3e588]
+                - cell "M. JEHANNIN Alexandre" [ref=f3e590]
+              - row [ref=f3e591] [cursor=pointer]:
+                - cell "0203/PC06" [ref=f3e592]
+                - cell "BRS" [ref=f3e593]
+                - cell "APPARTEMENT" [ref=f3e594]
+                - cell "T3" [ref=f3e595]
+                - cell "69.7 m²" [ref=f3e596]
+                - cell "154 000,00 €" [ref=f3e598]
+                - cell "M. LE BESCONT Etienne" [ref=f3e600]
+              - row [ref=f3e601] [cursor=pointer]:
+                - cell "0301/PC02" [ref=f3e602]
+                - cell "BRS" [ref=f3e603]
+                - cell "APPARTEMENT" [ref=f3e604]
+                - cell "T2" [ref=f3e605]
+                - cell "48.5 m²" [ref=f3e606]
+                - cell "128 000,00 €" [ref=f3e608]
+                - cell "M. GEORGE Quentin" [ref=f3e610]
+              - row [ref=f3e611] [cursor=pointer]:
+                - cell "0302/PC08" [ref=f3e612]
+                - cell "BRS" [ref=f3e613]
+                - cell "APPARTEMENT" [ref=f3e614]
+                - cell "T2" [ref=f3e615]
+                - cell "45.4 m²" [ref=f3e616]
+                - cell "126 000,00 €" [ref=f3e618]
+                - cell "M. MANCHON Wilfried" [ref=f3e620]
+              - row [ref=f3e621] [cursor=pointer]:
+                - cell "0303/PC32" [ref=f3e622]
+                - cell "BRS" [ref=f3e623]
+                - cell "APPARTEMENT" [ref=f3e624]
+                - cell "T3" [ref=f3e625]
+                - cell "64.8 m²" [ref=f3e626]
+                - cell "146 000,00 €" [ref=f3e628]
+                - cell "Mme L HOSTIS Elodie" [ref=f3e630]
+              - row [ref=f3e631] [cursor=pointer]:
+                - cell "0304/PC31" [ref=f3e632]
+                - cell "BRS" [ref=f3e633]
+                - cell "APPARTEMENT" [ref=f3e634]
+                - cell "T3" [ref=f3e635]
+                - cell "69.7 m²" [ref=f3e636]
+                - cell "156 000,00 €" [ref=f3e638]
+                - cell "M. et Mme DELABARRE Vivien et GOHIER Marion" [ref=f3e640]
+              - row [ref=f3e641] [cursor=pointer]:
+                - cell "0402/PC30" [ref=f3e642]
+                - cell "BRS" [ref=f3e643]
+                - cell "APPARTEMENT" [ref=f3e644]
+                - cell "T2" [ref=f3e645]
+                - cell "45.4 m²" [ref=f3e646]
+                - cell "128 000,00 €" [ref=f3e648]
+                - cell "Mme WOJCIECHWSKI Chloé" [ref=f3e650]
+              - row [ref=f3e651] [cursor=pointer]:
+                - cell "0404/PC29" [ref=f3e652]
+                - cell "BRS" [ref=f3e653]
+                - cell "APPARTEMENT" [ref=f3e654]
+                - cell "T3" [ref=f3e655]
+                - cell "69.7 m²" [ref=f3e656]
+                - cell "158 000,00 €" [ref=f3e658]
+                - cell "M. et M. EVANO Gwenael et SAULAIS Jean-Hugues" [ref=f3e660]
+              - row [ref=f3e661] [cursor=pointer]:
+                - cell "0502/PC28" [ref=f3e662]
+                - cell "BRS" [ref=f3e663]
+                - cell "APPARTEMENT" [ref=f3e664]
+                - cell "T2" [ref=f3e665]
+                - cell "45.4 m²" [ref=f3e666]
+                - cell "131 000,00 €" [ref=f3e668]
+                - cell "Mme SALERO Mathilde" [ref=f3e670]
+              - row [ref=f3e671] [cursor=pointer]:
+                - cell "0602/PC27" [ref=f3e672]
+                - cell "BRS" [ref=f3e673]
+                - cell "APPARTEMENT" [ref=f3e674]
+                - cell "T2" [ref=f3e675]
+                - cell "45.4 m²" [ref=f3e676]
+                - cell "132 000,00 €" [ref=f3e678]
+                - cell "M. ROCHDI Alexandre" [ref=f3e680]
+              - row [ref=f3e681] [cursor=pointer]:
+                - cell "401" [ref=f3e682]
+                - cell "VEFA" [ref=f3e683]
+                - cell "APPARTEMENT" [ref=f3e684]
+                - cell "T2" [ref=f3e685]
+                - cell "48.49 m²" [ref=f3e686]
+                - cell "209 000,00 €" [ref=f3e688]
+                - cell "Mme TIRASKIS Mélina" [ref=f3e690]
+              - row [ref=f3e691] [cursor=pointer]:
+                - cell "403/PC33" [ref=f3e692]
+                - cell "VEFA" [ref=f3e693]
+                - cell "APPARTEMENT" [ref=f3e694]
+                - cell "T3" [ref=f3e695]
+                - cell "64.78 m²" [ref=f3e696]
+                - cell "281 000,00 €" [ref=f3e698]
+                - cell "Mme BENAYAD Maha" [ref=f3e700]
+              - row [ref=f3e701] [cursor=pointer]:
+                - cell "501" [ref=f3e702]
+                - cell "VEFA" [ref=f3e703]
+                - cell "APPARTEMENT" [ref=f3e704]
+                - cell "T2" [ref=f3e705]
+                - cell "48.49 m²" [ref=f3e706]
+                - cell "211 000,00 €" [ref=f3e708]
+                - cell "M. LYRIO Filipé" [ref=f3e710]
+              - row [ref=f3e711] [cursor=pointer]:
+                - cell "503/PC34" [ref=f3e712]
+                - cell "VEFA" [ref=f3e713]
+                - cell "APPARTEMENT" [ref=f3e714]
+                - cell "T3" [ref=f3e715]
+                - cell "64.78 m²" [ref=f3e716]
+                - cell "283 000,00 €" [ref=f3e718]
+                - cell "—" [ref=f3e720]
+              - row [ref=f3e721] [cursor=pointer]:
+                - cell "504/PC35" [ref=f3e722]
+                - cell "VEFA" [ref=f3e723]
+                - cell "APPARTEMENT" [ref=f3e724]
+                - cell "T3" [ref=f3e725]
+                - cell "69.69 m²" [ref=f3e726]
+                - cell "295 000,00 €" [ref=f3e728]
+                - cell "—" [ref=f3e730]
+              - row [ref=f3e731] [cursor=pointer]:
+                - cell "601/PC36" [ref=f3e732]
+                - cell "VEFA" [ref=f3e733]
+                - cell "APPARTEMENT" [ref=f3e734]
+                - cell "T2" [ref=f3e735]
+                - cell "48.49 m²" [ref=f3e736]
+                - cell "228 000,00 €" [ref=f3e738]
+                - cell "M. et Mme ERAUD Emmanuel et CHAUDET Leslie" [ref=f3e740]
+              - row [ref=f3e741] [cursor=pointer]:
+                - cell "603/PC37" [ref=f3e742]
+                - cell "VEFA" [ref=f3e743]
+                - cell "APPARTEMENT" [ref=f3e744]
+                - cell "T3" [ref=f3e745]
+                - cell "64.78 m²" [ref=f3e746]
+                - cell "285 000,00 €" [ref=f3e748]
+                - cell "—" [ref=f3e750]
+              - row [ref=f3e751] [cursor=pointer]:
+                - cell "604/PC38" [ref=f3e752]
+                - cell "VEFA" [ref=f3e753]
+                - cell "APPARTEMENT" [ref=f3e754]
+                - cell "T3" [ref=f3e755]
+                - cell "69.48 m²" [ref=f3e756]
+                - cell "296 000,00 €" [ref=f3e758]
+                - cell "M. et Mme BARDY Pierre et GUENEGOU Margot" [ref=f3e760]
+              - row [ref=f3e761] [cursor=pointer]:
+                - cell "701/PC39" [ref=f3e762]
+                - cell "VEFA" [ref=f3e763]
+                - cell "APPARTEMENT" [ref=f3e764]
+                - cell "T2" [ref=f3e765]
+                - cell "47.85 m²" [ref=f3e766]
+                - cell "238 000,00 €" [ref=f3e768]
+                - cell "Mme CUVELLIER Marie" [ref=f3e770]
+              - row [ref=f3e771] [cursor=pointer]:
+                - cell "702/PC40" [ref=f3e772]
+                - cell "VEFA" [ref=f3e773]
+                - cell "APPARTEMENT" [ref=f3e774]
+                - cell "T2" [ref=f3e775]
+                - cell "45.4 m²" [ref=f3e776]
+                - cell "225 000,00 €" [ref=f3e778]
+                - cell "Mme PETIT Mélissa" [ref=f3e780]
+              - row [ref=f3e781] [cursor=pointer]:
+                - cell "703/PC47" [ref=f3e782]
+                - cell "VEFA" [ref=f3e783]
+                - cell "APPARTEMENT" [ref=f3e784]
+                - cell "T3" [ref=f3e785]
+                - cell "64.78 m²" [ref=f3e786]
+                - cell "287 000,00 €" [ref=f3e788]
+                - cell "—" [ref=f3e790]
+              - row [ref=f3e791] [cursor=pointer]:
+                - cell "801/PC48" [ref=f3e792]
+                - cell "VEFA" [ref=f3e793]
+                - cell "APPARTEMENT" [ref=f3e794]
+                - cell "T2" [ref=f3e795]
+                - cell "47.85 m²" [ref=f3e796]
+                - cell "242 000,00 €" [ref=f3e798]
+                - cell "M. Mme et Mme PALFRAY Jean-Marc et LE BAIL Soazig" [ref=f3e800]
+              - row [ref=f3e801] [cursor=pointer]:
+                - cell "802/PC49" [ref=f3e802]
+                - cell "VEFA" [ref=f3e803]
+                - cell "APPARTEMENT" [ref=f3e804]
+                - cell "T2" [ref=f3e805]
+                - cell "45.4 m²" [ref=f3e806]
+                - cell "227 000,00 €" [ref=f3e808]
+                - cell "M. et Mme PERE Christophe et POUYMAYOU Sophie" [ref=f3e810]
+              - row [ref=f3e811] [cursor=pointer]:
+                - cell "803/PC50" [ref=f3e812]
+                - cell "VEFA" [ref=f3e813]
+                - cell "APPARTEMENT" [ref=f3e814]
+                - cell "T3" [ref=f3e815]
+                - cell "64.78 m²" [ref=f3e816]
+                - cell "289 000,00 €" [ref=f3e818]
+                - cell "M. et Mme ROSZCZYPALA Daniel et GUYOMARD Mathilde" [ref=f3e820]
+              - row [ref=f3e821] [cursor=pointer]:
+                - cell "901/PC51" [ref=f3e822]
+                - cell "VEFA" [ref=f3e823]
+                - cell "APPARTEMENT" [ref=f3e824]
+                - cell "T4" [ref=f3e825]
+                - cell "84.84 m²" [ref=f3e826]
+                - cell "359 000,00 €" [ref=f3e828]
+                - cell "M. et Mme DARLET Antoine et PELHATE Mannaig" [ref=f3e830]
+              - row [ref=f3e831] [cursor=pointer]:
+                - cell "902/PC52" [ref=f3e832]
+                - cell "VEFA" [ref=f3e833]
+                - cell "APPARTEMENT" [ref=f3e834]
+                - cell "T3" [ref=f3e835]
+                - cell "61.85 m²" [ref=f3e836]
+                - cell "273 000,00 €" [ref=f3e838]
+                - cell "M. et Mme JAOUA Khalil et POSTEL Morgane" [ref=f3e840]
+              - row [ref=f3e841] [cursor=pointer]:
+                - cell "903/PC53" [ref=f3e842]
+                - cell "VEFA" [ref=f3e843]
+                - cell "APPARTEMENT" [ref=f3e844]
+                - cell "T3" [ref=f3e845]
+                - cell "64.43 m²" [ref=f3e846]
+                - cell "275 000,00 €" [ref=f3e848]
+                - cell "—" [ref=f3e850]
+              - row [ref=f3e851] [cursor=pointer]:
+                - cell "904/PC54" [ref=f3e852]
+                - cell "VEFA" [ref=f3e853]
+                - cell "APPARTEMENT" [ref=f3e854]
+                - cell "T4" [ref=f3e855]
+                - cell "84.33 m²" [ref=f3e856]
+                - cell "339 000,00 €" [ref=f3e858]
+                - cell "M. et Mme LE BLEVEC Frédéric et Luna" [ref=f3e860]
+              - row [ref=f3e861] [cursor=pointer]:
+                - cell "M01/PC09/PC10" [ref=f3e862]
+                - cell "VEFA" [ref=f3e863]
+                - cell "MAISON" [ref=f3e864]
+                - cell "T5 et +" [ref=f3e865]
+                - cell "118 m²" [ref=f3e866]
+                - cell "485 000,00 €" [ref=f3e868]
+                - cell "—" [ref=f3e870]
+              - row [ref=f3e871] [cursor=pointer]:
+                - cell "M02/PC25/PC26" [ref=f3e872]
+                - cell "VEFA" [ref=f3e873]
+                - cell "MAISON" [ref=f3e874]
+                - cell "T5 et +" [ref=f3e875]
+                - cell "121.5 m²" [ref=f3e876]
+                - cell "499 000,00 €" [ref=f3e878]
+                - cell "M. et Mme BAPTISTE Julien et GARIN Emilie" [ref=f3e880]
+              - row [ref=f3e881] [cursor=pointer]:
+                - cell "Partie commune" [ref=f3e882]
+                - cell "—" [ref=f3e883]
+                - cell "AUTRE" [ref=f3e884]
+                - cell "Autre type" [ref=f3e885]
+                - cell "—" [ref=f3e886]
+                - cell "—" [ref=f3e888]
+                - cell "—" [ref=f3e890]
+            - rowgroup [ref=f3e891]:
+              - row [ref=f3e892]:
+                - cell "Total" [ref=f3e893]
+                - cell [ref=f3e894]
+                - cell [ref=f3e895]
+                - cell [ref=f3e896]
+                - cell "2154.6899999999996" [ref=f3e897]
+                - cell "7829000" [ref=f3e898]
+                - cell [ref=f3e899]
+          - generic [ref=f3e900]:
+            - generic [ref=f3e901]:
+              - text: Lignes par page
+              - combobox "Lignes par page" [ref=f3e902]:
+                - generic: "50"
+            - generic [ref=f3e903]: 1–35 sur 35 lots
+  - button "Open TanStack Devtools" [ref=f3e247] [cursor=pointer]:
+    - img "TanStack Devtools" [ref=f3e248]

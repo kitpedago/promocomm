@@ -1,0 +1,77 @@
+- generic [active] [ref=f35e1]:
+  - banner [ref=f35e2]:
+    - navigation [ref=f35e3]:
+      - link [ref=f35e4] [cursor=pointer]:
+        - /url: /
+        - img "Keredes — PromoComm" [ref=f35e5]
+  - generic [ref=f35e8]:
+    - complementary [ref=f35e9]:
+      - navigation [ref=f35e10]:
+        - link "Accueil" [ref=f35e11] [cursor=pointer]:
+          - /url: /
+      - paragraph [ref=f35e15]: Modules
+      - navigation [ref=f35e16]:
+        - link "Commercialisation" [ref=f35e17] [cursor=pointer]:
+          - /url: /commercialisation
+        - link "Opérations" [ref=f35e22] [cursor=pointer]:
+          - /url: /operations
+        - link "SAV Promotion" [ref=f35e28] [cursor=pointer]:
+          - /url: /sav
+        - link "Acquéreurs" [ref=f35e31] [cursor=pointer]:
+          - /url: /acquereurs
+        - link "SCCV" [ref=f35e37] [cursor=pointer]:
+          - /url: /sccv
+      - generic [ref=f35e40]:
+        - paragraph [ref=f35e41]: Administration
+        - navigation [ref=f35e42]:
+          - link "Import .bak" [ref=f35e43] [cursor=pointer]:
+            - /url: /admin/import
+    - generic [ref=f35e49]:
+      - complementary [ref=f35e50]:
+        - generic [ref=f35e51]:
+          - heading "Opérations" [level=2] [ref=f35e52]
+          - button "Replier la liste des opérations" [ref=f35e53] [cursor=pointer]
+        - generic [ref=f35e57]:
+          - generic [ref=f35e58]:
+            - generic [ref=f35e59]: Contient (nom, SCCV, commune)
+            - textbox "Contient (nom, SCCV, commune)" [ref=f35e60]:
+              - /placeholder: Au moins 3 caract., sans accent
+          - generic [ref=f35e61]:
+            - switch "Inclure les « Masquer commercial »" [ref=f35e62]
+            - checkbox
+            - text: Inclure les « Masquer commercial »
+          - paragraph [ref=f35e63]: Chargement…
+        - navigation [ref=f35e64]
+      - generic [ref=f35e65]:
+        - heading "Lots (…) de l'opération …" [level=1] [ref=f35e67]
+        - generic [ref=f35e68]:
+          - generic [ref=f35e69]:
+            - generic [ref=f35e70]: 0 lots au total
+            - textbox [ref=f35e75]:
+              - /placeholder: Filtrer…
+            - button "Affichage" [ref=f35e76] [cursor=pointer]
+          - table [ref=f35e81]:
+            - rowgroup [ref=f35e82]:
+              - row [ref=f35e83]:
+                - columnheader [ref=f35e84]:
+                  - button "Num lot" [ref=f35e85] [cursor=pointer]
+                - columnheader [ref=f35e91]:
+                  - button "Acquéreur" [ref=f35e92] [cursor=pointer]
+                - columnheader [ref=f35e98]:
+                  - button "Destination" [ref=f35e99] [cursor=pointer]
+                - columnheader [ref=f35e105]:
+                  - button "Nature achat" [ref=f35e106] [cursor=pointer]
+                - columnheader [ref=f35e112]:
+                  - button "Date de réservation" [ref=f35e113] [cursor=pointer]
+                - columnheader [ref=f35e119]:
+                  - button "Famille de bien" [ref=f35e120] [cursor=pointer]
+                - columnheader [ref=f35e126]:
+                  - button "Type de bien" [ref=f35e127] [cursor=pointer]
+                - columnheader [ref=f35e133]:
+                  - button "Surf. hab." [ref=f35e134] [cursor=pointer]
+                - columnheader [ref=f35e140]:
+                  - button "Prix TTC" [ref=f35e141] [cursor=pointer]
+            - rowgroup [ref=f35e147]:
+              - row [ref=f35e148]:
+                - cell "Aucun lot pour cette sélection." [ref=f35e149]
+        - paragraph [ref=f35e150]: Chargement du lot…

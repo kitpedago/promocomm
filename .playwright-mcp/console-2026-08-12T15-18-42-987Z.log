@@ -1,0 +1,113 @@
+[     885ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:14335
+[   44631ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:14335
+[   49438ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:14335
+[   74904ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:14335
+[  525822ms] [ERROR] %o
+
+%s
+
+%s
+ ReferenceError: DetailLot is not defined
+    at PageCommercialisation (http://10.66.66.1:3021/src/routes/_authed/commercialisation.tsx?t=1786548448182&tsr-split=component:273:44)
+    at Object.react_stack_bottom_frame (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:12866:12)
+    at renderWithHooks (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:4213:19)
+    at updateFunctionComponent (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:5569:16)
+    at beginWork (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:6140:20)
+    at runWithFiberInDEV (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:851:66)
+    at performUnitOfWork (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:8429:92)
+    at workLoopSync (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:8325:37)
+    at renderRootSync (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:8309:6)
+    at performWorkOnRoot (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:7994:27) The above error occurred in the <PageCommercialisation> component. React will try to recreate this component tree from scratch using the error boundary you provided, CatchBoundaryImpl. @ http://10.66.66.1:3021/@vite/client:524
+[  525824ms] [WARNING] Warning: The following error wasn't caught by any route! At the very least, consider setting an 'errorComponent' in your RootRoute! @ http://10.66.66.1:3021/@vite/client:524
+[  525824ms] [WARNING] Warning: DetailLot is not defined @ http://10.66.66.1:3021/@vite/client:524
+[  526246ms] [ERROR] %o
+
+%s
+
+%s
+ ReferenceError: DetailLot is not defined
+    at PageCommercialisation (http://10.66.66.1:3021/src/routes/_authed/commercialisation.tsx?t=1786548448182&tsr-split=component:273:44)
+    at Object.react_stack_bottom_frame (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:12866:12)
+    at renderWithHooks (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:4213:19)
+    at updateFunctionComponent (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:5569:16)
+    at beginWork (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:6140:20)
+    at runWithFiberInDEV (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:851:66)
+    at performUnitOfWork (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:8429:92)
+    at workLoopSync (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:8325:37)
+    at renderRootSync (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:8309:6)
+    at performWorkOnRoot (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:7994:27) The above error occurred in the <PageCommercialisation> component. React will try to recreate this component tree from scratch using the error boundary you provided, CatchBoundaryImpl. @ http://10.66.66.1:3021/@vite/client:524
+[  526247ms] [WARNING] Warning: The following error wasn't caught by any route! At the very least, consider setting an 'errorComponent' in your RootRoute! @ http://10.66.66.1:3021/@vite/client:524
+[  526248ms] [WARNING] Warning: DetailLot is not defined @ http://10.66.66.1:3021/@vite/client:524
+[  608543ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:14335
+[  769327ms] [ERROR] %o
+
+%s
+
+%s
+ ReferenceError: recapTranche is not defined
+    at http://10.66.66.1:3021/src/routes/_authed/commercialisation.tsx?t=1786548691631&tsr-split=component:228:36
+    at Array.map (<anonymous>)
+    at PageCommercialisation (http://10.66.66.1:3021/src/routes/_authed/commercialisation.tsx?t=1786548691631&tsr-split=component:224:42)
+    at Object.react_stack_bottom_frame (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:12866:12)
+    at renderWithHooks (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:4213:19)
+    at updateFunctionComponent (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:5569:16)
+    at beginWork (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:6140:20)
+    at runWithFiberInDEV (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:851:66)
+    at performUnitOfWork (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:8429:92)
+    at workLoopSync (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:8325:37) The above error occurred in the <PageCommercialisation> component. React will try to recreate this component tree from scratch using the error boundary you provided, CatchBoundaryImpl. @ http://10.66.66.1:3021/@vite/client:524
+[  769330ms] [WARNING] Warning: The following error wasn't caught by any route! At the very least, consider setting an 'errorComponent' in your RootRoute! @ http://10.66.66.1:3021/@vite/client:524
+[  769331ms] [WARNING] Warning: recapTranche is not defined @ http://10.66.66.1:3021/@vite/client:524
+[  769631ms] [ERROR] %o
+
+%s
+
+%s
+ ReferenceError: recapTranche is not defined
+    at http://10.66.66.1:3021/src/routes/_authed/commercialisation.tsx?t=1786548691631&tsr-split=component:228:36
+    at Array.map (<anonymous>)
+    at PageCommercialisation (http://10.66.66.1:3021/src/routes/_authed/commercialisation.tsx?t=1786548691631&tsr-split=component:224:42)
+    at Object.react_stack_bottom_frame (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:12866:12)
+    at renderWithHooks (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:4213:19)
+    at updateFunctionComponent (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:5569:16)
+    at beginWork (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:6140:20)
+    at runWithFiberInDEV (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:851:66)
+    at performUnitOfWork (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:8429:92)
+    at workLoopSync (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:8325:37) The above error occurred in the <PageCommercialisation> component. React will try to recreate this component tree from scratch using the error boundary you provided, CatchBoundaryImpl. @ http://10.66.66.1:3021/@vite/client:524
+[  769632ms] [WARNING] Warning: The following error wasn't caught by any route! At the very least, consider setting an 'errorComponent' in your RootRoute! @ http://10.66.66.1:3021/@vite/client:524
+[  769633ms] [WARNING] Warning: recapTranche is not defined @ http://10.66.66.1:3021/@vite/client:524
+[  776405ms] [ERROR] %o
+
+%s
+
+%s
+ ReferenceError: SelecteurTranche is not defined
+    at PageCommercialisation (http://10.66.66.1:3021/src/routes/_authed/commercialisation.tsx?t=1786548698925&tsr-split=component:191:40)
+    at Object.react_stack_bottom_frame (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:12866:12)
+    at renderWithHooks (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:4213:19)
+    at updateFunctionComponent (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:5569:16)
+    at beginWork (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:6140:20)
+    at runWithFiberInDEV (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:851:66)
+    at performUnitOfWork (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:8429:92)
+    at workLoopSync (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:8325:37)
+    at renderRootSync (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:8309:6)
+    at performWorkOnRoot (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:7994:27) The above error occurred in the <PageCommercialisation> component. React will try to recreate this component tree from scratch using the error boundary you provided, CatchBoundaryImpl. @ http://10.66.66.1:3021/@vite/client:524
+[  776406ms] [WARNING] Warning: The following error wasn't caught by any route! At the very least, consider setting an 'errorComponent' in your RootRoute! @ http://10.66.66.1:3021/@vite/client:524
+[  776406ms] [WARNING] Warning: SelecteurTranche is not defined @ http://10.66.66.1:3021/@vite/client:524
+[  776690ms] [ERROR] %o
+
+%s
+
+%s
+ ReferenceError: SelecteurTranche is not defined
+    at PageCommercialisation (http://10.66.66.1:3021/src/routes/_authed/commercialisation.tsx?t=1786548698925&tsr-split=component:191:40)
+    at Object.react_stack_bottom_frame (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:12866:12)
+    at renderWithHooks (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:4213:19)
+    at updateFunctionComponent (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:5569:16)
+    at beginWork (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:6140:20)
+    at runWithFiberInDEV (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:851:66)
+    at performUnitOfWork (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:8429:92)
+    at workLoopSync (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:8325:37)
+    at renderRootSync (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:8309:6)
+    at performWorkOnRoot (http://10.66.66.1:3021/node_modules/.vite/deps/react-dom_client.js?v=0713c849:7994:27) The above error occurred in the <PageCommercialisation> component. React will try to recreate this component tree from scratch using the error boundary you provided, CatchBoundaryImpl. @ http://10.66.66.1:3021/@vite/client:524
+[  776691ms] [WARNING] Warning: The following error wasn't caught by any route! At the very least, consider setting an 'errorComponent' in your RootRoute! @ http://10.66.66.1:3021/@vite/client:524
+[  776691ms] [WARNING] Warning: SelecteurTranche is not defined @ http://10.66.66.1:3021/@vite/client:524

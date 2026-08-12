@@ -1,0 +1,5 @@
+[     692ms] [VERBOSE] [DOM] Password forms should have (optionally hidden) username fields for accessibility: (More info: https://goo.gl/9p2vKq) %o @ http://10.66.66.1:3021/login:0
+[    1166ms] [VERBOSE] [DOM] Password forms should have (optionally hidden) username fields for accessibility: (More info: https://goo.gl/9p2vKq) %o @ http://10.66.66.1:3021/login:0
+[    1442ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ http://10.66.66.1:3021/src/integrations/tanstack-query/devtools.tsx:0
+[    1448ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ http://10.66.66.1:3021/src/styles.css?url:0
+[    1452ms] Failed to fetch dynamically imported module: http://10.66.66.1:3021/node_modules/@tanstack/react-start/dist/plugin/default-entry/client.tsx?t=1786547721210

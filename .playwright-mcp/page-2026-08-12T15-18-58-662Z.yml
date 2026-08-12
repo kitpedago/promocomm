@@ -1,0 +1,412 @@
+- generic [active] [ref=f4e1]:
+  - banner [ref=f4e2]:
+    - navigation [ref=f4e3]:
+      - link [ref=f4e4] [cursor=pointer]:
+        - /url: /
+        - img "Keredes — PromoComm" [ref=f4e5]
+      - generic [ref=f4e7]:
+        - generic [ref=f4e67]: C
+        - generic [ref=f4e69]: Consultation
+        - button "Déconnexion" [ref=f4e70] [cursor=pointer]
+  - generic [ref=f4e8]:
+    - complementary [ref=f4e9]:
+      - navigation [ref=f4e10]:
+        - link "Accueil" [ref=f4e11] [cursor=pointer]:
+          - /url: /
+      - paragraph [ref=f4e15]: Modules
+      - navigation [ref=f4e16]:
+        - link "Commercialisation" [ref=f4e17] [cursor=pointer]:
+          - /url: /commercialisation
+        - link "Opérations" [ref=f4e22] [cursor=pointer]:
+          - /url: /operations
+        - link "SAV Promotion" [ref=f4e28] [cursor=pointer]:
+          - /url: /sav
+        - link "Acquéreurs" [ref=f4e31] [cursor=pointer]:
+          - /url: /acquereurs
+        - link "SCCV" [ref=f4e37] [cursor=pointer]:
+          - /url: /sccv
+      - generic [ref=f4e40]:
+        - paragraph [ref=f4e41]: Administration
+        - navigation [ref=f4e42]:
+          - link "Import .bak" [ref=f4e43] [cursor=pointer]:
+            - /url: /admin/import
+    - generic [ref=f4e49]:
+      - complementary [ref=f4e50]:
+        - generic [ref=f4e51]:
+          - heading "Opérations" [level=2] [ref=f4e52]
+          - button "Replier la liste des opérations" [ref=f4e53] [cursor=pointer]
+        - generic [ref=f4e57]:
+          - generic [ref=f4e58]:
+            - generic [ref=f4e59]: Contient (nom, SCCV, commune)
+            - textbox "Contient (nom, SCCV, commune)" [ref=f4e60]:
+              - /placeholder: Au moins 3 caract., sans accent
+          - generic [ref=f4e61]:
+            - switch "Inclure les « Masquer commercial »" [ref=f4e62]
+            - text: Inclure les « Masquer commercial »
+          - paragraph [ref=f4e63]: 58 opérations
+        - navigation [ref=f4e64]:
+          - button "GARDENIA ACIGNÉ" [ref=f4e71] [cursor=pointer]:
+            - generic [ref=f4e72]: GARDENIA
+            - generic [ref=f4e73]: ACIGNÉ
+          - button "LE GARREC AURAY" [ref=f4e74] [cursor=pointer]:
+            - generic [ref=f4e75]: LE GARREC
+            - generic [ref=f4e76]: AURAY
+          - button "COCON BRETEIL" [ref=f4e77] [cursor=pointer]:
+            - generic [ref=f4e78]: COCON
+            - generic [ref=f4e79]: BRETEIL
+          - button "PAPILLONS BRETEIL" [ref=f4e80] [cursor=pointer]:
+            - generic [ref=f4e81]: PAPILLONS
+            - generic [ref=f4e82]: BRETEIL
+          - button "BRUZ ARCHIPEL LES PLANCHES BRUZ" [ref=f4e83] [cursor=pointer]:
+            - generic [ref=f4e84]: BRUZ ARCHIPEL LES PLANCHES
+            - generic [ref=f4e85]: BRUZ
+          - button "DOMAINE DES PLANCHES BRUZ" [ref=f4e86] [cursor=pointer]:
+            - generic [ref=f4e87]: DOMAINE DES PLANCHES
+            - generic [ref=f4e88]: BRUZ
+          - button "KREI'ZEN BRUZ" [ref=f4e89] [cursor=pointer]:
+            - generic [ref=f4e90]: KREI'ZEN
+            - generic [ref=f4e91]: BRUZ
+          - button "LE CLOS METAIRIE ET LE DOMAINE DE LA CLOSERIE BRÉCÉ" [ref=f4e92] [cursor=pointer]:
+            - generic [ref=f4e93]: LE CLOS METAIRIE ET LE DOMAINE DE LA CLOSERIE
+            - generic [ref=f4e94]: BRÉCÉ
+          - button "MEVEN (S4.13.1) & CABESTAN (S4.2/3) CANCALE" [ref=f4e95] [cursor=pointer]:
+            - generic [ref=f4e96]: MEVEN (S4.13.1) & CABESTAN (S4.2/3)
+            - generic [ref=f4e97]: CANCALE
+          - button "BELLEVUE CARNAC" [ref=f4e98] [cursor=pointer]:
+            - generic [ref=f4e99]: BELLEVUE
+            - generic [ref=f4e100]: CARNAC
+          - button "ALDEA CESSON-SÉVIGNÉ" [ref=f4e101] [cursor=pointer]:
+            - generic [ref=f4e102]: ALDEA
+            - generic [ref=f4e103]: CESSON-SÉVIGNÉ
+          - button "CESSON ARCHIPEL MIKADO CESSON-SÉVIGNÉ" [ref=f4e104] [cursor=pointer]:
+            - generic [ref=f4e105]: CESSON ARCHIPEL MIKADO
+            - generic [ref=f4e106]: CESSON-SÉVIGNÉ
+          - button "VILLA AMALFI CESSON-SÉVIGNÉ" [ref=f4e107] [cursor=pointer]:
+            - generic [ref=f4e108]: VILLA AMALFI
+            - generic [ref=f4e109]: CESSON-SÉVIGNÉ
+          - button "VILLA POSITANO CESSON-SÉVIGNÉ" [ref=f4e110] [cursor=pointer]:
+            - generic [ref=f4e111]: VILLA POSITANO
+            - generic [ref=f4e112]: CESSON-SÉVIGNÉ
+          - button "AU NATUREL CHANTEPIE" [ref=f4e113] [cursor=pointer]:
+            - generic [ref=f4e114]: AU NATUREL
+            - generic [ref=f4e115]: CHANTEPIE
+          - button "HALLOUVRY CHANTEPIE" [ref=f4e116] [cursor=pointer]:
+            - generic [ref=f4e117]: HALLOUVRY
+            - generic [ref=f4e118]: CHANTEPIE
+          - button "CHAVAGNE ARCHIPEL LA TOUCHE CHAVAGNE" [ref=f4e119] [cursor=pointer]:
+            - generic [ref=f4e120]: CHAVAGNE ARCHIPEL LA TOUCHE
+            - generic [ref=f4e121]: CHAVAGNE
+          - button "CLOS KAVAN CHAVAGNE" [ref=f4e122] [cursor=pointer]:
+            - generic [ref=f4e123]: CLOS KAVAN
+            - generic [ref=f4e124]: CHAVAGNE
+          - button "SYMB'IOZ CHAVAGNE" [ref=f4e125] [cursor=pointer]:
+            - generic [ref=f4e126]: SYMB'IOZ
+            - generic [ref=f4e127]: CHAVAGNE
+          - button "LES 3 HETRES DINAN" [ref=f4e128] [cursor=pointer]:
+            - generic [ref=f4e129]: LES 3 HETRES
+            - generic [ref=f4e130]: DINAN
+          - button "CHEMIN DE LA MER - PIERRE PROMOTION DINARD" [ref=f4e131] [cursor=pointer]:
+            - generic [ref=f4e132]: CHEMIN DE LA MER - PIERRE PROMOTION
+            - generic [ref=f4e133]: DINARD
+          - button "LA SCENE ET LES ECLUSES DINARD" [ref=f4e134] [cursor=pointer]:
+            - generic [ref=f4e135]: LA SCENE ET LES ECLUSES
+            - generic [ref=f4e136]: DINARD
+          - button "GUIPRY LOTISSEMENT GUIPRY" [ref=f4e137] [cursor=pointer]:
+            - generic [ref=f4e138]: GUIPRY LOTISSEMENT
+            - generic [ref=f4e139]: GUIPRY
+          - button "TYGUEZH GÉVEZÉ" [ref=f4e140] [cursor=pointer]:
+            - generic [ref=f4e141]: TYGUEZH
+            - generic [ref=f4e142]: GÉVEZÉ
+          - button "DOMAINE DU VERGER LAILLÉ" [ref=f4e143] [cursor=pointer]:
+            - generic [ref=f4e144]: DOMAINE DU VERGER
+            - generic [ref=f4e145]: LAILLÉ
+          - button "TINTEO LE RHEU" [ref=f4e146] [cursor=pointer]:
+            - generic [ref=f4e147]: TINTEO
+            - generic [ref=f4e148]: LE RHEU
+          - button "INFLUENCES LIFFRÉ" [ref=f4e149] [cursor=pointer]:
+            - generic [ref=f4e150]: INFLUENCES
+            - generic [ref=f4e151]: LIFFRÉ
+          - button "KERSANTIA LIFFRÉ" [ref=f4e152] [cursor=pointer]:
+            - generic [ref=f4e153]: KERSANTIA
+            - generic [ref=f4e154]: LIFFRÉ
+          - button "COURS OLIVET MONTGERMONT" [ref=f4e155] [cursor=pointer]:
+            - generic [ref=f4e156]: COURS OLIVET
+            - generic [ref=f4e157]: MONTGERMONT
+          - button "BELLES AU BOIS ORGÈRES" [ref=f4e158] [cursor=pointer]:
+            - generic [ref=f4e159]: BELLES AU BOIS
+            - generic [ref=f4e160]: ORGÈRES
+          - button "L'ORÉE DU TER PLOEMEUR" [ref=f4e161] [cursor=pointer]:
+            - generic [ref=f4e162]: L'ORÉE DU TER
+            - generic [ref=f4e163]: PLOEMEUR
+          - button "LES ORMES PLOEMEUR" [ref=f4e164] [cursor=pointer]:
+            - generic [ref=f4e165]: LES ORMES
+            - generic [ref=f4e166]: PLOEMEUR
+          - button "AIR - SNC 41 BD TASSIGNY RENNES" [ref=f4e167] [cursor=pointer]:
+            - generic [ref=f4e168]: AIR - SNC 41 BD TASSIGNY
+            - generic [ref=f4e169]: RENNES
+          - button "ALKIMIA RENNES" [ref=f4e170] [cursor=pointer]:
+            - generic [ref=f4e171]: ALKIMIA
+            - generic [ref=f4e172]: RENNES
+          - button "ARABESQUE - ARCHIPEL RENNES" [ref=f4e173] [cursor=pointer]:
+            - generic [ref=f4e174]: ARABESQUE - ARCHIPEL
+            - generic [ref=f4e175]: RENNES
+          - button "ARBORETUM QUINCE RENNES" [ref=f4e176] [cursor=pointer]:
+            - generic [ref=f4e177]: ARBORETUM QUINCE
+            - generic [ref=f4e178]: RENNES
+          - button "DARIUS - ARCHIPEL RENNES RENNES" [ref=f4e179] [cursor=pointer]:
+            - generic [ref=f4e180]: DARIUS - ARCHIPEL RENNES
+            - generic [ref=f4e181]: RENNES
+          - button "ECLIPSE RENNES" [ref=f4e182] [cursor=pointer]:
+            - generic [ref=f4e183]: ECLIPSE
+            - generic [ref=f4e184]: RENNES
+          - button "EPONA RENNES" [ref=f4e185] [cursor=pointer]:
+            - generic [ref=f4e186]: EPONA
+            - generic [ref=f4e187]: RENNES
+          - button "LE KASTELLAN - VINCI RENNES" [ref=f4e188] [cursor=pointer]:
+            - generic [ref=f4e189]: LE KASTELLAN - VINCI
+            - generic [ref=f4e190]: RENNES
+          - button "LE PATIO - ARCHIPEL RENNES" [ref=f4e191] [cursor=pointer]:
+            - generic [ref=f4e192]: LE PATIO - ARCHIPEL
+            - generic [ref=f4e193]: RENNES
+          - button "LES GABARRES - ARCHIPEL HABITAT RENNES" [ref=f4e194] [cursor=pointer]:
+            - generic [ref=f4e195]: LES GABARRES - ARCHIPEL HABITAT
+            - generic [ref=f4e196]: RENNES
+          - button "LES PARTITIONS RENNES" [ref=f4e197] [cursor=pointer]:
+            - generic [ref=f4e198]: LES PARTITIONS
+            - generic [ref=f4e199]: RENNES
+          - button "LES VILLAS INKERMANN RENNES" [ref=f4e200] [cursor=pointer]:
+            - generic [ref=f4e201]: LES VILLAS INKERMANN
+            - generic [ref=f4e202]: RENNES
+          - button "NOLA RENNES" [ref=f4e203] [cursor=pointer]:
+            - generic [ref=f4e204]: NOLA
+            - generic [ref=f4e205]: RENNES
+          - button "QUAI 80 RENNES" [ref=f4e206] [cursor=pointer]:
+            - generic [ref=f4e207]: QUAI 80
+            - generic [ref=f4e208]: RENNES
+          - button "SCCV DU LANDRY-GREEN ACADEMY - LAMOTTE - BOUYGUES RENNES" [ref=f4e209] [cursor=pointer]:
+            - generic [ref=f4e210]: SCCV DU LANDRY-GREEN ACADEMY - LAMOTTE - BOUYGUES
+            - generic [ref=f4e211]: RENNES
+          - button "SESAME-SCCV ALMA RIVE OUEST RENNES" [ref=f4e212] [cursor=pointer]:
+            - generic [ref=f4e213]: SESAME-SCCV ALMA RIVE OUEST
+            - generic [ref=f4e214]: RENNES
+          - button "SQUARE INKERMANN RENNES" [ref=f4e215] [cursor=pointer]:
+            - generic [ref=f4e216]: SQUARE INKERMANN
+            - generic [ref=f4e217]: RENNES
+          - button "VILLA LEONIE - ARCHIPEL RENNES RENNES" [ref=f4e218] [cursor=pointer]:
+            - generic [ref=f4e219]: VILLA LEONIE - ARCHIPEL RENNES
+            - generic [ref=f4e220]: RENNES
+          - button "SYLLA BAIE SAINT-LUNAIRE" [ref=f4e221] [cursor=pointer]:
+            - generic [ref=f4e222]: SYLLA BAIE
+            - generic [ref=f4e223]: SAINT-LUNAIRE
+          - button "ENJOY SAINT-MALO" [ref=f4e224] [cursor=pointer]:
+            - generic [ref=f4e225]: ENJOY
+            - generic [ref=f4e226]: SAINT-MALO
+          - button "KERLORETTE SAINT-MALO" [ref=f4e227] [cursor=pointer]:
+            - generic [ref=f4e228]: KERLORETTE
+            - generic [ref=f4e229]: SAINT-MALO
+          - button "RIVAGE ET VILLAS DES PINS SAINT-PHILIBERT" [ref=f4e230] [cursor=pointer]:
+            - generic [ref=f4e231]: RIVAGE ET VILLAS DES PINS
+            - generic [ref=f4e232]: SAINT-PHILIBERT
+          - button "KOADIG VANNES" [ref=f4e233] [cursor=pointer]:
+            - generic [ref=f4e234]: KOADIG
+            - generic [ref=f4e235]: VANNES
+          - button "LES COTTAGES VANNES" [ref=f4e236] [cursor=pointer]:
+            - generic [ref=f4e237]: LES COTTAGES
+            - generic [ref=f4e238]: VANNES
+          - button "LIMOGES SUD VANNES" [ref=f4e239] [cursor=pointer]:
+            - generic [ref=f4e240]: LIMOGES SUD
+            - generic [ref=f4e241]: VANNES
+          - button "LES JARDINS DU CLOS SOTTIN VERN-SUR-SEICHE" [ref=f4e242] [cursor=pointer]:
+            - generic [ref=f4e243]: LES JARDINS DU CLOS SOTTIN
+            - generic [ref=f4e244]: VERN-SUR-SEICHE
+      - generic [ref=f4e65]:
+        - generic [ref=f4e245]:
+          - heading "NOLA — RENNES" [level=1] [ref=f4e246]
+          - generic [ref=f4e247]: HLM
+        - generic [ref=f4e248]:
+          - heading "Détails opération" [level=2] [ref=f4e250]
+          - generic [ref=f4e251]:
+            - generic [ref=f4e252]:
+              - generic [ref=f4e253]: SCCV
+              - generic [ref=f4e254]: SCCV KERNOLA
+            - generic [ref=f4e255]:
+              - generic [ref=f4e256]: Siret SCCV
+              - generic [ref=f4e257]: "88775501500013"
+            - generic [ref=f4e258]:
+              - generic [ref=f4e259]: Code réservé
+              - generic [ref=f4e260]: —
+            - generic [ref=f4e261]:
+              - generic [ref=f4e262]: Année DGD
+              - generic [ref=f4e263]: "0"
+            - generic [ref=f4e264]:
+              - generic [ref=f4e265]: Adresse
+              - generic [ref=f4e266]: —
+            - generic [ref=f4e267]:
+              - generic [ref=f4e268]: Code postal
+              - generic [ref=f4e269]: "35000"
+            - generic [ref=f4e270]:
+              - generic [ref=f4e271]: Commune
+              - generic [ref=f4e272]: RENNES
+            - generic [ref=f4e273]:
+              - generic [ref=f4e274]: ZAC
+              - generic [ref=f4e275]: ZAC BAUD CHARDONNET - G2
+            - generic [ref=f4e276]:
+              - generic [ref=f4e277]: Secteur géographique
+              - generic [ref=f4e278]: Rennes Agglomération
+            - generic [ref=f4e279]:
+              - generic [ref=f4e280]: Rennes Métropole
+              - generic [ref=f4e281]: Oui
+            - generic [ref=f4e282]:
+              - generic [ref=f4e283]: ANRU
+              - generic [ref=f4e284]: Non
+            - generic [ref=f4e285]:
+              - generic [ref=f4e286]: Validation engagement
+              - generic [ref=f4e287]: —
+            - generic [ref=f4e288]:
+              - generic [ref=f4e289]: Possibilité investisseur
+              - generic [ref=f4e290]: Non
+            - generic [ref=f4e291]:
+              - generic [ref=f4e292]: Taux investisseur autorisé
+              - generic [ref=f4e293]: —
+            - generic [ref=f4e294]:
+              - generic [ref=f4e295]: Commentaire investisseur
+              - generic [ref=f4e296]: —
+            - generic [ref=f4e297]:
+              - generic [ref=f4e298]: Commentaire
+              - generic [ref=f4e299]: —
+        - heading "Tranches (2)" [level=2] [ref=f4e300]
+        - generic [ref=f4e301]:
+          - generic [ref=f4e302]:
+            - generic [ref=f4e303]: 2 tranches au total
+            - textbox [ref=f4e308]:
+              - /placeholder: Filtrer…
+            - button "Affichage" [ref=f4e309] [cursor=pointer]
+          - table [ref=f4e314]:
+            - rowgroup [ref=f4e315]:
+              - row [ref=f4e316]:
+                - columnheader [ref=f4e317]:
+                  - button "Tranche" [ref=f4e318] [cursor=pointer]
+                - columnheader [ref=f4e324]:
+                  - button "Concept" [ref=f4e325] [cursor=pointer]
+                - columnheader [ref=f4e331]:
+                  - button "Adresse" [ref=f4e332] [cursor=pointer]
+                - columnheader [ref=f4e338]:
+                  - button "Situation" [ref=f4e339] [cursor=pointer]
+                - columnheader [ref=f4e345]:
+                  - button "Lots" [ref=f4e346] [cursor=pointer]
+                - columnheader [ref=f4e352]:
+                  - button "Coll." [ref=f4e353] [cursor=pointer]
+                - columnheader [ref=f4e359]:
+                  - button "dont PSLA" [ref=f4e360] [cursor=pointer]
+                - columnheader [ref=f4e366]:
+                  - button "dont BRS" [ref=f4e367] [cursor=pointer]
+                - columnheader [ref=f4e373]:
+                  - button "Indiv." [ref=f4e374] [cursor=pointer]
+                - columnheader [ref=f4e380]:
+                  - button "Autres locaux" [ref=f4e381] [cursor=pointer]
+                - columnheader [ref=f4e387]:
+                  - button "Terrains" [ref=f4e388] [cursor=pointer]
+                - columnheader [ref=f4e394]:
+                  - button "Convention" [ref=f4e395] [cursor=pointer]
+                - columnheader [ref=f4e401]:
+                  - button "Livraison contractuelle" [ref=f4e402] [cursor=pointer]
+            - rowgroup [ref=f4e408]:
+              - row [ref=f4e409] [cursor=pointer]:
+                - cell "G2 - KPI" [ref=f4e410]
+                - cell [ref=f4e411]
+                - cell "23,25 et 27 Rue Raymonde FOREVILLE" [ref=f4e412]
+                - cell "TRAVAUX" [ref=f4e413]
+                - cell "35" [ref=f4e414]
+                - cell "34" [ref=f4e416]
+                - cell "0" [ref=f4e418]
+                - cell "14" [ref=f4e420]
+                - cell "0" [ref=f4e422]
+                - cell "0" [ref=f4e424]
+                - cell "0" [ref=f4e426]
+                - cell "—" [ref=f4e428]
+                - cell "—" [ref=f4e429]
+              - row [ref=f4e430] [cursor=pointer]:
+                - cell "G2 - LLI CDC" [ref=f4e431]
+                - cell [ref=f4e432]
+                - cell "29 rue Raymonde FOREVILLE" [ref=f4e433]
+                - cell "TRAVAUX" [ref=f4e434]
+                - cell "1" [ref=f4e435]
+                - cell "20" [ref=f4e437]
+                - cell "0" [ref=f4e439]
+                - cell "0" [ref=f4e441]
+                - cell "0" [ref=f4e443]
+                - cell "0" [ref=f4e445]
+                - cell "0" [ref=f4e447]
+                - cell "—" [ref=f4e449]
+                - cell "—" [ref=f4e450]
+            - rowgroup [ref=f4e451]:
+              - row [ref=f4e452]:
+                - cell "Total" [ref=f4e453]
+                - cell [ref=f4e454]
+                - cell [ref=f4e455]
+                - cell [ref=f4e456]
+                - cell "36" [ref=f4e457]
+                - cell "54" [ref=f4e458]
+                - cell [ref=f4e459]
+                - cell [ref=f4e460]
+                - cell "0" [ref=f4e461]
+                - cell [ref=f4e462]
+                - cell [ref=f4e463]
+                - cell [ref=f4e464]
+                - cell [ref=f4e465]
+          - generic [ref=f4e466]:
+            - generic [ref=f4e467]:
+              - text: Lignes par page
+              - combobox "Lignes par page" [ref=f4e468]:
+                - generic: "50"
+            - generic [ref=f4e469]: 1–2 sur 2 tranches
+        - heading "Lots de la tranche G2 - LLI CDC (1)" [level=2] [ref=f4e470]
+        - generic [ref=f4e471]:
+          - generic [ref=f4e472]:
+            - generic [ref=f4e473]: 1 lots au total
+            - textbox [ref=f4e478]:
+              - /placeholder: Filtrer…
+            - button "Affichage" [ref=f4e479] [cursor=pointer]
+          - table [ref=f4e484]:
+            - rowgroup [ref=f4e485]:
+              - row [ref=f4e486]:
+                - columnheader [ref=f4e487]:
+                  - button "Num lot" [ref=f4e488] [cursor=pointer]
+                - columnheader [ref=f4e494]:
+                  - button "Destination" [ref=f4e495] [cursor=pointer]
+                - columnheader [ref=f4e501]:
+                  - button "Famille de bien" [ref=f4e502] [cursor=pointer]
+                - columnheader [ref=f4e508]:
+                  - button "Type de bien" [ref=f4e509] [cursor=pointer]
+                - columnheader [ref=f4e515]:
+                  - button "Surf. hab." [ref=f4e516] [cursor=pointer]
+                - columnheader [ref=f4e522]:
+                  - button "Prix grille TTC" [ref=f4e523] [cursor=pointer]
+                - columnheader [ref=f4e529]:
+                  - button "Acquéreur" [ref=f4e530] [cursor=pointer]
+            - rowgroup [ref=f4e536]:
+              - row [ref=f4e537] [cursor=pointer]:
+                - cell "Bat B 20 logts CDC" [ref=f4e538]
+                - cell "Vente en bloc" [ref=f4e539]
+                - cell "APPARTEMENT" [ref=f4e540]
+                - cell "Tous types" [ref=f4e541]
+                - cell "1114.5 m²" [ref=f4e542]
+                - cell "3 697 005,15 €" [ref=f4e544]
+                - cell "M. CAP RESIDENTIEL (CDC)" [ref=f4e546]
+            - rowgroup [ref=f4e547]:
+              - row [ref=f4e548]:
+                - cell "Total" [ref=f4e549]
+                - cell [ref=f4e550]
+                - cell [ref=f4e551]
+                - cell [ref=f4e552]
+                - cell "1 114,5" [ref=f4e553]
+                - cell "3 697 005,15" [ref=f4e554]
+                - cell [ref=f4e555]
+          - generic [ref=f4e556]:
+            - generic [ref=f4e557]:
+              - text: Lignes par page
+              - combobox "Lignes par page" [ref=f4e558]:
+                - generic: "50"
+            - generic [ref=f4e559]: 1–1 sur 1 lots
+  - button "Open TanStack Devtools" [ref=f4e560] [cursor=pointer]:
+    - img "TanStack Devtools" [ref=f4e561]

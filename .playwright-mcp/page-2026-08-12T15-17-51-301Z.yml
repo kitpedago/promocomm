@@ -1,0 +1,47 @@
+- generic [active] [ref=f3e1]:
+  - banner [ref=f3e2]:
+    - navigation [ref=f3e3]:
+      - link [ref=f3e4] [cursor=pointer]:
+        - /url: /
+        - img "Keredes — PromoComm" [ref=f3e5]
+  - generic [ref=f3e8]:
+    - complementary [ref=f3e9]:
+      - navigation [ref=f3e10]:
+        - link "Accueil" [ref=f3e11] [cursor=pointer]:
+          - /url: /
+      - paragraph [ref=f3e15]: Modules
+      - navigation [ref=f3e16]:
+        - link "Commercialisation" [ref=f3e17] [cursor=pointer]:
+          - /url: /commercialisation
+        - link "Opérations" [ref=f3e22] [cursor=pointer]:
+          - /url: /operations
+        - link "SAV Promotion" [ref=f3e28] [cursor=pointer]:
+          - /url: /sav
+        - link "Acquéreurs" [ref=f3e31] [cursor=pointer]:
+          - /url: /acquereurs
+        - link "SCCV" [ref=f3e37] [cursor=pointer]:
+          - /url: /sccv
+      - generic [ref=f3e40]:
+        - paragraph [ref=f3e41]: Administration
+        - navigation [ref=f3e42]:
+          - link "Import .bak" [ref=f3e43] [cursor=pointer]:
+            - /url: /admin/import
+    - generic [ref=f3e49]:
+      - complementary [ref=f3e50]:
+        - generic [ref=f3e51]:
+          - heading "Opérations" [level=2] [ref=f3e52]
+          - button "Replier la liste des opérations" [ref=f3e53] [cursor=pointer]
+        - generic [ref=f3e57]:
+          - generic [ref=f3e58]:
+            - generic [ref=f3e59]: Contient (nom, SCCV, commune)
+            - textbox "Contient (nom, SCCV, commune)" [ref=f3e60]:
+              - /placeholder: Au moins 3 caract., sans accent
+          - generic [ref=f3e61]:
+            - switch "Inclure les « Masquer commercial »" [ref=f3e62]
+            - checkbox
+            - text: Inclure les « Masquer commercial »
+          - paragraph [ref=f3e63]: Chargement…
+        - navigation [ref=f3e64]
+      - generic [ref=f3e66]:
+        - paragraph [ref=f3e67]: Opérations
+        - paragraph [ref=f3e68]: Sélectionnez une opération dans la liste de gauche.

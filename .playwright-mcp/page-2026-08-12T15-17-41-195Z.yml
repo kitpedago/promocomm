@@ -1,0 +1,19 @@
+- generic [ref=f2e1]:
+  - main [ref=f2e2]:
+    - generic [ref=f2e3]:
+      - img "Keredes" [ref=f2e4]
+      - paragraph [ref=f2e5]: PromoComm
+      - heading "Connexion" [level=1] [ref=f2e6]
+      - generic [ref=f2e7]:
+        - generic [ref=f2e8]:
+          - generic [ref=f2e9]: Service
+          - combobox "Service" [active] [ref=f2e10]:
+            - generic: Consultation
+          - combobox [ref=f2e39]
+        - generic [ref=f2e12]:
+          - generic [ref=f2e13]: Mot de passe
+          - textbox "Mot de passe" [disabled]:
+            - /placeholder: Aucun mot de passe requis
+        - button "Se connecter" [ref=f2e40]
+  - button "Open TanStack Devtools" [ref=f2e41] [cursor=pointer]:
+    - img "TanStack Devtools" [ref=f2e42]

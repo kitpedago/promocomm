@@ -1,0 +1,64 @@
+- generic [active] [ref=f2e1]:
+  - banner [ref=f2e43]:
+    - navigation [ref=f2e44]:
+      - link [ref=f2e45] [cursor=pointer]:
+        - /url: /
+        - img "Keredes — PromoComm" [ref=f2e46]
+      - generic [ref=f2e48]:
+        - generic [ref=f2e49]: C
+        - generic [ref=f2e51]: Consultation
+        - button "Déconnexion" [ref=f2e52] [cursor=pointer]
+  - generic [ref=f2e53]:
+    - complementary [ref=f2e54]:
+      - navigation [ref=f2e55]:
+        - link "Accueil" [ref=f2e56] [cursor=pointer]:
+          - /url: /
+      - paragraph [ref=f2e60]: Modules
+      - navigation [ref=f2e61]:
+        - link "Commercialisation" [ref=f2e62] [cursor=pointer]:
+          - /url: /commercialisation
+        - link "Opérations" [ref=f2e67] [cursor=pointer]:
+          - /url: /operations
+        - link "SAV Promotion" [ref=f2e73] [cursor=pointer]:
+          - /url: /sav
+        - link "Acquéreurs" [ref=f2e76] [cursor=pointer]:
+          - /url: /acquereurs
+        - link "SCCV" [ref=f2e82] [cursor=pointer]:
+          - /url: /sccv
+      - generic [ref=f2e85]:
+        - paragraph [ref=f2e86]: Administration
+        - navigation [ref=f2e87]:
+          - link "Import .bak" [ref=f2e88] [cursor=pointer]:
+            - /url: /admin/import
+    - main [ref=f2e94]:
+      - generic [ref=f2e95]:
+        - paragraph [ref=f2e96]: Tableau de bord
+        - heading "PromoComm" [level=1] [ref=f2e97]
+      - generic [ref=f2e98]:
+        - generic [ref=f2e99]:
+          - generic [ref=f2e100]:
+            - heading "Lancements commercialisation depuis les 90 derniers jours" [level=2] [ref=f2e101]
+            - generic [ref=f2e102]: aucune ligne
+          - paragraph [ref=f2e103]: Rien sur la période.
+        - generic [ref=f2e104]:
+          - generic [ref=f2e105]:
+            - heading "Livraisons depuis les 90 derniers jours" [level=2] [ref=f2e106]
+            - generic [ref=f2e107]: aucune ligne
+          - paragraph [ref=f2e108]: Rien sur la période.
+        - generic [ref=f2e109]:
+          - generic [ref=f2e110]:
+            - heading "En travaux depuis les 90 derniers jours" [level=2] [ref=f2e111]
+            - generic [ref=f2e112]: aucune ligne
+          - paragraph [ref=f2e113]: Rien sur la période.
+        - generic [ref=f2e114]:
+          - generic [ref=f2e115]:
+            - heading "SCCV créées depuis 1 an" [level=2] [ref=f2e116]
+            - generic [ref=f2e117]: aucune ligne
+          - paragraph [ref=f2e118]: Rien sur la période.
+        - generic [ref=f2e119]:
+          - generic [ref=f2e120]:
+            - heading "SCCV liquidées depuis 1 an" [level=2] [ref=f2e121]
+            - generic [ref=f2e122]: aucune ligne
+          - paragraph [ref=f2e123]: Rien sur la période.
+  - button "Open TanStack Devtools" [ref=f2e41] [cursor=pointer]:
+    - img "TanStack Devtools" [ref=f2e42]

@@ -1,0 +1,351 @@
+- generic [ref=f30e1]:
+  - banner [ref=f30e2]:
+    - navigation [ref=f30e3]:
+      - link [ref=f30e4] [cursor=pointer]:
+        - /url: /
+        - img "Keredes — PromoComm" [ref=f30e5]
+      - generic [ref=f30e7]:
+        - generic [ref=f30e67]: C
+        - generic [ref=f30e69]: Consultation
+        - button "Déconnexion" [ref=f30e70] [cursor=pointer]
+  - generic [ref=f30e8]:
+    - complementary [ref=f30e9]:
+      - navigation [ref=f30e10]:
+        - link "Accueil" [ref=f30e11] [cursor=pointer]:
+          - /url: /
+      - paragraph [ref=f30e15]: Modules
+      - navigation [ref=f30e16]:
+        - link "Commercialisation" [ref=f30e17] [cursor=pointer]:
+          - /url: /commercialisation
+        - link "Opérations" [ref=f30e22] [cursor=pointer]:
+          - /url: /operations
+        - link "SAV Promotion" [ref=f30e28] [cursor=pointer]:
+          - /url: /sav
+        - link "Acquéreurs" [ref=f30e31] [cursor=pointer]:
+          - /url: /acquereurs
+        - link "SCCV" [ref=f30e37] [cursor=pointer]:
+          - /url: /sccv
+      - generic [ref=f30e40]:
+        - paragraph [ref=f30e41]: Administration
+        - navigation [ref=f30e42]:
+          - link "Import .bak" [ref=f30e43] [cursor=pointer]:
+            - /url: /admin/import
+    - generic [ref=f30e49]:
+      - complementary [ref=f30e50]:
+        - generic [ref=f30e51]:
+          - heading "Opérations" [level=2] [ref=f30e52]
+          - button "Replier la liste des opérations" [ref=f30e53] [cursor=pointer]
+        - generic [ref=f30e57]:
+          - generic [ref=f30e58]:
+            - generic [ref=f30e59]: Contient (nom, SCCV, commune)
+            - textbox "Contient (nom, SCCV, commune)" [ref=f30e60]:
+              - /placeholder: Au moins 3 caract., sans accent
+          - generic [ref=f30e61]:
+            - switch "Inclure les « Masquer commercial »" [ref=f30e62]
+            - text: Inclure les « Masquer commercial »
+          - paragraph [ref=f30e63]: 58 opérations
+        - navigation [ref=f30e64]:
+          - button "GARDENIA ACIGNÉ" [ref=f30e71] [cursor=pointer]:
+            - generic [ref=f30e72]: GARDENIA
+            - generic [ref=f30e73]: ACIGNÉ
+          - button "LE GARREC AURAY" [ref=f30e74] [cursor=pointer]:
+            - generic [ref=f30e75]: LE GARREC
+            - generic [ref=f30e76]: AURAY
+          - button "COCON BRETEIL" [ref=f30e77] [cursor=pointer]:
+            - generic [ref=f30e78]: COCON
+            - generic [ref=f30e79]: BRETEIL
+          - button "PAPILLONS BRETEIL" [ref=f30e80] [cursor=pointer]:
+            - generic [ref=f30e81]: PAPILLONS
+            - generic [ref=f30e82]: BRETEIL
+          - button "BRUZ ARCHIPEL LES PLANCHES BRUZ" [ref=f30e83] [cursor=pointer]:
+            - generic [ref=f30e84]: BRUZ ARCHIPEL LES PLANCHES
+            - generic [ref=f30e85]: BRUZ
+          - button "DOMAINE DES PLANCHES BRUZ" [ref=f30e86] [cursor=pointer]:
+            - generic [ref=f30e87]: DOMAINE DES PLANCHES
+            - generic [ref=f30e88]: BRUZ
+          - button "KREI'ZEN BRUZ" [ref=f30e89] [cursor=pointer]:
+            - generic [ref=f30e90]: KREI'ZEN
+            - generic [ref=f30e91]: BRUZ
+          - button "LE CLOS METAIRIE ET LE DOMAINE DE LA CLOSERIE BRÉCÉ" [ref=f30e92] [cursor=pointer]:
+            - generic [ref=f30e93]: LE CLOS METAIRIE ET LE DOMAINE DE LA CLOSERIE
+            - generic [ref=f30e94]: BRÉCÉ
+          - button "MEVEN (S4.13.1) & CABESTAN (S4.2/3) CANCALE" [ref=f30e95] [cursor=pointer]:
+            - generic [ref=f30e96]: MEVEN (S4.13.1) & CABESTAN (S4.2/3)
+            - generic [ref=f30e97]: CANCALE
+          - button "BELLEVUE CARNAC" [ref=f30e98] [cursor=pointer]:
+            - generic [ref=f30e99]: BELLEVUE
+            - generic [ref=f30e100]: CARNAC
+          - button "ALDEA CESSON-SÉVIGNÉ" [ref=f30e101] [cursor=pointer]:
+            - generic [ref=f30e102]: ALDEA
+            - generic [ref=f30e103]: CESSON-SÉVIGNÉ
+          - button "CESSON ARCHIPEL MIKADO CESSON-SÉVIGNÉ" [ref=f30e104] [cursor=pointer]:
+            - generic [ref=f30e105]: CESSON ARCHIPEL MIKADO
+            - generic [ref=f30e106]: CESSON-SÉVIGNÉ
+          - button "VILLA AMALFI CESSON-SÉVIGNÉ" [ref=f30e107] [cursor=pointer]:
+            - generic [ref=f30e108]: VILLA AMALFI
+            - generic [ref=f30e109]: CESSON-SÉVIGNÉ
+          - button "VILLA POSITANO CESSON-SÉVIGNÉ" [ref=f30e110] [cursor=pointer]:
+            - generic [ref=f30e111]: VILLA POSITANO
+            - generic [ref=f30e112]: CESSON-SÉVIGNÉ
+          - button "AU NATUREL CHANTEPIE" [ref=f30e113] [cursor=pointer]:
+            - generic [ref=f30e114]: AU NATUREL
+            - generic [ref=f30e115]: CHANTEPIE
+          - button "HALLOUVRY CHANTEPIE" [ref=f30e116] [cursor=pointer]:
+            - generic [ref=f30e117]: HALLOUVRY
+            - generic [ref=f30e118]: CHANTEPIE
+          - button "CHAVAGNE ARCHIPEL LA TOUCHE CHAVAGNE" [ref=f30e119] [cursor=pointer]:
+            - generic [ref=f30e120]: CHAVAGNE ARCHIPEL LA TOUCHE
+            - generic [ref=f30e121]: CHAVAGNE
+          - button "CLOS KAVAN CHAVAGNE" [ref=f30e122] [cursor=pointer]:
+            - generic [ref=f30e123]: CLOS KAVAN
+            - generic [ref=f30e124]: CHAVAGNE
+          - button "SYMB'IOZ CHAVAGNE" [ref=f30e125] [cursor=pointer]:
+            - generic [ref=f30e126]: SYMB'IOZ
+            - generic [ref=f30e127]: CHAVAGNE
+          - button "LES 3 HETRES DINAN" [ref=f30e128] [cursor=pointer]:
+            - generic [ref=f30e129]: LES 3 HETRES
+            - generic [ref=f30e130]: DINAN
+          - button "CHEMIN DE LA MER - PIERRE PROMOTION DINARD" [ref=f30e131] [cursor=pointer]:
+            - generic [ref=f30e132]: CHEMIN DE LA MER - PIERRE PROMOTION
+            - generic [ref=f30e133]: DINARD
+          - button "LA SCENE ET LES ECLUSES DINARD" [ref=f30e134] [cursor=pointer]:
+            - generic [ref=f30e135]: LA SCENE ET LES ECLUSES
+            - generic [ref=f30e136]: DINARD
+          - button "GUIPRY LOTISSEMENT GUIPRY" [ref=f30e137] [cursor=pointer]:
+            - generic [ref=f30e138]: GUIPRY LOTISSEMENT
+            - generic [ref=f30e139]: GUIPRY
+          - button "TYGUEZH GÉVEZÉ" [ref=f30e140] [cursor=pointer]:
+            - generic [ref=f30e141]: TYGUEZH
+            - generic [ref=f30e142]: GÉVEZÉ
+          - button "DOMAINE DU VERGER LAILLÉ" [ref=f30e143] [cursor=pointer]:
+            - generic [ref=f30e144]: DOMAINE DU VERGER
+            - generic [ref=f30e145]: LAILLÉ
+          - button "TINTEO LE RHEU" [ref=f30e146] [cursor=pointer]:
+            - generic [ref=f30e147]: TINTEO
+            - generic [ref=f30e148]: LE RHEU
+          - button "INFLUENCES LIFFRÉ" [ref=f30e149] [cursor=pointer]:
+            - generic [ref=f30e150]: INFLUENCES
+            - generic [ref=f30e151]: LIFFRÉ
+          - button "KERSANTIA LIFFRÉ" [ref=f30e152] [cursor=pointer]:
+            - generic [ref=f30e153]: KERSANTIA
+            - generic [ref=f30e154]: LIFFRÉ
+          - button "COURS OLIVET MONTGERMONT" [ref=f30e155] [cursor=pointer]:
+            - generic [ref=f30e156]: COURS OLIVET
+            - generic [ref=f30e157]: MONTGERMONT
+          - button "BELLES AU BOIS ORGÈRES" [ref=f30e158] [cursor=pointer]:
+            - generic [ref=f30e159]: BELLES AU BOIS
+            - generic [ref=f30e160]: ORGÈRES
+          - button "L'ORÉE DU TER PLOEMEUR" [ref=f30e161] [cursor=pointer]:
+            - generic [ref=f30e162]: L'ORÉE DU TER
+            - generic [ref=f30e163]: PLOEMEUR
+          - button "LES ORMES PLOEMEUR" [ref=f30e164] [cursor=pointer]:
+            - generic [ref=f30e165]: LES ORMES
+            - generic [ref=f30e166]: PLOEMEUR
+          - button "AIR - SNC 41 BD TASSIGNY RENNES" [ref=f30e167] [cursor=pointer]:
+            - generic [ref=f30e168]: AIR - SNC 41 BD TASSIGNY
+            - generic [ref=f30e169]: RENNES
+          - button "ALKIMIA RENNES" [ref=f30e170] [cursor=pointer]:
+            - generic [ref=f30e171]: ALKIMIA
+            - generic [ref=f30e172]: RENNES
+          - button "ARABESQUE - ARCHIPEL RENNES" [ref=f30e173] [cursor=pointer]:
+            - generic [ref=f30e174]: ARABESQUE - ARCHIPEL
+            - generic [ref=f30e175]: RENNES
+          - button "ARBORETUM QUINCE RENNES" [ref=f30e176] [cursor=pointer]:
+            - generic [ref=f30e177]: ARBORETUM QUINCE
+            - generic [ref=f30e178]: RENNES
+          - button "DARIUS - ARCHIPEL RENNES RENNES" [ref=f30e179] [cursor=pointer]:
+            - generic [ref=f30e180]: DARIUS - ARCHIPEL RENNES
+            - generic [ref=f30e181]: RENNES
+          - button "ECLIPSE RENNES" [ref=f30e182] [cursor=pointer]:
+            - generic [ref=f30e183]: ECLIPSE
+            - generic [ref=f30e184]: RENNES
+          - button "EPONA RENNES" [ref=f30e185] [cursor=pointer]:
+            - generic [ref=f30e186]: EPONA
+            - generic [ref=f30e187]: RENNES
+          - button "LE KASTELLAN - VINCI RENNES" [ref=f30e188] [cursor=pointer]:
+            - generic [ref=f30e189]: LE KASTELLAN - VINCI
+            - generic [ref=f30e190]: RENNES
+          - button "LE PATIO - ARCHIPEL RENNES" [ref=f30e191] [cursor=pointer]:
+            - generic [ref=f30e192]: LE PATIO - ARCHIPEL
+            - generic [ref=f30e193]: RENNES
+          - button "LES GABARRES - ARCHIPEL HABITAT RENNES" [ref=f30e194] [cursor=pointer]:
+            - generic [ref=f30e195]: LES GABARRES - ARCHIPEL HABITAT
+            - generic [ref=f30e196]: RENNES
+          - button "LES PARTITIONS RENNES" [ref=f30e197] [cursor=pointer]:
+            - generic [ref=f30e198]: LES PARTITIONS
+            - generic [ref=f30e199]: RENNES
+          - button "LES VILLAS INKERMANN RENNES" [ref=f30e200] [cursor=pointer]:
+            - generic [ref=f30e201]: LES VILLAS INKERMANN
+            - generic [ref=f30e202]: RENNES
+          - button "NOLA RENNES" [ref=f30e203] [cursor=pointer]:
+            - generic [ref=f30e204]: NOLA
+            - generic [ref=f30e205]: RENNES
+          - button "QUAI 80 RENNES" [ref=f30e206] [cursor=pointer]:
+            - generic [ref=f30e207]: QUAI 80
+            - generic [ref=f30e208]: RENNES
+          - button "SCCV DU LANDRY-GREEN ACADEMY - LAMOTTE - BOUYGUES RENNES" [ref=f30e209] [cursor=pointer]:
+            - generic [ref=f30e210]: SCCV DU LANDRY-GREEN ACADEMY - LAMOTTE - BOUYGUES
+            - generic [ref=f30e211]: RENNES
+          - button "SESAME-SCCV ALMA RIVE OUEST RENNES" [ref=f30e212] [cursor=pointer]:
+            - generic [ref=f30e213]: SESAME-SCCV ALMA RIVE OUEST
+            - generic [ref=f30e214]: RENNES
+          - button "SQUARE INKERMANN RENNES" [ref=f30e215] [cursor=pointer]:
+            - generic [ref=f30e216]: SQUARE INKERMANN
+            - generic [ref=f30e217]: RENNES
+          - button "VILLA LEONIE - ARCHIPEL RENNES RENNES" [ref=f30e218] [cursor=pointer]:
+            - generic [ref=f30e219]: VILLA LEONIE - ARCHIPEL RENNES
+            - generic [ref=f30e220]: RENNES
+          - button "SYLLA BAIE SAINT-LUNAIRE" [ref=f30e221] [cursor=pointer]:
+            - generic [ref=f30e222]: SYLLA BAIE
+            - generic [ref=f30e223]: SAINT-LUNAIRE
+          - button "ENJOY SAINT-MALO" [ref=f30e224] [cursor=pointer]:
+            - generic [ref=f30e225]: ENJOY
+            - generic [ref=f30e226]: SAINT-MALO
+          - button "KERLORETTE SAINT-MALO" [ref=f30e227] [cursor=pointer]:
+            - generic [ref=f30e228]: KERLORETTE
+            - generic [ref=f30e229]: SAINT-MALO
+          - button "RIVAGE ET VILLAS DES PINS SAINT-PHILIBERT" [ref=f30e230] [cursor=pointer]:
+            - generic [ref=f30e231]: RIVAGE ET VILLAS DES PINS
+            - generic [ref=f30e232]: SAINT-PHILIBERT
+          - button "KOADIG VANNES" [ref=f30e233] [cursor=pointer]:
+            - generic [ref=f30e234]: KOADIG
+            - generic [ref=f30e235]: VANNES
+          - button "LES COTTAGES VANNES" [ref=f30e236] [cursor=pointer]:
+            - generic [ref=f30e237]: LES COTTAGES
+            - generic [ref=f30e238]: VANNES
+          - button "LIMOGES SUD VANNES" [ref=f30e239] [cursor=pointer]:
+            - generic [ref=f30e240]: LIMOGES SUD
+            - generic [ref=f30e241]: VANNES
+          - button "LES JARDINS DU CLOS SOTTIN VERN-SUR-SEICHE" [ref=f30e242] [cursor=pointer]:
+            - generic [ref=f30e243]: LES JARDINS DU CLOS SOTTIN
+            - generic [ref=f30e244]: VERN-SUR-SEICHE
+      - generic [ref=f30e65]:
+        - generic [ref=f30e245]:
+          - heading "NOLA — RENNES" [level=1] [ref=f30e246]
+          - generic [ref=f30e247]: HLM
+        - generic [ref=f30e248]:
+          - heading "Détails opération" [level=2] [ref=f30e250]
+          - generic [ref=f30e251]:
+            - generic [ref=f30e252]:
+              - generic [ref=f30e253]:
+                - generic [ref=f30e254]: Notaire Vente
+                - generic [ref=f30e255]:
+                  - text: "NOTAIRES DES LICES : Maitre BEAUVAIS Isabelle"
+                  - generic [ref=f30e256]: 02.99.78.57.56 · isabelle.beauvais.35007@notaires.fr
+              - generic [ref=f30e257]:
+                - generic [ref=f30e258]: Clerc Vente
+                - generic [ref=f30e259]: —
+              - generic [ref=f30e260]:
+                - generic [ref=f30e261]: Notaire Foncier
+                - generic [ref=f30e262]: —
+              - generic [ref=f30e263]:
+                - generic [ref=f30e264]: Clerc Foncier
+                - generic [ref=f30e265]: —
+            - generic [ref=f30e266]:
+              - paragraph [ref=f30e267]: Architectes de la tranche G2 - KPI
+              - generic [ref=f30e268]:
+                - generic [ref=f30e269]: Architecte mandataire
+                - generic [ref=f30e270]: —
+              - generic [ref=f30e271]:
+                - generic [ref=f30e272]: Architecte cotraitant
+                - generic [ref=f30e273]: —
+            - generic [ref=f30e274]:
+              - generic [ref=f30e275]:
+                - switch "Possibilité investisseur" [disabled] [ref=f30e276]
+                - text: Possibilité investisseur
+              - generic [ref=f30e277]:
+                - generic [ref=f30e278]: Taux investisseur autorisé
+                - generic [ref=f30e279]: —
+              - generic [ref=f30e280]:
+                - generic [ref=f30e281]: Commentaire investisseur
+                - generic [ref=f30e282]: —
+          - generic [ref=f30e283]:
+            - generic [ref=f30e284]:
+              - switch "Masquer Commercial" [disabled] [ref=f30e285]
+              - text: Masquer Commercial
+            - generic [ref=f30e286]:
+              - switch "Masquer Comptable" [disabled] [ref=f30e287]
+              - text: Masquer Comptable
+            - generic [ref=f30e288]:
+              - switch "Masquer Promo" [disabled] [ref=f30e289]
+              - text: Masquer Promo
+        - generic [ref=f30e291]:
+          - generic [ref=f30e292]: "Tranches (2). Filtrer sur :"
+          - combobox [ref=f30e293]:
+            - generic: "G2 - KPI (Coll. : 34 dont PSLA 0 dont BRS 14, Indiv. : 0 dont PSLA 0 dont BRS 0)"
+        - generic [ref=f30e294]:
+          - generic [ref=f30e295]:
+            - button "Stade d'avancement" [ref=f30e296] [cursor=pointer]
+            - button "Terrain" [ref=f30e297] [cursor=pointer]
+            - button "Informations diverses" [active] [ref=f30e298] [cursor=pointer]
+          - generic [ref=f30e300]:
+            - generic [ref=f30e301]:
+              - generic [ref=f30e302]:
+                - paragraph [ref=f30e303]: Certification & Label
+                - generic [ref=f30e304]:
+                  - generic [ref=f30e305]:
+                    - generic [ref=f30e306]: Certification
+                    - generic [ref=f30e307]: NF Habitat HQE
+                  - generic [ref=f30e308]:
+                    - generic [ref=f30e309]: Label
+                    - generic [ref=f30e310]: —
+                  - generic [ref=f30e311]:
+                    - generic [ref=f30e312]: Performance énergétique
+                    - generic [ref=f30e313]: —
+              - generic [ref=f30e314]:
+                - paragraph [ref=f30e315]: MOE
+                - generic [ref=f30e316]:
+                  - generic [ref=f30e317]:
+                    - switch "Est MOE interne" [checked] [disabled] [ref=f30e318]
+                    - text: Est MOE interne
+                  - generic [ref=f30e319]:
+                    - generic [ref=f30e320]: Mission MOE interne
+                    - generic [ref=f30e321]: OPC + DET
+                  - generic [ref=f30e322]:
+                    - generic [ref=f30e323]: Commentaires avancement
+                    - generic [ref=f30e324]: —
+            - generic [ref=f30e325]:
+              - paragraph [ref=f30e326]: Subventions de la tranche
+              - generic [ref=f30e327]:
+                - generic [ref=f30e328]:
+                  - generic [ref=f30e329]: 1 subventions au total
+                  - textbox [ref=f30e334]:
+                    - /placeholder: Filtrer…
+                  - button "Affichage" [ref=f30e335] [cursor=pointer]
+                - table [ref=f30e340]:
+                  - rowgroup [ref=f30e341]:
+                    - row [ref=f30e342]:
+                      - columnheader [ref=f30e343]:
+                        - button "Catégorie subvention" [ref=f30e344] [cursor=pointer]
+                      - columnheader [ref=f30e350]:
+                        - button "Organisme" [ref=f30e351] [cursor=pointer]
+                      - columnheader [ref=f30e357]:
+                        - button "Date conv." [ref=f30e358] [cursor=pointer]
+                      - columnheader [ref=f30e364]:
+                        - button "Budget prévi" [ref=f30e365] [cursor=pointer]
+                      - columnheader [ref=f30e371]:
+                        - button "Montant agréé" [ref=f30e372] [cursor=pointer]
+                      - columnheader [ref=f30e378]:
+                        - button "Montant provisoire" [ref=f30e379] [cursor=pointer]
+                      - columnheader [ref=f30e385]:
+                        - button "Montant définitif" [ref=f30e386] [cursor=pointer]
+                      - columnheader [ref=f30e392]:
+                        - button "Fin de suivi" [ref=f30e393] [cursor=pointer]
+                  - rowgroup [ref=f30e399]:
+                    - row [ref=f30e400]:
+                      - cell "Label" [ref=f30e401]
+                      - cell "RENNES METROPOLE" [ref=f30e402]
+                      - cell "26/03/2024" [ref=f30e403]
+                      - cell "4 500,00 €" [ref=f30e404]
+                      - cell "0,00 €" [ref=f30e406]
+                      - cell "0,00 €" [ref=f30e408]
+                      - cell "4 046,62 €" [ref=f30e410]
+                      - cell "—" [ref=f30e412]
+                - generic [ref=f30e413]:
+                  - generic [ref=f30e414]:
+                    - text: Lignes par page
+                    - combobox "Lignes par page" [ref=f30e415]:
+                      - generic: "50"
+                  - generic [ref=f30e416]: 1–1 sur 1 subventions
+  - button "Open TanStack Devtools" [ref=f30e417] [cursor=pointer]:
+    - img "TanStack Devtools" [ref=f30e418]

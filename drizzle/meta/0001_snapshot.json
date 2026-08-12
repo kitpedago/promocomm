@@ -1,0 +1,3597 @@
+{
+  "id": "1371a9dc-5cc2-4162-952d-cb3380da1add",
+  "prevId": "c0a823f6-7323-4748-bd8b-7128a3cf679e",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.import_runs": {
+      "name": "import_runs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'running'"
+        },
+        "step": {
+          "name": "step",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "log": {
+          "name": "log",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "tables_done": {
+          "name": "tables_done",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "tables_total": {
+          "name": "tables_total",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "finished_at": {
+          "name": "finished_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.account": {
+      "name": "account",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "access_token": {
+          "name": "access_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_token": {
+          "name": "id_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "access_token_expires_at": {
+          "name": "access_token_expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refresh_token_expires_at": {
+          "name": "refresh_token_expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scope": {
+          "name": "scope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "account_userId_idx": {
+          "name": "account_userId_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "account_user_id_user_id_fk": {
+          "name": "account_user_id_user_id_fk",
+          "tableFrom": "account",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.session": {
+      "name": "session",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token": {
+          "name": "token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "session_userId_idx": {
+          "name": "session_userId_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "session_user_id_user_id_fk": {
+          "name": "session_user_id_user_id_fk",
+          "tableFrom": "session",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "session_token_unique": {
+          "name": "session_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user": {
+      "name": "user",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email_verified": {
+          "name": "email_verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "image": {
+          "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "user_email_unique": {
+          "name": "user_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.verification": {
+      "name": "verification",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "identifier": {
+          "name": "identifier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "verification_identifier_idx": {
+          "name": "verification_identifier_idx",
+          "columns": [
+            {
+              "expression": "identifier",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.acquereur": {
+      "name": "acquereur",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "acquereur_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "civilite_id": {
+          "name": "civilite_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "patronyme": {
+          "name": "patronyme",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prenom": {
+          "name": "prenom",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "civilite2_id": {
+          "name": "civilite2_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "patronyme2": {
+          "name": "patronyme2",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prenom2": {
+          "name": "prenom2",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "civilite3_id": {
+          "name": "civilite3_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "patronyme3": {
+          "name": "patronyme3",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prenom3": {
+          "name": "prenom3",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nom_complet": {
+          "name": "nom_complet",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rs": {
+          "name": "rs",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nature_juridique_id": {
+          "name": "nature_juridique_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "telephone": {
+          "name": "telephone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "portable": {
+          "name": "portable",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email2": {
+          "name": "email2",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "adresse_actuelle": {
+          "name": "adresse_actuelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cp_actuel": {
+          "name": "cp_actuel",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commune_actuelle": {
+          "name": "commune_actuelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commune_origine": {
+          "name": "commune_origine",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_modif_adresse": {
+          "name": "date_modif_adresse",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type_logement_actuel_id": {
+          "name": "type_logement_actuel_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "situation_familiale_id": {
+          "name": "situation_familiale_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "situation_famille_id": {
+          "name": "situation_famille_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type_menage_id": {
+          "name": "type_menage_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "adulte1_age": {
+          "name": "adulte1_age",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "adulte2_age": {
+          "name": "adulte2_age",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "adulte1_date_naissance": {
+          "name": "adulte1_date_naissance",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "adulte2_date_naissance": {
+          "name": "adulte2_date_naissance",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "adulte1_lieu_naissance": {
+          "name": "adulte1_lieu_naissance",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "adulte2_lieu_naissance": {
+          "name": "adulte2_lieu_naissance",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "adulte1_csp_id": {
+          "name": "adulte1_csp_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "adulte2_csp_id": {
+          "name": "adulte2_csp_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "adulte1_metier": {
+          "name": "adulte1_metier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "adulte2_metier": {
+          "name": "adulte2_metier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "adulte1_commune_travail": {
+          "name": "adulte1_commune_travail",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "adulte2_commune_travail": {
+          "name": "adulte2_commune_travail",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "age_enfant1": {
+          "name": "age_enfant1",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "age_enfant2": {
+          "name": "age_enfant2",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "age_enfant3": {
+          "name": "age_enfant3",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "age_enfant4": {
+          "name": "age_enfant4",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "age_enfant5": {
+          "name": "age_enfant5",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nombre_adultes": {
+          "name": "nombre_adultes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nombre_enfants": {
+          "name": "nombre_enfants",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "enfant_a_venir": {
+          "name": "enfant_a_venir",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tranche_age_id": {
+          "name": "tranche_age_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "plafond_ressources_id": {
+          "name": "plafond_ressources_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revenu_quartile_id": {
+          "name": "revenu_quartile_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revenus_foyer_fiscal": {
+          "name": "revenus_foyer_fiscal",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "annee_declaration": {
+          "name": "annee_declaration",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revenus_net_imposable_nm1": {
+          "name": "revenus_net_imposable_nm1",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revenu_net_foyer_mensuel": {
+          "name": "revenu_net_foyer_mensuel",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pension_autres_revenus": {
+          "name": "pension_autres_revenus",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "loyer_actuel": {
+          "name": "loyer_actuel",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prix_achat": {
+          "name": "prix_achat",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "taux_tva": {
+          "name": "taux_tva",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "apport_reel_hors_subvention": {
+          "name": "apport_reel_hors_subvention",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "subvention": {
+          "name": "subvention",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "est_ptz": {
+          "name": "est_ptz",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "multi_accedant": {
+          "name": "multi_accedant",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mensualite_financement": {
+          "name": "mensualite_financement",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "taux_effort": {
+          "name": "taux_effort",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "duree_financement_mois": {
+          "name": "duree_financement_mois",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "conseiller_commercial_id": {
+          "name": "conseiller_commercial_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "info_pour_entreprise": {
+          "name": "info_pour_entreprise",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commentaire": {
+          "name": "commentaire",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_creation": {
+          "name": "date_creation",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_modification": {
+          "name": "date_modification",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "acquereur_civilite_id_civilite_id_fk": {
+          "name": "acquereur_civilite_id_civilite_id_fk",
+          "tableFrom": "acquereur",
+          "tableTo": "civilite",
+          "columnsFrom": [
+            "civilite_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "acquereur_civilite2_id_civilite_id_fk": {
+          "name": "acquereur_civilite2_id_civilite_id_fk",
+          "tableFrom": "acquereur",
+          "tableTo": "civilite",
+          "columnsFrom": [
+            "civilite2_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "acquereur_civilite3_id_civilite_id_fk": {
+          "name": "acquereur_civilite3_id_civilite_id_fk",
+          "tableFrom": "acquereur",
+          "tableTo": "civilite",
+          "columnsFrom": [
+            "civilite3_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "acquereur_nature_juridique_id_nature_juridique_id_fk": {
+          "name": "acquereur_nature_juridique_id_nature_juridique_id_fk",
+          "tableFrom": "acquereur",
+          "tableTo": "nature_juridique",
+          "columnsFrom": [
+            "nature_juridique_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "acquereur_type_logement_actuel_id_type_logement_actuel_id_fk": {
+          "name": "acquereur_type_logement_actuel_id_type_logement_actuel_id_fk",
+          "tableFrom": "acquereur",
+          "tableTo": "type_logement_actuel",
+          "columnsFrom": [
+            "type_logement_actuel_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "acquereur_situation_familiale_id_situation_familiale_id_fk": {
+          "name": "acquereur_situation_familiale_id_situation_familiale_id_fk",
+          "tableFrom": "acquereur",
+          "tableTo": "situation_familiale",
+          "columnsFrom": [
+            "situation_familiale_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "acquereur_situation_famille_id_situation_famille_id_fk": {
+          "name": "acquereur_situation_famille_id_situation_famille_id_fk",
+          "tableFrom": "acquereur",
+          "tableTo": "situation_famille",
+          "columnsFrom": [
+            "situation_famille_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "acquereur_type_menage_id_type_menage_id_fk": {
+          "name": "acquereur_type_menage_id_type_menage_id_fk",
+          "tableFrom": "acquereur",
+          "tableTo": "type_menage",
+          "columnsFrom": [
+            "type_menage_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "acquereur_adulte1_csp_id_csp_id_fk": {
+          "name": "acquereur_adulte1_csp_id_csp_id_fk",
+          "tableFrom": "acquereur",
+          "tableTo": "csp",
+          "columnsFrom": [
+            "adulte1_csp_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "acquereur_adulte2_csp_id_csp_id_fk": {
+          "name": "acquereur_adulte2_csp_id_csp_id_fk",
+          "tableFrom": "acquereur",
+          "tableTo": "csp",
+          "columnsFrom": [
+            "adulte2_csp_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "acquereur_tranche_age_id_acquereur_tranche_age_id_fk": {
+          "name": "acquereur_tranche_age_id_acquereur_tranche_age_id_fk",
+          "tableFrom": "acquereur",
+          "tableTo": "acquereur_tranche_age",
+          "columnsFrom": [
+            "tranche_age_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "acquereur_plafond_ressources_id_acquereur_plafond_ressources_id_fk": {
+          "name": "acquereur_plafond_ressources_id_acquereur_plafond_ressources_id_fk",
+          "tableFrom": "acquereur",
+          "tableTo": "acquereur_plafond_ressources",
+          "columnsFrom": [
+            "plafond_ressources_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "acquereur_revenu_quartile_id_acquereur_revenu_quartile_id_fk": {
+          "name": "acquereur_revenu_quartile_id_acquereur_revenu_quartile_id_fk",
+          "tableFrom": "acquereur",
+          "tableTo": "acquereur_revenu_quartile",
+          "columnsFrom": [
+            "revenu_quartile_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "acquereur_conseiller_commercial_id_commercial_id_fk": {
+          "name": "acquereur_conseiller_commercial_id_commercial_id_fk",
+          "tableFrom": "acquereur",
+          "tableTo": "commercial",
+          "columnsFrom": [
+            "conseiller_commercial_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.acquereur_plafond_ressources": {
+      "name": "acquereur_plafond_ressources",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "acquereur_plafond_ressources_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.acquereur_revenu_quartile": {
+      "name": "acquereur_revenu_quartile",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "acquereur_revenu_quartile_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "borne_max": {
+          "name": "borne_max",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.acquereur_tranche_age": {
+      "name": "acquereur_tranche_age",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "acquereur_tranche_age_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "borne_max": {
+          "name": "borne_max",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.banque_courtage": {
+      "name": "banque_courtage",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "banque_courtage_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.civilite": {
+      "name": "civilite",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "civilite_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "libelle_court": {
+          "name": "libelle_court",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.comm_vendeur": {
+      "name": "comm_vendeur",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "comm_vendeur_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "commercialisation_id": {
+          "name": "commercialisation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lot_id": {
+          "name": "lot_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commercial_id": {
+          "name": "commercial_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pourcentage": {
+          "name": "pourcentage",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "evenement": {
+          "name": "evenement",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tx_comm_vendeur": {
+          "name": "tx_comm_vendeur",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mnt_comm_vendeur": {
+          "name": "mnt_comm_vendeur",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_reglement": {
+          "name": "date_reglement",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_validation": {
+          "name": "date_validation",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commentaire": {
+          "name": "commentaire",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "comm_vendeur_commercialisation_id_commercialisation_id_fk": {
+          "name": "comm_vendeur_commercialisation_id_commercialisation_id_fk",
+          "tableFrom": "comm_vendeur",
+          "tableTo": "commercialisation",
+          "columnsFrom": [
+            "commercialisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "comm_vendeur_lot_id_lot_id_fk": {
+          "name": "comm_vendeur_lot_id_lot_id_fk",
+          "tableFrom": "comm_vendeur",
+          "tableTo": "lot",
+          "columnsFrom": [
+            "lot_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "comm_vendeur_commercial_id_commercial_id_fk": {
+          "name": "comm_vendeur_commercial_id_commercial_id_fk",
+          "tableFrom": "comm_vendeur",
+          "tableTo": "commercial",
+          "columnsFrom": [
+            "commercial_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.commercial": {
+      "name": "commercial",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "commercial_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "denomination": {
+          "name": "denomination",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prenom": {
+          "name": "prenom",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "initiales": {
+          "name": "initiales",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "societe": {
+          "name": "societe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fonction": {
+          "name": "fonction",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.commercialisation": {
+      "name": "commercialisation",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "commercialisation_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "lot_id": {
+          "name": "lot_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "acquereur_id": {
+          "name": "acquereur_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type_acquereur_id": {
+          "name": "type_acquereur_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nature_achat_id": {
+          "name": "nature_achat_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fiscalite_acquereur_id": {
+          "name": "fiscalite_acquereur_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "moyen_paiement_id": {
+          "name": "moyen_paiement_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "banque_courtage_id": {
+          "name": "banque_courtage_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_resa": {
+          "name": "date_resa",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_prevue_signature_acte": {
+          "name": "date_prevue_signature_acte",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_signature_acte_vefa": {
+          "name": "date_signature_acte_vefa",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_signature_contrat_loc": {
+          "name": "date_signature_contrat_loc",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_resiliation_contrat_loc": {
+          "name": "date_resiliation_contrat_loc",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_levee_option": {
+          "name": "date_levee_option",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_livraison": {
+          "name": "date_livraison",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_annulation": {
+          "name": "date_annulation",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motif_annulation": {
+          "name": "motif_annulation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "annulation_commentaire": {
+          "name": "annulation_commentaire",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_previ_actabilite": {
+          "name": "date_previ_actabilite",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prix_vente_reel_ttc": {
+          "name": "prix_vente_reel_ttc",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prix_vente_reel_ht": {
+          "name": "prix_vente_reel_ht",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "taux_tva_reel": {
+          "name": "taux_tva_reel",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "remise_client_ttc": {
+          "name": "remise_client_ttc",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "montant_depot_garantie": {
+          "name": "montant_depot_garantie",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "taux_comm_resa": {
+          "name": "taux_comm_resa",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "taux_comm_acte": {
+          "name": "taux_comm_acte",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "comm_vendeur_a_verser_resa": {
+          "name": "comm_vendeur_a_verser_resa",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "comm_vendeur_a_verser_acte": {
+          "name": "comm_vendeur_a_verser_acte",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "est_fiscalite": {
+          "name": "est_fiscalite",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "comm_fisca": {
+          "name": "comm_fisca",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "est_justif_fiscal": {
+          "name": "est_justif_fiscal",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "loyer": {
+          "name": "loyer",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "epargne": {
+          "name": "epargne",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pas_aide_rm": {
+          "name": "pas_aide_rm",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "montant_subv": {
+          "name": "montant_subv",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "montant_subv_acpte": {
+          "name": "montant_subv_acpte",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "solde_demande": {
+          "name": "solde_demande",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avec_honoraire_courtage": {
+          "name": "avec_honoraire_courtage",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "montant_hono_courtage_client": {
+          "name": "montant_hono_courtage_client",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "montant_hono_courtage_banque": {
+          "name": "montant_hono_courtage_banque",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avec_souscription_capital_kpi": {
+          "name": "avec_souscription_capital_kpi",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pas_de_souscription_capital": {
+          "name": "pas_de_souscription_capital",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_souscription": {
+          "name": "date_souscription",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commentaires_souscription": {
+          "name": "commentaires_souscription",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avec_clause_particuliere": {
+          "name": "avec_clause_particuliere",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motif_clause_particuliere_id": {
+          "name": "motif_clause_particuliere_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commentaire_clause_particuliere": {
+          "name": "commentaire_clause_particuliere",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avec_tma": {
+          "name": "avec_tma",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tma_montant_ouverture_dossier": {
+          "name": "tma_montant_ouverture_dossier",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tma_date_envoi_courrier": {
+          "name": "tma_date_envoi_courrier",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tma_date_paiement_solde": {
+          "name": "tma_date_paiement_solde",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tma_pmr_montant": {
+          "name": "tma_pmr_montant",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tma_pmr_contrat_signe": {
+          "name": "tma_pmr_contrat_signe",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tma_pmr_date_remis_notaire": {
+          "name": "tma_pmr_date_remis_notaire",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tma_commentaire": {
+          "name": "tma_commentaire",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "courrier_info_demarrage_date_envoi": {
+          "name": "courrier_info_demarrage_date_envoi",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "plan_technique_date_envoi": {
+          "name": "plan_technique_date_envoi",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "choix_materiaux_date_envoi": {
+          "name": "choix_materiaux_date_envoi",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "choix_materiaux_date_valide": {
+          "name": "choix_materiaux_date_valide",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "placo_date_envoi": {
+          "name": "placo_date_envoi",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "placo_rdv_date": {
+          "name": "placo_rdv_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "placo_rdv_heure": {
+          "name": "placo_rdv_heure",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trois_mois_avant_livraison_date_envoi": {
+          "name": "trois_mois_avant_livraison_date_envoi",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trois_mois_avant_livraison_periode": {
+          "name": "trois_mois_avant_livraison_periode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "livraison_date_envoi_courrier": {
+          "name": "livraison_date_envoi_courrier",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "livraison_rdv_date": {
+          "name": "livraison_rdv_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "livraison_rdv_heure": {
+          "name": "livraison_rdv_heure",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "livraison_trimestre_prevu_contrat": {
+          "name": "livraison_trimestre_prevu_contrat",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "livraison_trimestre_decale": {
+          "name": "livraison_trimestre_decale",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_etat_sortie_lieux": {
+          "name": "date_etat_sortie_lieux",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_demande_agrement": {
+          "name": "date_demande_agrement",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_agrement_obtenu": {
+          "name": "date_agrement_obtenu",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_reception_courrier_lvo": {
+          "name": "date_reception_courrier_lvo",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "est_revente_bien": {
+          "name": "est_revente_bien",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_butoir_revente": {
+          "name": "date_butoir_revente",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cdv_technique": {
+          "name": "cdv_technique",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cdv_promo": {
+          "name": "cdv_promo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "commercialisation_lot_id_lot_id_fk": {
+          "name": "commercialisation_lot_id_lot_id_fk",
+          "tableFrom": "commercialisation",
+          "tableTo": "lot",
+          "columnsFrom": [
+            "lot_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "commercialisation_acquereur_id_acquereur_id_fk": {
+          "name": "commercialisation_acquereur_id_acquereur_id_fk",
+          "tableFrom": "commercialisation",
+          "tableTo": "acquereur",
+          "columnsFrom": [
+            "acquereur_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "commercialisation_type_acquereur_id_type_acquereur_id_fk": {
+          "name": "commercialisation_type_acquereur_id_type_acquereur_id_fk",
+          "tableFrom": "commercialisation",
+          "tableTo": "type_acquereur",
+          "columnsFrom": [
+            "type_acquereur_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "commercialisation_nature_achat_id_nature_achat_id_fk": {
+          "name": "commercialisation_nature_achat_id_nature_achat_id_fk",
+          "tableFrom": "commercialisation",
+          "tableTo": "nature_achat",
+          "columnsFrom": [
+            "nature_achat_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "commercialisation_fiscalite_acquereur_id_fiscalite_acquereur_id_fk": {
+          "name": "commercialisation_fiscalite_acquereur_id_fiscalite_acquereur_id_fk",
+          "tableFrom": "commercialisation",
+          "tableTo": "fiscalite_acquereur",
+          "columnsFrom": [
+            "fiscalite_acquereur_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "commercialisation_moyen_paiement_id_moyen_paiement_id_fk": {
+          "name": "commercialisation_moyen_paiement_id_moyen_paiement_id_fk",
+          "tableFrom": "commercialisation",
+          "tableTo": "moyen_paiement",
+          "columnsFrom": [
+            "moyen_paiement_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "commercialisation_banque_courtage_id_banque_courtage_id_fk": {
+          "name": "commercialisation_banque_courtage_id_banque_courtage_id_fk",
+          "tableFrom": "commercialisation",
+          "tableTo": "banque_courtage",
+          "columnsFrom": [
+            "banque_courtage_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "commercialisation_motif_clause_particuliere_id_motif_clause_particuliere_id_fk": {
+          "name": "commercialisation_motif_clause_particuliere_id_motif_clause_particuliere_id_fk",
+          "tableFrom": "commercialisation",
+          "tableTo": "motif_clause_particuliere",
+          "columnsFrom": [
+            "motif_clause_particuliere_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.concept": {
+      "name": "concept",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "concept_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "commentaire": {
+          "name": "commentaire",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.csp": {
+      "name": "csp",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "csp_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "numero": {
+          "name": "numero",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.destination": {
+      "name": "destination",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "destination_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "libelle_comm": {
+          "name": "libelle_comm",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commentaire": {
+          "name": "commentaire",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.fiscalite_acquereur": {
+      "name": "fiscalite_acquereur",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "fiscalite_acquereur_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "libelle_court": {
+          "name": "libelle_court",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.lot": {
+      "name": "lot",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "lot_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "tranche_id": {
+          "name": "tranche_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "destination_id": {
+          "name": "destination_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "num_lot": {
+          "name": "num_lot",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lot_associe": {
+          "name": "lot_associe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "famille_de_bien": {
+          "name": "famille_de_bien",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type_de_bien": {
+          "name": "type_de_bien",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "designation": {
+          "name": "designation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "adresse": {
+          "name": "adresse",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "num_etage": {
+          "name": "num_etage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "exposition": {
+          "name": "exposition",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "num_parcelle": {
+          "name": "num_parcelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "num_copropriete": {
+          "name": "num_copropriete",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tantiemes": {
+          "name": "tantiemes",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "est_partie_commune": {
+          "name": "est_partie_commune",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "est_vente_acheve": {
+          "name": "est_vente_acheve",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "surf_habitable": {
+          "name": "surf_habitable",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "surface_utile": {
+          "name": "surface_utile",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "surf_terrasse": {
+          "name": "surf_terrasse",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "surf_garage": {
+          "name": "surf_garage",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "surf_cave": {
+          "name": "surf_cave",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "surf_balcon": {
+          "name": "surf_balcon",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "surf_loggias": {
+          "name": "surf_loggias",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "surf_remise": {
+          "name": "surf_remise",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "surf_jardin": {
+          "name": "surf_jardin",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "surf_terrain": {
+          "name": "surf_terrain",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prix_origine": {
+          "name": "prix_origine",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prix_vente_ht": {
+          "name": "prix_vente_ht",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prix_vente_ttc": {
+          "name": "prix_vente_ttc",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tva": {
+          "name": "tva",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prix_m2": {
+          "name": "prix_m2",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "montant_hono_com": {
+          "name": "montant_hono_com",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commercial_id": {
+          "name": "commercial_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "acquereur_id": {
+          "name": "acquereur_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "taux_comm_resa": {
+          "name": "taux_comm_resa",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "taux_comm_acte": {
+          "name": "taux_comm_acte",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "comm_vendeur_a_verser_resa": {
+          "name": "comm_vendeur_a_verser_resa",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "comm_vendeur_a_verser_acte": {
+          "name": "comm_vendeur_a_verser_acte",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locataire_civilite": {
+          "name": "locataire_civilite",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locataire_patronyme": {
+          "name": "locataire_patronyme",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locataire_prenom": {
+          "name": "locataire_prenom",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locataire_telephone": {
+          "name": "locataire_telephone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locataire_portable": {
+          "name": "locataire_portable",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pdl": {
+          "name": "pdl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pce": {
+          "name": "pce",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_livraison_sccv": {
+          "name": "date_livraison_sccv",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commentaire": {
+          "name": "commentaire",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "lot_tranche_id_tranche_id_fk": {
+          "name": "lot_tranche_id_tranche_id_fk",
+          "tableFrom": "lot",
+          "tableTo": "tranche",
+          "columnsFrom": [
+            "tranche_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "lot_destination_id_destination_id_fk": {
+          "name": "lot_destination_id_destination_id_fk",
+          "tableFrom": "lot",
+          "tableTo": "destination",
+          "columnsFrom": [
+            "destination_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "lot_commercial_id_commercial_id_fk": {
+          "name": "lot_commercial_id_commercial_id_fk",
+          "tableFrom": "lot",
+          "tableTo": "commercial",
+          "columnsFrom": [
+            "commercial_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "lot_acquereur_id_acquereur_id_fk": {
+          "name": "lot_acquereur_id_acquereur_id_fk",
+          "tableFrom": "lot",
+          "tableTo": "acquereur",
+          "columnsFrom": [
+            "acquereur_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.motif_clause_particuliere": {
+      "name": "motif_clause_particuliere",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "motif_clause_particuliere_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.moyen_paiement": {
+      "name": "moyen_paiement",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "moyen_paiement_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.nature_achat": {
+      "name": "nature_achat",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "nature_achat_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "libelle_long": {
+          "name": "libelle_long",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ordre_comm": {
+          "name": "ordre_comm",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.nature_juridique": {
+      "name": "nature_juridique",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "nature_juridique_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.operation": {
+      "name": "operation",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "operation_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "structure_juridique_id": {
+          "name": "structure_juridique_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "adresse": {
+          "name": "adresse",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cp": {
+          "name": "cp",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commune": {
+          "name": "commune",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nom_zac": {
+          "name": "nom_zac",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "secteur_geographique_id": {
+          "name": "secteur_geographique_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sur_rennes_metropole": {
+          "name": "sur_rennes_metropole",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anru": {
+          "name": "anru",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anru_commentaire": {
+          "name": "anru_commentaire",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "indiv_coll": {
+          "name": "indiv_coll",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "annee_dgd": {
+          "name": "annee_dgd",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "abreviation_code_reserve": {
+          "name": "abreviation_code_reserve",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "possibilite_investisseur": {
+          "name": "possibilite_investisseur",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "taux_investisseur_autorise": {
+          "name": "taux_investisseur_autorise",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commentaire_investisseur": {
+          "name": "commentaire_investisseur",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_validation_engagement": {
+          "name": "date_validation_engagement",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_abandon": {
+          "name": "date_abandon",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commentaires_abandon": {
+          "name": "commentaires_abandon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "masquer_commercial": {
+          "name": "masquer_commercial",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "masquer_comptable": {
+          "name": "masquer_comptable",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "masquer_promo": {
+          "name": "masquer_promo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commentaire": {
+          "name": "commentaire",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "operation_structure_juridique_id_structure_juridique_id_fk": {
+          "name": "operation_structure_juridique_id_structure_juridique_id_fk",
+          "tableFrom": "operation",
+          "tableTo": "structure_juridique",
+          "columnsFrom": [
+            "structure_juridique_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "operation_secteur_geographique_id_secteur_geographique_id_fk": {
+          "name": "operation_secteur_geographique_id_secteur_geographique_id_fk",
+          "tableFrom": "operation",
+          "tableTo": "secteur_geographique",
+          "columnsFrom": [
+            "secteur_geographique_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.secteur_geographique": {
+      "name": "secteur_geographique",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "secteur_geographique_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.situation_familiale": {
+      "name": "situation_familiale",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "situation_familiale_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.situation_famille": {
+      "name": "situation_famille",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "situation_famille_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.structure_juridique": {
+      "name": "structure_juridique",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "structure_juridique_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "rs": {
+          "name": "rs",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "num_tva_intra": {
+          "name": "num_tva_intra",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "siret": {
+          "name": "siret",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_debut_activite": {
+          "name": "date_debut_activite",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_immat": {
+          "name": "date_immat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_liquidation": {
+          "name": "date_liquidation",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "capital": {
+          "name": "capital",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nb_part": {
+          "name": "nb_part",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "montant_part": {
+          "name": "montant_part",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sccv_hf": {
+          "name": "sccv_hf",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sccv_hlm": {
+          "name": "sccv_hlm",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.tma": {
+      "name": "tma",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "tma_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "commercialisation_id": {
+          "name": "commercialisation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ref_devis": {
+          "name": "ref_devis",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_devis": {
+          "name": "date_devis",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "objet_devis": {
+          "name": "objet_devis",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_signature_devis": {
+          "name": "date_signature_devis",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "montant_devis": {
+          "name": "montant_devis",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "montant_versement1": {
+          "name": "montant_versement1",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "montant_versement2": {
+          "name": "montant_versement2",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commentaires": {
+          "name": "commentaires",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "tma_commercialisation_id_commercialisation_id_fk": {
+          "name": "tma_commercialisation_id_commercialisation_id_fk",
+          "tableFrom": "tma",
+          "tableTo": "commercialisation",
+          "columnsFrom": [
+            "commercialisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.tranche": {
+      "name": "tranche",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "tranche_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "operation_id": {
+          "name": "operation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "concept_id": {
+          "name": "concept_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "adresse": {
+          "name": "adresse",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nb_logt_indiv": {
+          "name": "nb_logt_indiv",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nb_logt_coll": {
+          "name": "nb_logt_coll",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nb_autres_locaux": {
+          "name": "nb_autres_locaux",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nb_terrain": {
+          "name": "nb_terrain",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dont_logt_coll_psla": {
+          "name": "dont_logt_coll_psla",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dont_logt_indiv_psla": {
+          "name": "dont_logt_indiv_psla",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dont_logt_coll_brs": {
+          "name": "dont_logt_coll_brs",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dont_logt_indiv_brs": {
+          "name": "dont_logt_indiv_brs",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nb_etage": {
+          "name": "nb_etage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "duree_chantier_mois": {
+          "name": "duree_chantier_mois",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_convention": {
+          "name": "date_convention",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_livraison_contractuelle": {
+          "name": "date_livraison_contractuelle",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pas_de_commercialisation": {
+          "name": "pas_de_commercialisation",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commentaire": {
+          "name": "commentaire",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "tranche_operation_id_operation_id_fk": {
+          "name": "tranche_operation_id_operation_id_fk",
+          "tableFrom": "tranche",
+          "tableTo": "operation",
+          "columnsFrom": [
+            "operation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "tranche_concept_id_concept_id_fk": {
+          "name": "tranche_concept_id_concept_id_fk",
+          "tableFrom": "tranche",
+          "tableTo": "concept",
+          "columnsFrom": [
+            "concept_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.type_acquereur": {
+      "name": "type_acquereur",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "type_acquereur_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.type_logement_actuel": {
+      "name": "type_logement_actuel",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "type_logement_actuel_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "num_rm": {
+          "name": "num_rm",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.type_menage": {
+      "name": "type_menage",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "type_menage_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.versement_depot_garantie": {
+      "name": "versement_depot_garantie",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "versement_depot_garantie_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "commercialisation_id": {
+          "name": "commercialisation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "montant_verse": {
+          "name": "montant_verse",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_remise": {
+          "name": "date_remise",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_creation": {
+          "name": "date_creation",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commentaire": {
+          "name": "commentaire",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "versement_depot_garantie_commercialisation_id_commercialisation_id_fk": {
+          "name": "versement_depot_garantie_commercialisation_id_commercialisation_id_fk",
+          "tableFrom": "versement_depot_garantie",
+          "tableTo": "commercialisation",
+          "columnsFrom": [
+            "commercialisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

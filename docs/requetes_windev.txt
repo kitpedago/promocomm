@@ -1,0 +1,5059 @@
+-- ============================================
+-- Requête : REQ_StadeAvancement_Operation
+-- ============================================
+SELECT 
+	StadeAvancement.IDStadeAvancement AS IDStadeAvancement,	
+	StadeAvancement.IDListeAvancement AS IDListeAvancement,	
+	StadeAvancement.DatePrevComptaDebutAnnee AS DatePrevComptaDebutAnnee,	
+	StadeAvancement.DatePrevMAJPromo AS DatePrevMAJPromo,	
+	StadeAvancement.DateReelle AS DateReelle,	
+	StadeAvancement.Commentaire AS Commentaire,	
+	StadeAvancement.AjoutNbMois AS AjoutNbMois,	
+	StadeAvancement.Ordre AS Ordre,	
+	StadeAvancement.PourcentageAvancementReel AS PourcentageAvancementReel,	
+	StadeAvancement.MontantPrevi AS MontantPrevi,	
+	Avancement.PourcentageStandard AS PourcentageStandard,	
+	Tranche.IDTranche AS IDTranche,	
+	Tranche.Libelle AS Tranche,	
+	Operation.IDOperation AS IDOperation,	
+	Operation.Libelle AS Operation,	
+	Operation.Commune AS Commune,	
+	Avancement.Code AS Code,	
+	Avancement.Libelle AS Avancement,	
+	StadeAvancement.AvecAppelFondClientSuppl AS AvecAppelFondClientSuppl,	
+	Avancement.AvecSynchroEntreTranche AS AvecSynchroEntreTranche,	
+	DomaineStadeAvancement.CodeDomaineStadeAvancement AS CodeDomaineStadeAvancement,	
+	StadeAvancement.LienHypertexte AS LienHypertexte
+FROM 
+	Operation
+	INNER JOIN
+	(
+		Tranche
+		INNER JOIN
+		(
+			StadeAvancement
+			INNER JOIN
+			(
+				DomaineStadeAvancement
+				RIGHT OUTER JOIN
+				Avancement
+				ON DomaineStadeAvancement.CodeDomaineStadeAvancement = Avancement.Domaine
+			)
+			ON StadeAvancement.IDListeAvancement = Avancement.IDListeAvancement
+		)
+		ON Tranche.IDTranche = StadeAvancement.IDTranche
+	)
+	ON Operation.IDOperation = Tranche.IDOperation
+WHERE 
+	(
+	Tranche.IDTranche = {ParamIDTranche}
+	AND	DomaineStadeAvancement.CodeDomaineStadeAvancement = {ParamCodeDomaineStadeAvancement}
+)
+ORDER BY 
+	Ordre ASC
+
+-- ============================================
+-- Requête : REQ_Operation
+-- ============================================
+SELECT 
+	Operation.IDOperation AS IDOperation,	
+	Operation.IDStructureJuridique AS IDStructureJuridique,	
+	Operation.Libelle AS Libelle,	
+	Operation.CP AS CP,	
+	Operation.Commune AS Commune,	
+	Operation.SurRennesMetropole AS SurRennesMetropole,	
+	Operation.ANRU AS ANRU,	
+	Operation.Commentaire AS Commentaire,	
+	Operation.AnneeDGD AS AnneeDGD,	
+	Operation.MasquerCommercial AS MasquerCommercial,	
+	Operation.MasquerComptable AS MasquerComptable,	
+	Operation.Adresse AS Adresse,	
+	Operation.NomZAC AS NomZAC,	
+	Operation.DureeChantierMois_old AS DureeChantierMois_old,	
+	Operation.MasquerPromo AS MasquerPromo,	
+	StructureJuridique.RS AS RS,	
+	Operation.curIDPersonne_ChargeOpe1 AS curIDPersonne_ChargeOpe1,	
+	Operation.curIDPersonne_ChargeOpe2 AS curIDPersonne_ChargeOpe2,	
+	COUNT(Tranche.IDTranche) AS NbTranches,	
+	SUM(Tranche.NbLogtColl) AS TotalLogtColl,	
+	SUM(Tranche.NbTerrain) AS TotalTerrain,	
+	SUM(Tranche.NbLogtIndiv) AS TotalLogtIndiv,	
+	SUM(Tranche.NbAutresLocaux) AS TotalNbAutresLocaux,	
+	Operation.ANRUComment AS ANRUComment,	
+	Operation.IDSecteurGeographiqueDeveloppement AS IDSecteurGeographiqueDeveloppement,	
+	Operation.IDInterlocuteurNotaire_Notaire_Foncier AS IDInterlocuteurNotaire_Foncier,	
+	Operation.IDInterlocuteurNotaire_Notaire_Vente AS IDInterlocuteurNotaire_Vente,	
+	Operation.AbreviationPourCodeReserve AS AbreviationPourCodeReserve,	
+	Operation.IDPersonne_Assistante AS IDPersonne_Assistante,	
+	Operation.SynchroniserDatesEntreTranche AS SynchroniserDatesEntreTranche,	
+	Operation.IDApporteurFoncier AS IDApporteurFoncier
+FROM 
+	StructureJuridique
+	INNER JOIN
+	(
+		Operation
+		LEFT OUTER JOIN
+		Tranche
+		ON Operation.IDOperation = Tranche.IDOperation
+	)
+	ON StructureJuridique.IDStructureJuridique = Operation.IDStructureJuridique
+WHERE 
+	(
+	
+	(
+		UPPER( Operation.Libelle  )  LIKE %{ParamLibelle}%
+		OR	Operation.Commune LIKE %{ParamLibelle}%
+		OR	StructureJuridique.RS LIKE %{ParamLibelle}%
+	)
+	AND	Operation.MasquerPromo = {paramMasquerPromo}
+	AND	Operation.MasquerComptable = {paramMasquerComptable}
+	AND	Operation.MasquerCommercial = {paramMasquerCommercial}
+	AND	Operation.IDPersonne_Assistante = {paramIDPersonne_Assistante}
+)
+GROUP BY 
+	Operation.IDOperation,	
+	Operation.IDStructureJuridique,	
+	Operation.Libelle,	
+	Operation.CP,	
+	Operation.Commune,	
+	Operation.SurRennesMetropole,	
+	Operation.ANRU,	
+	Operation.Commentaire,	
+	Operation.AnneeDGD,	
+	Operation.MasquerCommercial,	
+	Operation.MasquerComptable,	
+	Operation.Adresse,	
+	Operation.NomZAC,	
+	Operation.DureeChantierMois_old,	
+	Operation.MasquerPromo,	
+	StructureJuridique.RS,	
+	Operation.curIDPersonne_ChargeOpe1,	
+	Operation.curIDPersonne_ChargeOpe2,	
+	Operation.ANRUComment,	
+	Operation.IDSecteurGeographiqueDeveloppement,	
+	Operation.IDInterlocuteurNotaire_Notaire_Foncier,	
+	Operation.IDInterlocuteurNotaire_Notaire_Vente,	
+	Operation.AbreviationPourCodeReserve,	
+	Operation.IDPersonne_Assistante,	
+	Operation.SynchroniserDatesEntreTranche,	
+	Operation.IDApporteurFoncier
+
+-- ============================================
+-- Requête : REQ_Tranche
+-- ============================================
+SELECT 
+	Tranche.IDTranche AS IDTranche,	
+	Tranche.Libelle AS Libelle,	
+	Tranche.IDConcept AS IDConcept,	
+	Tranche.IDOperation AS IDOperation,	
+	Tranche.NbLogtIndiv AS NbLogtIndiv,	
+	Tranche.NbLogtColl AS NbLogtColl,	
+	Tranche.NbAutresLocaux AS NbAutresLocaux,	
+	Tranche.NbTerrain AS NbTerrain,	
+	Tranche.DontLogtCollPSLA AS DontLogtCollPSLA,	
+	Tranche.DontLogtIndivPSLA AS DontLogtIndivPSLA,	
+	Tranche.Commentaire AS Commentaire,	
+	Tranche.DateLivraisonContractuelle AS DateLivraisonContractuelle,	
+	Tranche.MontantHonoParLogt AS MontantHonoParLogt,	
+	Tranche.PasDeCommercialisation AS PasDeCommercialisation,	
+	Tranche.Adresse AS Adresse,	
+	Tranche.DureeChantierMois AS DureeChantierMois,	
+	Tranche.TerrainMontantHT AS TerrainMontantHT,	
+	Tranche.TerrainAcompte AS TerrainAcompte,	
+	Tranche.TerrainComm AS TerrainComm,	
+	Tranche.CoutPrevPSLA AS CoutPrevPSLA,	
+	Tranche.CoutPrevVEFA AS CoutPrevVEFA,	
+	Tranche.CoutPrevAutre AS CoutPrevAutre,	
+	Tranche.CoutPrevCommentaire AS CoutPrevCommentaire,	
+	Tranche.CoutReelPSLA AS CoutReelPSLA,	
+	Tranche.CoutReelVEFA AS CoutReelVEFA,	
+	Tranche.CoutReelAutre AS CoutReelAutre,	
+	Tranche.CoutReelCommentaire AS CoutReelCommentaire,	
+	Tranche.IDModeRepartQuotePart AS IDModeRepartQuotePart,	
+	Tranche.QuotePartPSLA AS QuotePartPSLA,	
+	Tranche.QuotePartVEFA_Normal AS QuotePartVEFA_Normal,	
+	Tranche.QuotePartVEFA_Reduit AS QuotePartVEFA_Reduit,	
+	Tranche.QuotePartAutre AS QuotePartAutre,	
+	Tranche.QuotePartCommentaire AS QuotePartCommentaire,	
+	Tranche.NbLVoPrev AS NbLVOPrev,	
+	Tranche.FinCommercialisation AS FinCommercialisation,	
+	Tranche.FinTabborAnnuel AS FinTabborAnnuel,	
+	Concept.Libelle AS Concept,	
+	Architecte.RS AS Architecte,	
+	Tranche.DontLogtCollBRS AS DontLogtCollBRS,	
+	Tranche.DontLogtIndivBRS AS DontLogtIndivBRS,	
+	Tranche.AlerteStadeAvancement_Texte AS AlerteStadeAvancement_Texte,	
+	Tranche.IDCertification AS IDCertification,	
+	Tranche.IDLabel AS IDLabel,	
+	Tranche.IDPerformanceEnergetique AS IDPerformanceEnergetique,	
+	Tranche.EstMOEInterne AS EstMOEInterne,	
+	Tranche.IDMissionMOEInterne AS IDMissionMOEInterne,	
+	Tranche.CommentaireAvancement AS CommentaireAvancement,	
+	Tranche.CommentaireActionAMener AS CommentaireActionAMener
+FROM 
+	(
+		Architecte
+		RIGHT OUTER JOIN
+		Concept
+		ON Architecte.IDArchitecte = Concept.IDArchitecte
+	)
+	RIGHT OUTER JOIN
+	Tranche
+	ON Concept.IDConcept = Tranche.IDConcept
+WHERE 
+	(
+	Tranche.IDOperation = {ParamIDOperation}
+	AND	Tranche.IDTranche = {ParamIDTranche}
+)
+
+-- ============================================
+-- Requête : REQ_SCCV_MoinsD1An
+-- ============================================
+SELECT DISTINCT 
+	StructureJuridique.RS AS RS,	
+	Operation.Libelle AS Operation,	
+	Operation.Commune AS Commune,	
+	StructureJuridique.DateImmat AS DateImmat,	
+	StructureJuridique.DateLiquidation AS DateLiquidation
+FROM 
+	StructureJuridique,	
+	Operation
+WHERE 
+	StructureJuridique.IDStructureJuridique = Operation.IDStructureJuridique
+	AND
+	(
+		StructureJuridique.DateLiquidation IS NULL 
+		AND	LEFT(StructureJuridique.DateImmat,4) >= LEFT(date(),4)
+	)
+
+-- ============================================
+-- Requête : REQ_Acquereur_Lot
+-- ============================================
+SELECT 
+	Acquereur.IDAcquereur AS IDAcquereur,	
+	Acquereur.Civilite AS Civilite,	
+	Acquereur.Patronyme AS Patronyme,	
+	Acquereur.Prenom AS Prenom,	
+	( ( Acquereur.Patronyme +  ' ') + Acquereur.Prenom )  AS Acquereur,	
+	Acquereur.RS AS RS,	
+	Acquereur.Email AS Email,	
+	Acquereur.Téléphone AS Téléphone,	
+	Acquereur.Portable AS Portable,	
+	Acquereur.AdresseActuelle AS AdresseActuelle,	
+	Acquereur.CPActuel AS CPActuel,	
+	Acquereur.Communeactuelle AS Communeactuelle,	
+	( ( ( ( Acquereur.AdresseActuelle +  ' ') + Acquereur.Communeactuelle ) +  ' ') + Acquereur.CPActuel )  AS CoordonneesActuelles,	
+	Commercialisation.IDLot AS IDLot,	
+	Commercialisation.DateResa AS DateResa,	
+	Commercialisation.DateSignatureContratLoc AS DateSignatureContratLoc,	
+	Commercialisation.DateSignatureActeVEFA AS DateSignatureActeVEFA,	
+	Commercialisation.DateLeveeOption AS DateLeveeOption,	
+	Commercialisation.DatePrevueSignatureActe AS DatePrevueSignatureActe,	
+	Commercialisation.DateAnnulation AS DateAnnulation,	
+	Lot.IDTranche AS IDTranche,	
+	Tranche.IDOperation AS IDOperation,	
+	NatureAchat.Libelle AS NatureAchat,	
+	ListePrestataire1.Libelle AS PrestataireComm1,	
+	ListePrestataire1.IDPrestataire AS IDPrestataireComm1,	
+	ListePrestataire2.Libelle AS PrestataireComm2,	
+	ListePrestataire2.IDPrestataire AS IDPrestataireComm2
+FROM 
+	(
+		Operation
+		INNER JOIN
+		(
+			Tranche
+			INNER JOIN
+			(
+				Lot
+				INNER JOIN
+				(
+					(
+						Acquereur
+						INNER JOIN
+						(
+							NatureAchat
+							RIGHT OUTER JOIN
+							Commercialisation
+							ON NatureAchat.IDNatureAchat = Commercialisation.IDNatureAchat
+						)
+						ON Acquereur.IDAcquereur = Commercialisation.IDAcquereur
+					)
+					LEFT OUTER JOIN
+					Prestataire ListePrestataire1
+					ON Commercialisation.PrestataireComm1 = ListePrestataire1.IDPrestataire
+				)
+				ON Lot.IDlot = Commercialisation.IDLot
+			)
+			ON Tranche.IDTranche = Lot.IDTranche
+		)
+		ON Operation.IDOperation = Tranche.IDOperation
+	)
+	LEFT OUTER JOIN
+	Prestataire ListePrestataire2
+	ON Commercialisation.PrestataireComm2 = ListePrestataire2.IDPrestataire
+WHERE 
+	(
+	Commercialisation.DateResa IS NOT NULL 
+	AND	Commercialisation.DateAnnulation IS NULL 
+	AND	Commercialisation.IDLot = {ParamIDLot}
+	AND	Lot.IDTranche = {ParamIDTranche}
+	AND	Operation.IDOperation = {ParamIDOperation}
+)
+
+-- ============================================
+-- Requête : REQ_CommVendeur
+-- ============================================
+SELECT 
+	CommVendeur.IDCommVendeur AS IDCommVendeur,	
+	CommVendeur.IDLot AS IDLot,	
+	CommVendeur.IDCommercial AS IDCommercial,	
+	CommVendeur.Pourcentage AS Pourcentage,	
+	CommVendeur.Evenement AS IDEvenement,	
+	CommVendeur.DateRglt AS DateRglt,	
+	CommVendeur.Commentaire AS Commentaire,	
+	CommVendeur.MntCommVendeur AS MntCommVendeur,	
+	CommVendeur.TxCommVendeur AS TxCommVendeur,	
+	Tranche.IDTranche AS IDTranche,	
+	TypeEvenement.Libelle AS Evenement,	
+	Commercialisation.IDCommercialisation AS IDCommercialisation,	
+	Commercialisation.IDAcquereur AS IDAcquereur,	
+	Acquereur.NomComplet AS NomComplet,	
+	CommVendeur.DateValidation AS DateValidation
+FROM 
+	CommVendeur,	
+	TypeEvenement,	
+	Commercialisation,	
+	Acquereur,	
+	Lot,	
+	Tranche
+WHERE 
+	Tranche.IDTranche = Lot.IDTranche
+	AND		Lot.IDlot = Commercialisation.IDLot
+	AND		Acquereur.IDAcquereur = Commercialisation.IDAcquereur
+	AND		Commercialisation.IDCommercialisation = CommVendeur.IDCommercialisation
+	AND		CommVendeur.Evenement = TypeEvenement.IDListeTypeEvenement
+	AND
+	(
+		Tranche.IDTranche = {ParamIDTranche}
+		AND	CommVendeur.IDCommercial = {paramIDCommercial}
+		AND	TypeEvenement.IDListeTypeEvenement = {paramIDListeTypeEvenement}
+		AND	Commercialisation.IDCommercialisation = {ParamIDCommercialisation}
+		AND	Commercialisation.IDAcquereur = {ParamIDAcquereur}
+		AND	Commercialisation.IDLot = {ParamIDLot}
+	)
+
+-- ============================================
+-- Requête : REQ_InterfaceCommercialisation_Lot
+-- ============================================
+SELECT
+	Operation.IDOperation AS IDOperation,
+	Operation.Libelle AS Operation,
+	Lot.IDTranche AS IDTranche,
+	Tranche.Libelle AS Tranche,
+	Lot.IDlot AS IDlot,
+	Lot.Numlot AS Numlot,
+	Acquereur.NomComplet AS NomComplet,
+	Lot.curPrixDeVenteReelHT AS curPrixDeVenteReelHT,
+	Destination.Libelle AS Destination,
+	Lot.LotAssocie AS LotAssocie,
+	Lot.FamilleDeBien AS FamilleDeBien,
+	Lot.TypeDeBien AS TypeDeBien,
+	Lot.PrixDeVenteHT AS PrixDeVenteHT,
+	Lot.TVA AS TVA,
+	Lot.PrixDeVenteTTC AS PrixDeVenteTTC,
+	Lot.curDateLivraison AS curDateLivraison,
+	Lot.Commentaire AS Commentaire,
+	Lot.NumEtage AS NumEtage,
+	Lot.Exposition AS Exposition,
+	Lot.NumParcelle AS NumParcelle,
+	Lot.Tantiemes AS Tantiemes,
+	Lot.PrixM2 AS PrixM2,
+	Lot.Adresse AS Adresse,
+	Lot.CommVendeurAVerserResa AS CommVendeurAVerserResa,
+	Lot.CommVendeurAVerserActe AS CommVendeurAVerserActe,
+	Lot.TauxCommActe AS TauxCommActe,
+	Lot.TauxCommResa AS TauxCommResa,
+	Lot.curIDAcquereur AS curIDAcquereur,
+	Lot.curDateResa AS curDateResa,
+	Lot.curIDNatureAchat AS curIDNatureAchat,
+	Lot.curIDCommercialisation AS curIDCommercialisation,
+	Commercialisation.IDCommercialisation AS IDCommercialisation,
+	Commercialisation.DateSignatureActeVEFA AS DateSignatureActeVEFA,
+	Commercialisation.DateSignatureContratLoc AS DateSignatureContratLoc,
+	Commercialisation.DateLeveeOption AS DateLeveeOption,
+	Prestataire.Libelle AS LibellePrestataireComm1,
+	Prestataire_1.Libelle AS LibellePrestataireComm2,
+	Commercialisation.EstJustifFiscal AS EstJustifFiscal,
+	Commercialisation.EstFiscalite AS EstFiscalite,
+	Commercialisation.CommFisca AS MotifFisca,
+	Commercialisation.PasAideRM AS PasAideRM,
+	Commercialisation.Loyer AS Loyer,
+	Commercialisation.Epargne AS Epargne,	
+	( ( Commercial.Prenom +  ' ') + Commercial.Denomination )  AS ConseillerCommercial,
+	Lot.Adresse AS LivraisonAdresse,
+	Operation.CP AS LivraisonCP,
+	Operation.Commune AS LivraisonCommune,
+	Commercialisation.IDFiscaliteAcquereur AS IDFiscaliteAcquereur,
+	Lot.curTauxTVAReel AS curTauxTVAReel,
+	Lot.curPrixDeVenteReelTTC AS curPrixDeVenteReelTTC,
+	Lot.curRemiseClientTTC AS curRemiseClientTTC,
+	Commercialisation.DateLivraison AS DateLivraison,
+	Commercialisation.AvecHonoraireCourtage AS AvecHonoraireCourtage,
+	Commercialisation.MontantHonoraireCourtageBanque AS MontantHonoraireCourtageBanque,
+	Commercialisation.MontantHonoraireCourtageClient AS MontantHonoraireCourtageClient,
+	Commercialisation.IDBanqueCourtage AS IDBanqueCourtage,
+	Commercialisation.AvecTMA AS AvecTMA,
+	Acquereur.AdresseActuelle AS AdresseActuelle,
+	Acquereur.CPActuel AS CPActuel,
+	Acquereur.Communeactuelle AS Communeactuelle,
+	Operation.CP AS CP,
+	Operation.Commune AS Commune
+FROM
+	Commercial
+	RIGHT OUTER JOIN
+	(
+		(
+			Operation
+			RIGHT OUTER JOIN
+			Tranche
+			ON Operation.IDOperation = Tranche.IDOperation
+		)
+		RIGHT OUTER JOIN
+		(
+			Destination
+			RIGHT OUTER JOIN
+			(
+				(
+					Prestataire
+					RIGHT OUTER JOIN
+					(
+						Acquereur
+						RIGHT OUTER JOIN
+						(
+							Lot
+							LEFT OUTER JOIN
+							Commercialisation
+							ON Lot.curIDCommercialisation = Commercialisation.IDCommercialisation
+						)
+						ON Acquereur.IDAcquereur = Lot.curIDAcquereur
+					)
+					ON Prestataire.IDPrestataire = Commercialisation.PrestataireComm1
+				)
+				LEFT OUTER JOIN
+				Prestataire Prestataire_1
+				ON Commercialisation.PrestataireComm2 = Prestataire_1.IDPrestataire
+			)
+			ON Destination.IDDestination = Lot.IDDestination
+		)
+		ON Tranche.IDTranche = Lot.IDTranche
+	)
+	ON Commercial.IDCommercial = Acquereur.IDConseillerCommercial
+WHERE
+	(
+	Lot.IDTranche = {ParamIDTranche}
+	AND	Operation.IDOperation = {ParamIDOperation}
+	AND	Lot.FamilleDeBien <> 'AUTRES'
+)
+ORDER BY
+	Tranche ASC,
+	Numlot ASC
+
+-- ============================================
+-- Requête : REQ_InterfaceCommercialisation_Lot_2
+-- ============================================
+SELECT
+	Lot.IDlot AS IDlot,
+	Destination.Libelle AS Destination,
+	Lot.Numlot AS Numlot,
+	Lot.LotAssocie AS LotAssocie,
+	Lot.FamilleDeBien AS FamilleDeBien,
+	Lot.TypeDeBien AS TypeDeBien,
+	Lot.PrixDeVenteHT AS PrixDeVenteHT,
+	Lot.TVA AS TVA,
+	Lot.PrixDeVenteTTC AS PrixDeVenteTTC,
+	Lot.curPrixDeVenteReelHT AS curPrixDeVenteReelHT,
+	Lot.curTauxTVAReel AS curTauxTVAReel,
+	Lot.curPrixDeVenteReelTTC AS curPrixDeVenteReelTTC,
+	Lot.curDateLivraison AS DateLivraison,
+	Lot.Commentaire AS Commentaire,
+	Lot.IDTranche AS IDTranche,
+	Operation.IDOperation AS IDOperation,
+	Tranche.Libelle AS Tranche,
+	Operation.Libelle AS Operation,
+	Lot.SurfHabitable AS SurfHabitable,
+	Lot.SurfTerrasse AS SurfTerrasse,
+	Lot.SurfGarage AS SurfGarage,
+	Lot.SurfCave AS SurfCave,
+	Lot.SurfBalcon AS SurfBalcon,
+	Lot.SurfLoggias AS SurfLoggias,
+	Lot.SurfRemise AS SurfRemise,
+	Lot.SurfJardin AS SurfJardin,
+	Lot.SurfTerrain AS SurfTerrain,
+	Lot.NumEtage AS NumEtage,
+	Lot.Exposition AS Exposition,
+	Lot.NumParcelle AS NumParcelle,
+	Lot.Tantiemes AS Tantiemes,
+	Lot.PrixM2 AS PrixM2,
+	Lot.curRemiseClientTTC AS curRemiseClientTTC,
+	Lot.Adresse AS Adresse,
+	Lot.DateLivraisonSCCV AS DateLivraisonSCCV,
+	Lot.CommVendeurAVerserResa AS CommVendeurAVerserResa,
+	Lot.CommVendeurAVerserActe AS CommVendeurAVerserActe,
+	Lot.TauxCommActe AS TauxCommActe,
+	Lot.TauxCommResa AS TauxCommResa,
+	REQ_Commercialisation_LotResa.IDAcquereur AS IDAcquereur,
+	REQ_Commercialisation_LotResa.IDLot AS IDLot_RE
+FROM
+	(
+		Operation
+		FULL OUTER JOIN
+		(
+			Tranche
+			FULL OUTER JOIN
+			(
+				Destination
+				RIGHT OUTER JOIN
+				Lot
+				ON Destination.IDDestination = Lot.IDDestination
+			)
+			ON Tranche.IDTranche = Lot.IDTranche
+		)
+		ON Operation.IDOperation = Tranche.IDOperation
+	)
+	LEFT OUTER JOIN
+	REQ_Commercialisation_LotResa
+	ON Lot.IDlot = REQ_Commercialisation_LotResa.IDLot
+WHERE
+	(
+	Lot.IDTranche = {ParamIDTranche}
+	AND	Operation.IDOperation = {ParamIDOperation}
+	AND	Lot.FamilleDeBien <> 'AUTRES'
+)
+
+-- ============================================
+-- Requête : REQ_Tranche_Stade_COM
+-- ============================================
+SELECT 
+	Tranche.IDTranche AS IDTranche,	
+	StadeAvancement.DateReelle AS DateReelle,	
+	Avancement.Code AS Code,	
+	Operation.Libelle AS Libelle
+FROM 
+	Operation,	
+	Tranche,	
+	StadeAvancement,	
+	Avancement
+WHERE 
+	Tranche.IDTranche = StadeAvancement.IDTranche
+	AND		Operation.IDOperation = Tranche.IDOperation
+	AND		StadeAvancement.IDListeAvancement = Avancement.IDListeAvancement
+	AND
+	(
+		StadeAvancement.DateReelle IS NOT NULL 
+		AND	Avancement.Code = 'COM'
+	)
+
+-- ============================================
+-- Requête : REQ_Tranche_Situation_DernierMois_LancementCom
+-- ============================================
+SELECT 
+	Operation.Libelle AS Operation,	
+	Operation.Commune AS Commune,	
+	Tranche.Libelle AS Tranche,	
+	( Tranche.NbLogtIndiv + Tranche.NbLogtColl )  AS NbLogt,	
+	Tranche.StadeCOM AS StadeCOM
+FROM 
+	Operation,	
+	Tranche
+WHERE 
+	Operation.IDOperation = Tranche.IDOperation
+	AND
+	(
+		Tranche.StadeCOM >= {ParamStadeCOM}
+	)
+
+-- ============================================
+-- Requête : REQ_Operation_NbTranche
+-- ============================================
+SELECT 
+	COUNT(Tranche.IDOperation) AS Comptage_1
+FROM 
+	Tranche
+WHERE 
+	Tranche.IDOperation = {ParamIDOperation}
+
+-- ============================================
+-- Requête : REQ_Stat_Lot_NbLot
+-- ============================================
+SELECT
+	COUNT(Lot.IDTranche) AS Nb
+FROM
+	Tranche,
+	Lot
+WHERE
+	Tranche.IDTranche = Lot.IDTranche
+	AND
+	(
+		Tranche.IDTranche = {ParamIDTranche}
+	)
+	AND
+	(
+		Lot.FamilleDeBien='APPARTEMENT'
+		OR
+		Lot.FamilleDeBien='MAISON'
+	)
+
+
+-- ============================================
+-- Requête : REQ_Stat_Lot_NbLotAutres
+-- ============================================
+SELECT 
+	COUNT(Lot.IDTranche) AS Nb
+FROM 
+	Tranche
+	INNER JOIN
+	Lot
+	ON Tranche.IDTranche = Lot.IDTranche
+WHERE 
+	(
+	Tranche.IDTranche = {ParamIDTranche}
+	AND	Lot.FamilleDeBien = 'AUTRES'
+)
+
+-- ============================================
+-- Requête : REQ_InterfaceAdminClient_Lot
+-- ============================================
+SELECT 
+	Acquereur.IDAcquereur AS Acquereur,	
+	Acquereur.NomComplet AS NomComplet,	
+	Acquereur.AdresseActuelle AS AdresseActuelle,	
+	Acquereur.CPActuel AS CPActuel,	
+	Acquereur.Communeactuelle AS Communeactuelle,	
+	Acquereur.Portable AS Portable,	
+	Acquereur.Téléphone AS Téléphone,	
+	Lot.Numlot AS Numlot,	
+	Lot.NumEtage AS NumEtage,	
+	Tranche.Libelle AS Tranche,	
+	Tranche.IDOperation AS IDOperation,	
+	Lot.IDlot AS IDLot,	
+	Lot.Adresse AS Adresse,	
+	Operation.CP AS CP,	
+	Operation.Commune AS Commune,	
+	Lot.LocatairePatronyme AS LocatairePatronyme,	
+	Lot.LocatairePrenom AS LocatairePrenom,	
+	Lot.LocataireCivilite AS LocataireCivilite,	
+	Lot.LocataireTelephone AS LocataireTelephone,	
+	Lot.LocatairePortable AS LocatairePortable,	
+	Operation.Libelle AS Operation,	
+	Lot.curDateLivraison AS curDateLivraison,	
+	Commercialisation.DateAnnulation AS DateAnnulation,	
+	Commercialisation.DateSignatureContratLoc AS DateSignatureContratLoc,	
+	Commercialisation.DateSignatureActeVEFA AS DateSignatureActeVEFA,	
+	Commercialisation.TroisMoisAvantLivraisonDateEnvoiCourrier AS TroisMoisAvantLivraisonDateEnvoiCourrier,	
+	Commercialisation.TroisMoisAvantLivraisonPeriode AS TroisMoisAvantLivraisonPeriode,	
+	Commercialisation.TMA_PMR_ContratSigne AS TMA_PMR_ContratSigne,	
+	Commercialisation.TMA_PMR_DateRemisNotaireContratEtPlanVEFA AS TMA_PMR_DateRemisNotaireContratEtPlanVEFA,	
+	Commercialisation.LivraisonDateEnvoiCourrier AS LivraisonDateEnvoiCourrier,	
+	Commercialisation.LivraisonTrimestrePrevueAuContrat AS LivraisonTrimestrePrevueAuContrat,	
+	Commercialisation.DateResa AS DateResa,	
+	Tranche.IDTranche AS IDTranche,	
+	Commercialisation.IDCommercialisation AS IDCommercialisation,	
+	Lot.curIDAcquereur AS curIDAcquereur,	
+	Commercialisation.AvecTMA AS AvecTMA,	
+	Commercialisation.NbTMA AS NbTMA,	
+	Commercialisation.CDVTechnique AS CDVTechnique,	
+	Commercialisation.DateLivraison AS DateLivraison,	
+	Destination.Libelle AS Destination,	
+	NatureAchat.Libelle AS NatureAchat
+FROM 
+	(
+		(
+			Civilite
+			INNER JOIN
+			(
+				Acquereur
+				RIGHT OUTER JOIN
+				(
+					NatureAchat
+					RIGHT OUTER JOIN
+					(
+						(
+							Tranche
+							LEFT OUTER JOIN
+							(
+								Destination
+								RIGHT OUTER JOIN
+								Lot
+								ON Destination.IDDestination = Lot.IDDestination
+							)
+							ON Tranche.IDTranche = Lot.IDTranche
+						)
+						LEFT OUTER JOIN
+						Commercialisation
+						ON Lot.IDlot = Commercialisation.IDLot
+					)
+					ON NatureAchat.IDNatureAchat = Commercialisation.IDNatureAchat
+				)
+				ON Acquereur.IDAcquereur = Commercialisation.IDAcquereur
+			)
+			ON Civilite.IDCivilite = Acquereur.IDCivilite
+		)
+		INNER JOIN
+		StructureJuridique
+		ON Civilite.IDCivilite = StructureJuridique.IDCivilite
+	)
+	LEFT OUTER JOIN
+	Operation
+	ON StructureJuridique.IDStructureJuridique = Operation.IDStructureJuridique
+WHERE 
+	(
+	Tranche.IDTranche = {ParamIDTranche}
+	AND	Acquereur.IDConseillerCommercial = {ParamIDConseillerCommercial}
+	AND	Tranche.IDOperation = {ParamIDOperation}
+)
+
+-- ============================================
+-- Requête : REQ_Reservation
+-- ============================================
+SELECT 
+	Commercialisation.IDCommercialisation AS IDCommercialisation,	
+	Commercialisation.IDLot AS IDLot,	
+	Lot.Numlot AS Numlot,	
+	Acquereur.NomComplet AS NomComplet,	
+	Lot.IDDestination AS IDDestination,	
+	Commercialisation.IDNatureAchat AS IDNatureAchat,	
+	Commercialisation.DateResa AS DateResa,	
+	Commercialisation.LivraisonTrimestrePrevueAuContrat AS LivraisonTrimestrePrevueAuContrat,	
+	Commercialisation.PrixDeVenteReelTTC AS PrixDeVenteReelTTC,	
+	Commercialisation.DateAnnulation AS DateAnnulation,	
+	Commercialisation.MontantDepotGarantie AS MontantDepotGarantie,	
+	Commercialisation.PrestataireComm1 AS PrestataireComm1,	
+	Commercialisation.PrestataireComm2 AS PrestataireComm2,	
+	Commercialisation.EstFiscalite AS EstFiscalite,	
+	Commercialisation.CommFisca AS CommFisca,	
+	Commercialisation.IDFiscaliteAcquereur AS IDFiscaliteAcquereur,	
+	Commercialisation.EstJustifFiscal AS EstJustifFiscal,	
+	Commercialisation.DateSignatureContratLoc AS DateSignatureContratLoc,	
+	Commercialisation.Loyer AS Loyer,	
+	Commercialisation.Epargne AS Epargne,	
+	Commercialisation.DatePrevueSignatureActe AS DatePrevueSignatureActe,	
+	Commercialisation.DateSignatureComm AS DateSignatureComm,	
+	Commercialisation.DateSignatureActeVEFA AS DateSignatureActeVEFA,	
+	Commercialisation.DateLeveeOption AS DateLeveeOption,	
+	Commercialisation.PasAideRM AS PasAideRM,	
+	Commercialisation.MontantSubv AS MontantSubv,	
+	Commercialisation.DateLivraison AS DateLivraison,	
+	Commercialisation.MontantSubvAcpte AS MontantSubvAcpte,	
+	Commercialisation.SoldeDemande AS SoldeDemande
+FROM 
+	Acquereur,	
+	Commercialisation,	
+	Lot
+WHERE 
+	Acquereur.IDAcquereur = Commercialisation.IDAcquereur
+	AND		Lot.IDlot = Commercialisation.IDLot
+	AND
+	(
+		Commercialisation.IDLot = {ParamIDLot}
+		AND	Commercialisation.DateAnnulation IS NULL 
+	)
+
+-- ============================================
+-- Requête : REQ_Reservation_Tout
+-- ============================================
+SELECT 
+	Commercialisation.IDCommercialisation AS IDCommercialisation,	
+	Commercialisation.IDLot AS IDLot,	
+	Acquereur.NomComplet AS NomComplet,	
+	Lot.Numlot AS Numlot,	
+	Lot.IDDestination AS IDDestination,	
+	Commercialisation.IDNatureAchat AS IDNatureAchat,	
+	Commercialisation.DateResa AS DateResa,	
+	Commercialisation.LivraisonTrimestrePrevueAuContrat AS LivraisonTrimestrePrevueAuContrat,	
+	Commercialisation.PrixDeVenteReelTTC AS PrixDeVenteReelTTC,	
+	Commercialisation.DateAnnulation AS DateAnnulation,	
+	Commercialisation.MontantDepotGarantie AS MontantDepotGarantie,	
+	Commercialisation.PrestataireComm1 AS PrestataireComm1,	
+	Commercialisation.PrestataireComm2 AS PrestataireComm2,	
+	Commercialisation.EstFiscalite AS EstFiscalite,	
+	Commercialisation.CommFisca AS CommFisca,	
+	Commercialisation.IDFiscaliteAcquereur AS IDFiscaliteAcquereur,	
+	Commercialisation.EstJustifFiscal AS EstJustifFiscal,	
+	Commercialisation.DateSignatureContratLoc AS DateSignatureContratLoc,	
+	Commercialisation.Loyer AS Loyer,	
+	Commercialisation.Epargne AS Epargne,	
+	Commercialisation.DatePrevueSignatureActe AS DatePrevueSignatureActe,	
+	Commercialisation.DateSignatureComm AS DateSignatureComm,	
+	Commercialisation.DateSignatureActeVEFA AS DateSignatureActeVEFA,	
+	Commercialisation.DateLeveeOption AS DateLeveeOption,	
+	Commercialisation.PasAideRM AS PasAideRM,	
+	Commercialisation.MontantSubv AS MontantSubv,	
+	Commercialisation.DateLivraison AS DateLivraison,	
+	Commercialisation.RemiseClientTTC AS RemiseClientTTC,	
+	Commercialisation.PrixDeVenteReelHT AS PrixDeVenteReelHT,	
+	Commercialisation.TauxTVAReel AS TauxTVAReel
+FROM 
+	Lot,	
+	Acquereur,	
+	Commercialisation
+WHERE 
+	Acquereur.IDAcquereur = Commercialisation.IDAcquereur
+	AND		Lot.IDlot = Commercialisation.IDLot
+	AND
+	(
+		Commercialisation.IDLot = {ParamIDLot}
+	)
+
+-- ============================================
+-- Requête : REQ_Reserve
+-- ============================================
+SELECT 
+	Reserve.IDReserve AS IDReserve,	
+	Reserve.ReserveCode AS ReserveCode,	
+	Reserve.IDTypeReserve AS IDTypeReserve,	
+	Reserve.TravauxEffectues AS TravauxEffectues,	
+	Reserve.Reserve AS Reserve,	
+	Reserve.DateReclamation AS DateReclamation,	
+	Reserve.DateDIntervention AS DateDIntervention,	
+	Reserve.IDLot AS IDLot,	
+	Reserve.IDEntreprise AS IDEntreprise,	
+	Reserve.IDPiece AS IDPiece,	
+	Reserve.EnvoyerMail AS EnvoyerMail,	
+	Reserve.EnvoyerMailDate AS EnvoyerMailDate,	
+	ReserveEntreprise.RS AS RS
+FROM 
+	ReserveEntreprise
+	RIGHT OUTER JOIN
+	Reserve
+	ON ReserveEntreprise.IDReserveEntreprise = Reserve.IDEntreprise
+WHERE 
+	(
+	Reserve.IDLot = {ParamIDLot}
+)
+
+-- ============================================
+-- Requête : REQ_ChargeOp_actif_selon_operation
+-- ============================================
+SELECT 
+	Operation_ChargeOpe.IDPersonne AS IDPersonne,	
+	Operation_ChargeOpe.IDOperation AS IDOperation,	
+	Operation_ChargeOpe.Jusquau AS Jusquau,	
+	Personne.Prenom + ' ' + Personne.Patronyme AS ChargeDOp
+FROM 
+	Personne,	
+	Operation_ChargeOpe
+WHERE 
+	Personne.IDPersonne = Operation_ChargeOpe.IDPersonne
+	AND
+	(
+		Operation_ChargeOpe.Jusquau IS NULL 
+		AND	Operation_ChargeOpe.IDOperation = {ParamIDOperation}
+	)
+
+-- ============================================
+-- Requête : REQ_Personne
+-- ============================================
+SELECT 
+	Personne.IDPersonne AS IDPersonne,	
+	Personne.Patronyme AS Patronyme,	
+	Personne.Prenom AS Prenom,	
+	Personne.EstPresent AS EstPresent,	
+	Personne.IDFonction AS IDFonction,	
+	Personne.EMail AS EMail,	
+	Personne.Patronyme + ' ' + Personne.Prenom AS NomPrenom
+FROM 
+	Personne
+
+-- ============================================
+-- Requête : REQ_Commercialisation_selon_Lot
+-- ============================================
+SELECT 
+	Commercialisation.IDCommercialisation AS IDCommercialisation,	
+	Commercialisation.IDLot AS IDLot,	
+	Commercialisation.IDAcquereur AS IDAcquereur,	
+	Commercialisation.DateResa AS DateResa,	
+	Commercialisation.DateAnnulation AS DateAnnulation,	
+	Commercialisation.IDNatureAchat AS IDNatureAchat,	
+	Commercialisation.PrixDeVenteReelHT AS PrixDeVenteReelHT,	
+	Commercialisation.PrixDeVenteReelTTC AS PrixDeVenteReelTTC,	
+	Commercialisation.TauxTVAReel AS TauxTVAReel,	
+	Commercialisation.RemiseClientTTC AS RemiseClientTTC,	
+	Commercialisation.DateLivraison AS DateLivraison
+FROM 
+	Commercialisation
+WHERE 
+	Commercialisation.IDLot = {ParamIDLot}
+	
+ORDER BY 
+	DateResa ASC
+
+-- ============================================
+-- Requête : REQ_Reserve_tout
+-- ============================================
+SELECT 
+	Operation.IDOperation AS IDOperation,	
+	Reserve.IDTypeReserve AS IDTypeReserve,	
+	Reserve.DateReclamation AS DateReclamation,	
+	Reserve.TravauxEffectues AS TravauxEffectues,	
+	Reserve.IDPiece AS IDPiece,	
+	Reserve.ReserveCode AS ReserveCode,	
+	Reserve.IDReserve AS IDReserve,	
+	Acquereur.IDAcquereur AS IDAcquereur,	
+	Reserve.Reserve AS Reserve,	
+	ReserveEntreprise.RS AS RS,	
+	ReserveEntreprise.Telephone AS EntrepriseTelephone,	
+	ReserveEntreprise.Contact AS Contact,	
+	ReserveEntreprise.EMail AS EMail,	
+	Acquereur.Patronyme AS Patronyme,	
+	Acquereur.Civilite AS Civilite,	
+	Acquereur.Prenom AS Prenom,	
+	Lot.Numlot AS Numlot,	
+	Lot.Adresse AS Adresse,	
+	Acquereur.Téléphone AS Téléphone,	
+	Acquereur.Portable AS Portable,	
+	Lot.LocatairePatronyme AS LocatairePatronyme,	
+	Lot.LocatairePrenom AS LocatairePrenom,	
+	Lot.LocataireCivilite AS LocataireCivilite,	
+	Lot.LocataireTelephone AS LocataireTelephone,	
+	Lot.LocatairePortable AS LocatairePortable,	
+	ReserveEntreprise.IDReserveEntreprise AS IDReserveEntreprise,	
+	Lot.IDTranche AS IDTranche,	
+	Operation.Libelle AS Libelle,	
+	Operation.Commune AS Commune,	
+	Reserve.DateDIntervention AS DateDIntervention,	
+	Reserve.EnvoyerMailDate AS EnvoyerMailDate,	
+	Reserve.IDEntreprise AS IDEntreprise,	
+	Civilite.LibelleCourt AS LibelleCourt,	
+	ReservePiece.Libelle AS Pièce,	
+	Reserve.EnvoyerMail AS EnvoyerMail,	
+	Acquereur.InfoPourEntreprise AS InfoPourEntreprise,	
+	Lot.curDateLivraison AS DateLivraison,	
+	Reserve.WindowsUser AS WindowsUser
+FROM 
+	(
+		(
+			Operation
+			INNER JOIN
+			Tranche
+			ON Operation.IDOperation = Tranche.IDOperation
+		)
+		INNER JOIN
+		(
+			ReservePiece
+			RIGHT OUTER JOIN
+			(
+				ReserveEntreprise
+				INNER JOIN
+				(
+					Lot
+					INNER JOIN
+					Reserve
+					ON Lot.IDlot = Reserve.IDLot
+				)
+				ON ReserveEntreprise.IDReserveEntreprise = Reserve.IDEntreprise
+			)
+			ON ReservePiece.IDReservePiece = Reserve.IDPiece
+		)
+		ON Tranche.IDTranche = Lot.IDTranche
+	)
+	LEFT OUTER JOIN
+	(
+		Civilite
+		RIGHT OUTER JOIN
+		Acquereur
+		ON Civilite.IDCivilite = Acquereur.IDCivilite
+	)
+	ON Lot.curIDAcquereur = Acquereur.IDAcquereur
+WHERE 
+	(
+	ReserveEntreprise.IDReserveEntreprise = {ParamIDReserveEntreprise}
+	AND	Operation.IDOperation = {ParamIDOperation}
+	AND	Reserve.TravauxEffectues = {ParamTravauxEffectues}
+	AND	Acquereur.IDAcquereur = {ParamIDAcquereur}
+	AND	Reserve.EnvoyerMail = {paramEnvoyerMail}
+	AND	Reserve.WindowsUser = {paramWindowsUser}
+)
+ORDER BY 
+	Libelle ASC,	
+	RS ASC,	
+	Numlot ASC
+
+-- ============================================
+-- Requête : REQ_PrestataireComm2
+-- ============================================
+SELECT 
+	Prestataire.IDPrestataire AS IDPrestataire,	
+	Prestataire.Libelle AS Libelle
+FROM 
+	Prestataire
+WHERE 
+	Prestataire.MasquerComm2 = 0
+	OR	Prestataire.MasquerComm2 IS NULL 
+ORDER BY 
+	Libelle ASC
+
+-- ============================================
+-- Requête : REQ_PSLA
+-- ============================================
+SELECT 
+	PSLA.IDPSLA AS IDPSLA,	
+	PSLA.DateAgrementProvisoire AS DateAgrementProvisoire,	
+	PSLA.NumAgrement AS NumAgrement,	
+	PSLA.CoutTotal AS CoutTotal,	
+	PSLA.MontantPSLA AS MontantPSLA,	
+	PSLA.IDBanque AS IDBanque,	
+	PSLA.OrganismeGarantieEmprunt AS OrganismeGarantieEmprunt,	
+	PSLA.DateDeliberationGarantie AS DateDeliberationGarantie,	
+	PSLA.IDTranche AS IDTranche,	
+	PSLA.GarantieEmpruntActionDate AS GarantieEmpruntActionDate,	
+	PSLA.Commentaire AS Commentaire,	
+	PSLA.NbLogtAgrement AS NbLogtAgrement,	
+	PSLA.DateSignatureGarant AS DateSignatureGarant,	
+	PSLA.DateInfoAnnuelle AS DateInfoAnnuelle,	
+	PSLA.DateInfoFin AS DateInfoFin,	
+	PSLA.Commemtaires AS Commemtaires,	
+	PSLA.BanqueActionDate AS BanqueActionDate,	
+	PSLA.old_ActionDestinataire AS old_ActionDestinataire,	
+	PSLA.old_DateDepotDossierAgrement AS old_DateDepotDossierAgrement,	
+	PSLA.old_DateSignaturePretSCCV AS old_DateSignaturePretSCCV,	
+	PSLA.old_DateEnvoiPretGarant AS old_DateEnvoiPretGarant,	
+	PSLA.old_IDPhaseMontagePSLA AS old_IDPhaseMontagePSLA,	
+	PSLA.old_PSLACoutRevientAgrement AS old_PSLACoutRevientAgrement,	
+	PSLA.old_PSLADateDepotDdeAgrement AS old_PSLADateDepotDdeAgrement,	
+	PSLA.old_IDFinancement AS old_IDFinancement,	
+	PSLA.OrganismeAgrément AS OrganismeAgrément,	
+	PSLA.PreviAgrement AS PreviAgrement,	
+	PSLA.DateDepotDossierAgrement AS DateDepotDossierAgrement,	
+	PSLA.DateReceptionAgrement AS DateReceptionAgrement,	
+	PSLA.DateDecisionAgrement AS DateDecisionAgrement,	
+	PSLA.DateConventionEngagementReciproque AS DateConventionEngagementReciproque,	
+	PSLA.BanqueOperateurDate AS BanqueOperateurDate,	
+	PSLA.BanqueOperateur AS BanqueOperateur,	
+	PSLA.BanqueClientDate AS BanqueClientDate,	
+	PSLA.BanqueClient AS BanqueClient,	
+	PSLA.FinSuivi AS FinSuivi,	
+	PSLA.CFF_FI_Client AS CFF_FI_Client,	
+	PSLA.DureeAnneePSLA AS DureeAnneePSLA,	
+	PSLA.EstimPSLA AS EstimPSLA,	
+	PSLA.NumBureauGarantie AS NumBureauGarantie,	
+	PSLA.NumConventionGarantie AS NumConventionGarantie
+FROM 
+	PSLA
+WHERE 
+	PSLA.IDTranche = {ParamIDTranche}
+
+-- ============================================
+-- Requête : REQ_StructureJuridique
+-- ============================================
+SELECT 
+	StructureJuridique.IDStructureJuridique AS IDStructureJuridique,	
+	StructureJuridique.RS AS RS,	
+	StructureJuridique.NumTVAIntra AS NumTVAIntra,	
+	StructureJuridique.Siret AS Siret,	
+	StructureJuridique.DateDebutActivite AS DateDebutActivite,	
+	StructureJuridique.DateImmat AS DateImmat,	
+	StructureJuridique.EDI_TVA AS EDI_TVA,	
+	StructureJuridique.EDI_Liasse AS EDI_Liasse,	
+	StructureJuridique.DateBilanDebutPremierExercice AS DateBilanDebutPremierExercice,	
+	StructureJuridique.DateBilanFinPremierExercice AS DateBilanFinPremierExercice,	
+	StructureJuridique.DatePlanningCloture AS DatePlanningCloture,	
+	StructureJuridique.IDPersonneComptable AS IDPersonneComptable,	
+	StructureJuridique.Stade AS Stade,	
+	StructureJuridique.GestionnaireSCCV AS GestionnaireSCCV,	
+	StructureJuridique.HFSGA AS HFSGA,	
+	StructureJuridique.DateLiquidation AS DateLiquidation,	
+	CASE WHEN StructureJuridique.DateLiquidation IS NULL  THEN  0 ELSE  1 END  AS EstLiquidee,	
+	StructureJuridique.old_CentreImpotsSIE AS old_CentreImpotsSIE,	
+	StructureJuridique.InterlocuteurSIE AS InterlocuteurSIE,	
+	StructureJuridique.IDSIE AS IDSIE,	
+	StructureJuridique.IDCivilite AS IDCivilite,	
+	StructureJuridique.CpteFiscal AS CpteFiscal,	
+	StructureJuridique.DateModifCloture AS DateModifCloture,	
+	StructureJuridique.SCCV_HF AS SCCV_HF,	
+	StructureJuridique.SCCV_HLM AS SCCV_HLM,	
+	StructureJuridique.CapitalSCCV AS CapitalSCCV,	
+	StructureJuridique.NbPart AS NbPart,	
+	StructureJuridique.MontantPart AS MontantPart,	
+	StructureJuridique.DateLiberationCapital AS DateLiberationCapital,	
+	StructureJuridique_Stade.Libelle AS LibelleStade,	
+	Personne.IDPersonne AS IDPersonne,	
+	( ( Personne.Patronyme +  ' ') + Personne.Prenom )  AS Comptable,	
+	SIE.Libelle AS SIE,	
+	Civilite.Libelle AS Civilite,	
+	CASE WHEN StructureJuridique.DateDebutActivite IS NULL  THEN  SMALLDATETIMEFROMPARTS ( 2050, 01, 01, 0, 0 ) ELSE StructureJuridique.DateDebutActivite  END  AS DateDebutActivite2
+FROM 
+	StructureJuridique_Stade
+	RIGHT OUTER JOIN
+	(
+		Civilite
+		RIGHT OUTER JOIN
+		(
+			Personne
+			RIGHT OUTER JOIN
+			(
+				SIE
+				RIGHT OUTER JOIN
+				StructureJuridique
+				ON SIE.IDSIE = StructureJuridique.IDSIE
+			)
+			ON Personne.IDPersonne = StructureJuridique.IDPersonneComptable
+		)
+		ON Civilite.IDCivilite = StructureJuridique.IDCivilite
+	)
+	ON StructureJuridique_Stade.IDStructureJuridique_Stade = StructureJuridique.Stade
+WHERE 
+	(
+	Personne.IDPersonne = {paramIDpersonne}
+	AND	StructureJuridique.Stade = {paramStade}
+	AND	StructureJuridique.RS LIKE %{ParamRS}%
+	AND	StructureJuridique.GestionnaireSCCV LIKE %{ParamGestionnaireHF}%
+	AND	StructureJuridique.IDGestionnaireSCCV = {ParamIDGestionnaireSCCV}
+	AND	
+	(
+		StructureJuridique.DateDebutActivite = {ParamDateDebutActivite}
+		OR	CASE WHEN StructureJuridique.DateDebutActivite IS NULL  THEN  SMALLDATETIMEFROMPARTS ( 2050, 01, 01, 0, 0 ) ELSE StructureJuridique.DateDebutActivite  END  >= {ParamDateDebutActivite}
+	)
+	AND	CASE WHEN StructureJuridique.DateLiquidation IS NULL  THEN  0 ELSE  1 END  = {ParamEstLiquidee}
+)
+
+-- ============================================
+-- Requête : REQ_Comptable
+-- ============================================
+SELECT
+	Personne.IDPersonne AS IDPersonne,
+	Personne.Patronyme + ' ' + Personne.Prenom AS Formule1,
+	Personne.Patronyme AS Patronyme,
+	Personne.IDFonction AS IDFonction
+FROM
+	Personne
+WHERE
+	Personne.IDFonction = 1
+	and
+	Personne.EstPresent = {paramEstPresent}
+ORDER BY
+	Patronyme ASC
+
+
+-- ============================================
+-- Requête : REQ_XL_AdminClient
+-- ============================================
+SELECT 
+	Destination.Libelle AS Destination,	
+	Lot.Numlot AS Numlot,	
+	Tranche.Libelle AS Libelle,	
+	Lot.TypeDeBien AS TypeDeBien,	
+	Lot.NumEtage AS NumEtage,	
+	Civilite.Libelle AS Civilite_Libelle,	
+	Civilite.LibelleCourt AS Civilite_Court,	
+	Civilite.Client AS Civilite_Client,	
+	Acquereur.Prenom AS Prenom,	
+	Acquereur.Patronyme AS Patronyme,	
+	Acquereur.AdresseActuelle AS AdresseActuelle,	
+	Acquereur.CPActuel AS CPActuel,	
+	Acquereur.Communeactuelle AS Communeactuelle,	
+	Acquereur.Portable AS Portable,	
+	Acquereur.Téléphone AS Téléphone,	
+	Acquereur.Email AS Email,	
+	Lot.Adresse AS Adresse,	
+	Operation.CP AS CP,	
+	Operation.Commune AS Commune,	
+	Commercialisation.DateSignatureContratLoc AS DateSignatureContratLoc,	
+	Commercialisation.DateSignatureActeVEFA AS DateSignatureActeVEFA,	
+	TypeAcquereur.Libelle AS TypeAquereur,	
+	Commercialisation.LivraisonDateEnvoiCourrier AS LivraisonDateEnvoiCourrier,	
+	Commercialisation.LivraisonTrimestrePrevueAuContrat AS LivraisonTrimestrePrevueAuContrat,	
+	( ( Commercial.Prenom +  ' ') + Commercial.Denomination )  AS Commercial,	
+	Commercial.Fonction AS Fonction,	
+	NatureAchat.Libelle AS NatureAchat,	
+	Tranche.IDTranche AS IDTranche,	
+	Commercialisation.TroisMoisAvantLivraisonDateEnvoiCourrier AS TroisMoisAvantLivraisonDateEnvoiCourrier,	
+	Commercialisation.TroisMoisAvantLivraisonPeriode AS TroisMoisAvantLivraisonPeriode
+FROM 
+	(
+		Operation
+		LEFT OUTER JOIN
+		Tranche
+		ON Operation.IDOperation = Tranche.IDOperation
+	)
+	LEFT OUTER JOIN
+	(
+		(
+			Lot
+			LEFT OUTER JOIN
+			Destination
+			ON Lot.IDDestination = Destination.IDDestination
+		)
+		LEFT OUTER JOIN
+		(
+			NatureAchat
+			RIGHT OUTER JOIN
+			(
+				Civilite
+				RIGHT OUTER JOIN
+				(
+					(
+						Commercial
+						RIGHT OUTER JOIN
+						Acquereur
+						ON Commercial.IDCommercial = Acquereur.IDConseillerCommercial
+					)
+					RIGHT OUTER JOIN
+					(
+						Commercialisation
+						, 
+						TypeAcquereur
+						
+					)
+					ON Acquereur.IDAcquereur = Commercialisation.IDAcquereur
+				)
+				ON Civilite.IDCivilite = Acquereur.IDCivilite
+			)
+			ON NatureAchat.IDNatureAchat = Commercialisation.IDNatureAchat
+		)
+		ON Lot.curIDCommercialisation = Commercialisation.IDCommercialisation
+	)
+	ON Tranche.IDTranche = Lot.IDTranche
+WHERE 
+	(
+	Commercialisation.DateAnnulation IS NULL 
+	AND	Operation.IDOperation = {paramIDOperation}
+	AND	Tranche.IDTranche = {ParamIDTranche}
+)
+ORDER BY 
+	Numlot ASC
+
+-- ============================================
+-- Requête : REQ_Financement_PSLA
+-- ============================================
+SELECT 
+	Financement.IDFinancement AS IDFinancement,	
+	Financement.IDTranche AS IDTranche,	
+	Financement.IDTypeFinancement AS IDTypeFinancement,	
+	Financement.IDBanque AS IDBanque,	
+	Financement.MontantFinancement AS MontantFinancement,	
+	Financement.DateSignature AS DateSignature,	
+	Financement.DateDebutMobilisation AS DateDebutMobilisation,	
+	Financement.DateFinMobilisation AS DateFinMobilisation,	
+	Financement.IndexTaux AS IndexTaux,	
+	Financement.MargeBanque AS MargeBanque,	
+	Financement.CommissionEngagementPourc AS CommissionEngagementPourc,	
+	Financement.FraisDossier AS FraisDossier,	
+	Financement.Commentaire AS Commentaire,	
+	Financement.NumContrat AS NumContrat,	
+	Financement.EstPhaseAmortissement AS EstPhaseAmortissement,	
+	Financement.SurOpe AS SurOpe,	
+	Financement.ApportPromoteur AS ApportPromoteur,	
+	Financement.IDListeFinPret AS IDListeFinPret,	
+	Financement.DateButoir AS DateButoir,	
+	Financement.PartSocialeMontant AS PartSocialeMontant,	
+	Financement.IDListeStatutPartSociale AS IDListeStatutPartSociale,	
+	Financement.DateStatutPartSociale AS DateStatutPartSociale,	
+	Financement.EstSolde AS EstSolde,	
+	Financement.MontantPrevi AS MontantPrevi,	
+	Financement.InfosPretprevi AS InfosPretprevi,	
+	Financement.DateEnvoiDossier AS DateEnvoiDossier,	
+	Financement.ContratMontant AS ContratMontant,	
+	Financement.ContratNbLogt AS ContratNbLogt,	
+	Financement.DateDebutEcheance AS DateDebutEcheance,	
+	Financement.DateFinEcheance AS DateFinEcheance,	
+	Financement.TauxPret AS TauxPret,	
+	Financement.MontantEcheance AS MontantEcheance,	
+	Financement.DureeMoisMobPSLA AS DureeMoisMobPSLA,	
+	Financement.Periodicite AS Periodicite,	
+	Financement.DateVerstPret AS DateVerstPret,	
+	Financement.PrevMtOC AS PrevMtOC,	
+	Financement.IDActionAlerte AS IDActionAlerte,	
+	Financement.EstPrlvFraisDossier AS EstPrlvFraisDossier,	
+	Financement.EstAmortDiffére AS EstAmortDiffére,	
+	Financement.AmortissementDiffereDuree AS AmortissementDiffereDuree,	
+	Financement.IndexTauxFloore AS IndexTauxFloore
+FROM 
+	Financement
+WHERE 
+	Financement.IDTypeFinancement = 1
+	AND	Financement.IDTranche = {ParamIDTranche}
+
+-- ============================================
+-- Requête : REQ_Financement
+-- ============================================
+SELECT 
+	Financement.IDFinancement AS IDFinancement,	
+	Financement.IDTranche AS IDTranche,	
+	Financement.IDTypeFinancement AS IDTypeFinancement,	
+	Financement.IDBanque AS IDBanque,	
+	Financement.PrevMtOC AS PrevMtOC,	
+	Financement.MontantFinancement AS MontantFinancement,	
+	Financement.EstSolde AS EstSolde,	
+	Financement.SurOpe AS SurOpe,	
+	Financement.DateSignature AS DateSignature,	
+	Financement.DateDebutMobilisation AS DateDebutMobilisation,	
+	Financement.DateFinMobilisation AS DateFinMobilisation,	
+	Financement.IDListeFinPret AS IDListeFinPret,	
+	Financement.Commentaire AS Commentaire,	
+	Financement.IndexTaux AS Indextaux,	
+	Financement.MargeBanque AS MargeBanque,	
+	Financement.CommissionEngagementPourc AS CommissionEngagementPourc,	
+	Financement.FraisDossier AS FraisDossier,	
+	Financement.EstPrlvFraisDossier AS EstPrlvFraisDossier,	
+	Financement.PartSocialeMontant AS PartSocialeMontant,	
+	Financement.IDListeStatutPartSociale AS IDListeStatutPartSociale,	
+	Financement.DateStatutPartSociale AS DateStatutPartSociale,	
+	Financement.IndexTauxFloore AS IndexTauxFloore,	
+	Financement.DateButoir AS DateButoir,	
+	Financement.IDActionAlerte AS IDActionAlerte
+FROM 
+	Financement
+WHERE 
+	Financement.IDTranche = {ParamIDTranche}
+	AND	Financement.IDTypeFinancement <> 1
+	AND	Financement.IDTypeFinancement <> 5
+
+-- ============================================
+-- Requête : REQ_GFA
+-- ============================================
+SELECT 
+	GFA.IDGFA AS IDGFA,	
+	GFA.IDTranche AS IDTranche,	
+	GFA.SurOpe AS SurOpe,	
+	GFA.IDBanque AS IDBanque,	
+	GFA.Commentaires AS Commentaires,	
+	GFA.DateDossierGFA AS DateDossierGFA,	
+	GFA.DateAccord AS DateAccord,	
+	GFA.DateAttestation AS DateAttestation,	
+	GFA.ActionFinGFADate AS ActionFinGFADate,	
+	GFA.IDActionFinGFAType AS IDActionFinGFAType,	
+	GFA.Taux AS Taux,	
+	GFA.FinGFA AS FinGFA,	
+	GFA.FondsGarantieMt AS FondsGarantieMt,	
+	GFA.FondsGarantieDateDemandeRemb AS FondsGarantieDateDemandeRemb,	
+	GFA.FondsGarantieDateRemb AS FondsGarantieDateRemb,	
+	GFA.PartSocialeMt AS PartSocialeMt,	
+	GFA.PartSocialeDateDemandeRemb AS PartSocialeDateDemandeRemb,	
+	GFA.PartSocialeDateRemb AS PartSocialeDateRemb,	
+	GFA.ApportPromoteurGFA AS ApportPromoteurGFA,	
+	GFA.IDStatutApportPromoteurGFA AS IDStatutApportPromoteurGFA,	
+	GFA.PartSocialeComm AS PartSocialeComm
+FROM 
+	GFA
+WHERE 
+	GFA.IDTranche = {ParamIDTranche}
+
+-- ============================================
+-- Requête : REQ_Mission
+-- ============================================
+SELECT 
+	Mission.IDMission AS IDMission,	
+	Mission.IDTranche AS IDTranche,	
+	Mission.DateConvention AS DateConvention,	
+	Mission.BaseHonoUnitaireHT AS BaseHonoUnitaireHT,	
+	Mission.BaseHonoHT AS BaseHonoHT,	
+	Mission.IDTypeMission AS IDTypeMission,	
+	Mission.FinFacturation AS FinFacturation,	
+	Mission.Commentaire AS Commentaire,	
+	Mission.Ordre AS Ordre,	
+	Mission.NbMois AS NbMois,	
+	Mission.NbLogement AS NbLogement,	
+	Mission.IDPrestataire AS IDPrestataire,	
+	Mission.DateFactCommKPI_Ext_ContratOFS AS DateFactCommKPI_Ext_ContratOFS
+FROM 
+	Mission
+WHERE 
+	Mission.IDTranche = {ParamIDTranche}
+ORDER BY 
+	DateConvention ASC
+
+-- ============================================
+-- Requête : REQ_AcquereurPourEnquete
+-- ============================================
+SELECT 
+	Acquereur.Identifiant AS Identifiant,	
+	Lot.Numlot AS Numlot,	
+	Lot.TypeDeBien AS Typologie,	
+	Acquereur.Etage AS Etage,	
+	Lot.SurfHabitable AS surface,	
+	Acquereur.Patronyme AS Patronyme,	
+	Acquereur.Prenom AS Prenom,	
+	Acquereur.Adulte1DateNaissance AS Adulte1DateNaissance,	
+	Acquereur.Adulte2DateNaissance AS Adulte2DateNaissance,	
+	Acquereur.Téléphone AS Téléphone,	
+	Acquereur.Email AS Email,	
+	Acquereur.AdresseActuelle AS AdresseActuelle,	
+	Acquereur.CPActuel AS CPActuel,	
+	Acquereur.Communeactuelle AS Communeactuelle,	
+	TypeLogementActuel.Libelle AS Origine,	
+	Acquereur.RevenusFoyerFiscal AS Revenus_foyer_fiscal,	
+	AcquereurRevenuFoyerFiscalParQuartile.Libelle AS Libelle,	
+	Acquereur.AnneeDeDeclaration AS AnneeDeDeclaration,	
+	Acquereur.NombreAdultes AS NombreAdultes,	
+	Acquereur.NombreEnfants AS NombreEnfants,	
+	Acquereur.EnfantAVenir AS EnfantAVenir,	
+	AcquereurPlafondRessources.Libelle AS Libelle_Ac,	
+	 Format (Commercialisation.PrixDeVenteReelTTC , '0' ) AS Formule1,	
+	Commercialisation.TauxTVAReel AS TauxTVAReel,	
+	Acquereur.ApportReelADateHorsSubvention AS ApportReelADateHorsSubvention,	
+	Acquereur.Subvention AS Subvention,	
+	Commercialisation.DateResa AS DateResa,	
+	Commercialisation.DateSignatureContratLoc AS DateSignatureContratLoc,	
+	Commercialisation.DateSignatureActeVEFA AS DateSignatureActeVEFA,	
+	 IIf (( Tranche.NbLogtIndiv >  0) ,Lot.Adresse ,Tranche.Adresse  ) AS Adresse_programme,	
+	Operation.CP AS CP_programme,	
+	Operation.Commune AS Ville_programme,	
+	Operation.Libelle AS Nom_programme,	
+	Acquereur."Type de programme" AS Type_de_programme,	
+	 IIf (( Lot.FamilleDeBien =  'APPARTEMENT') , 'oui', 'non' ) AS Formule2,	
+	 IIf (Operation.ANRU=1 , 'oui', 'non' ) AS Formule3,	
+	Acquereur."Type d'acquisition" AS Type_d_acquisition,	
+	Acquereur.PrimoAccedant AS PrimoAccedant,	
+	Acquereur.Modifications AS Modifications,	
+	Acquereur.ReservesDE AS ReservesDE,	
+	Acquereur."Date prévisionnelle livraison" AS Date_prévisionnelle_livraison,	
+	Acquereur."Date réelle livraison" AS Date_réelle_livraison,	
+	AcquereurTrancheAge.Libelle AS Libelle_Ac1,	
+	Acquereur.Etape AS Etape,	
+	Commercial.Denomination AS Denomination,	
+	Commercial.EMail AS EMail_Co,	
+	Personne_1.Patronyme AS Patronyme_Pe,	
+	Personne_1.EMail AS EMail_Pe,	
+	Acquereur.Adulte1CSP AS Adulte1CSP,	
+	Acquereur.Adulte2CSP AS Adulte2CSP,	
+	Acquereur.Adulte1Metier AS Adulte1Metier,	
+	Acquereur.Adulte2Metier AS Adulte2Metier,	
+	Acquereur.EnqueteA AS EnquêteA,	
+	Acquereur.EnqueteB AS EnquêteB,	
+	Acquereur.EnqueteC AS EnquêteC,	
+	Operation.MasquerComptable AS MasquerComptable,	
+	Commercialisation.DateAnnulation AS DateAnnulation
+FROM 
+	(
+		Operation
+		RIGHT OUTER JOIN
+		Tranche
+		ON Operation.IDOperation = Tranche.IDOperation
+	)
+	RIGHT OUTER JOIN
+	(
+		Lot
+		RIGHT OUTER JOIN
+		(
+			(
+				(
+					(
+						(
+							(
+								(
+									Acquereur
+									LEFT OUTER JOIN
+									TypeLogementActuel
+									ON Acquereur.IDTypeLogementActuel = TypeLogementActuel.IDTypeLogementActuel
+								)
+								LEFT OUTER JOIN
+								AcquereurRevenuFoyerFiscalParQuartile
+								ON Acquereur.IDAcquereurRevenuFoyerFiscalParQuartile = AcquereurRevenuFoyerFiscalParQuartile.IDAcquereurRevenuFoyerFiscalParQuartile
+							)
+							LEFT OUTER JOIN
+							AcquereurTrancheAge
+							ON Acquereur.IDAcquereurTrancheAge = AcquereurTrancheAge.IDAcquereurTrancheAge
+						)
+						LEFT OUTER JOIN
+						AcquereurPlafondRessources
+						ON Acquereur.IDAcquereurPlafondRessources = AcquereurPlafondRessources.IDAcquereurPlafondRessources
+					)
+					LEFT OUTER JOIN
+					Personne Personne_1
+					ON Acquereur.IDConseillerTechnique = Personne_1.IDPersonne
+				)
+				LEFT OUTER JOIN
+				Commercial
+				ON Acquereur.IDConseillerCommercial = Commercial.IDCommercial
+			)
+			LEFT OUTER JOIN
+			Commercialisation
+			ON Acquereur.IDAcquereur = Commercialisation.IDAcquereur
+		)
+		ON Lot.IDlot = Commercialisation.IDLot
+	)
+	ON Tranche.IDTranche = Lot.IDTranche
+WHERE 
+	(
+	Operation.MasquerComptable = 0
+	AND	Commercialisation.DateAnnulation IS NULL 
+)
+
+-- ============================================
+-- Requête : REQ_Lot_selon_acquereur
+-- ============================================
+SELECT 
+	Commercialisation.IDLot AS IDLot,	
+	Commercialisation.IDAcquereur AS IDAcquereur,	
+	Commercialisation.DateResa AS DateResa
+FROM 
+	Commercialisation
+WHERE 
+	Commercialisation.IDAcquereur = {ParamIDAcquereur}
+
+-- ============================================
+-- Requête : REQ_Lot
+-- ============================================
+SELECT 
+	Lot.IDlot AS IDlot,	
+	Lot.Numlot AS Numlot,	
+	Operation.Libelle AS Libelle,	
+	Operation.Commune AS Commune,	
+	( ( ( ( ( Lot.Numlot +  ' (') + Operation.Libelle ) +  ' ') + Operation.Commune ) +  ')')  AS InfoLot,	
+	( ( ( ( Operation.Libelle +  ' ') + Operation.Commune ) +  ' | ') +  iif (( Lot.Numlot =  NULL ) , '',Lot.Numlot  ))  AS InfoLot2
+FROM 
+	Operation,	
+	Tranche,	
+	Lot
+WHERE 
+	Tranche.IDTranche = Lot.IDTranche
+	AND		Operation.IDOperation = Tranche.IDOperation
+	AND
+	(
+		Lot.IDlot = {paramIDLot}
+	)
+
+-- ============================================
+-- Requête : REQ_TABLE_Acquereur
+-- ============================================
+SELECT 
+	Acquereur.IDAcquereur AS IDAcquereur,	
+	Acquereur.Code AS Code,	
+	Acquereur.Patronyme AS Patronyme,	
+	Acquereur.Civilite AS Civilite,	
+	Acquereur.Prenom AS Prenom,	
+	Acquereur.RS AS RS,	
+	Acquereur.NatureJuridique AS NatureJuridique,	
+	Acquereur.Commentaire AS Commentaire,	
+	Acquereur.Téléphone AS Téléphone,	
+	Acquereur.Portable AS Portable,	
+	Acquereur.Email AS Email,	
+	Acquereur.AdresseActuelle AS AdresseActuelle,	
+	Acquereur.CPActuel AS CPActuel,	
+	Acquereur.Communeactuelle AS Communeactuelle,	
+	Acquereur.IDTypeLogementActuel AS IDTypeLogementActuel,	
+	Acquereur.RevenusFoyerFiscal AS RevenusFoyerFiscal,	
+	Acquereur.IDAcquereurRevenuFoyerFiscalParQuartile AS IDAcquereurRevenuFoyerFiscalParQuartile,	
+	Acquereur.AnneeDeDeclaration AS AnneeDeDeclaration,	
+	Acquereur.NombreAdultes AS NombreAdultes,	
+	Acquereur.NombreEnfants AS NombreEnfants,	
+	Acquereur.EnfantAVenir AS EnfantAVenir,	
+	Acquereur.IDAcquereurPlafondRessources AS IDAcquereurPlafondRessources,	
+	Acquereur.ApportReelADateHorsSubvention AS ApportReelADateHorsSubvention,	
+	Acquereur.Subvention AS Subvention,	
+	Acquereur.PrimoAccedant AS PrimoAccedant,	
+	Acquereur.IDAcquereurTrancheAge AS IDAcquereurTrancheAge,	
+	Acquereur.Etape AS Etape,	
+	Acquereur.IDConseillerCommercial AS IDConseillerCommercial,	
+	Acquereur.IDConseillerTechnique AS IDConseillerTechnique,	
+	Acquereur.EnqueteA AS EnqueteA,	
+	Acquereur.EnqueteB AS EnqueteB,	
+	Acquereur.EnqueteC AS EnqueteC,	
+	Acquereur.SituationFamiliale AS SituationFamiliale,	
+	Acquereur.Adulte1Age AS Adulte1Age,	
+	Acquereur.Adulte2Age AS Adulte2Age,	
+	Acquereur.Adulte1CSP AS Adulte1CSP,	
+	Acquereur.Adulte2CSP AS Adulte2CSP,	
+	Acquereur.Adulte1Metier AS Adulte1Metier,	
+	Acquereur.Adulte2Metier AS Adulte2Metier,	
+	Acquereur.Adulte1CommuneTravail AS Adulte1CommuneTravail,	
+	Acquereur.Adulte2CommuneTravail AS Adulte2CommuneTravail,	
+	Acquereur.TypeDeMenage AS TypeDeMenage,	
+	Acquereur.AgeEnfant1 AS AgeEnfant1,	
+	Acquereur.AgeEnfant2 AS AgeEnfant2,	
+	Acquereur.AgeEnfant3 AS AgeEnfant3,	
+	Acquereur.AgeEnfant4 AS AgeEnfant4,	
+	Acquereur.AgeEnfant5 AS AgeEnfant5,	
+	Acquereur.RevenuNetFoyerMensuel AS RevenuNetFoyerMensuel,	
+	Acquereur.RevenusNetImposableNMoins1 AS RevenusNetImposableNMoins1,	
+	Acquereur.EstPTZ AS EstPTZ,	
+	Acquereur.MensualiteDuFinancementClient AS MensualiteDuFinancementClient,	
+	Acquereur.TauxEffort AS TauxEffort,	
+	Acquereur.IDCivilite AS IDCivilite,	
+	Acquereur.Adulte1DateNaissance AS Adulte1DateNaissance,	
+	Acquereur.Adulte2DateNaissance AS Adulte2DateNaissance,	
+	Acquereur.InfoPourEntreprise AS InfoPourEntreprise,	
+	Acquereur.CommuneOrigine AS CommuneOrigine,	
+	Acquereur.DateModifAdresse AS DateModifAdresse,	
+	Lot.Numlot AS Numlot,	
+	Operation.Libelle AS Operation,	
+	Operation.Commune AS Commune,	
+	Tranche.IDTranche AS IDTranche,	
+	Tranche.Libelle AS Tranche,	
+	Acquereur.IDCivilite2 AS IDCivilite2,	
+	Acquereur.Prenom2 AS Prénom2,	
+	Acquereur.Patronyme2 AS Patronyme2,	
+	LEFT(Lot.curDateResa ,4)  AS ResaAnnee,	
+	Acquereur.NomComplet AS NomComplet,	
+	Acquereur.DescriptionLotCourant AS DescriptionLotCourant,	
+	Acquereur.Patronyme3 AS Patronyme3,	
+	Acquereur.Prenom3 AS Prenom3,	
+	Acquereur.IDCivilite3 AS IDCivilite3,	
+	Acquereur.Email2 AS Email2,	
+	Acquereur.curIDLot AS curIDLot,	
+	Acquereur.curDateAnnulation AS curDateAnnulation
+FROM 
+	Operation
+	RIGHT OUTER JOIN
+	(
+		Tranche
+		RIGHT OUTER JOIN
+		(
+			Lot
+			RIGHT OUTER JOIN
+			Acquereur
+			ON Lot.IDlot = Acquereur.curIDLot
+		)
+		ON Tranche.IDTranche = Lot.IDTranche
+	)
+	ON Operation.IDOperation = Tranche.IDOperation
+ORDER BY 
+	Patronyme ASC,	
+	DescriptionLotCourant ASC
+
+-- ============================================
+-- Requête : REQ_Operation_Commune
+-- ============================================
+SELECT DISTINCT 
+	Operation.Commune AS Commune
+FROM 
+	Operation
+WHERE 
+	Operation.Commune IS NOT NULL 
+	AND	Operation.Commune <> ''
+ORDER BY 
+	Commune ASC
+
+-- ============================================
+-- Requête : REQ_DateReservation_Annee
+-- ============================================
+SELECT DISTINCT 
+	LEFT(Commercialisation.DateResa,4) AS Année
+FROM 
+	Commercialisation
+WHERE 
+	Commercialisation.DateResa IS NOT NULL 
+ORDER BY 
+	Année ASC
+
+-- ============================================
+-- Requête : REQ_Acquereur_CommuneOrigine
+-- ============================================
+SELECT DISTINCT 
+	Acquereur.Communeactuelle AS Communeactuelle
+FROM 
+	Acquereur
+WHERE 
+	Acquereur.Communeactuelle IS NOT NULL 
+ORDER BY 
+	Communeactuelle ASC
+
+-- ============================================
+-- Requête : REQ_Report_Service
+-- ============================================
+SELECT 
+	Report.IDReport AS IDReport,	
+	Report.Libelle AS Libelle,	
+	Report.ServiceHF AS ServiceHF
+FROM 
+	Report
+WHERE 
+	Report.ServiceHF = {ParamServiceHF}
+
+-- ============================================
+-- Requête : REQ_ReserveEntreprise_Operation
+-- ============================================
+SELECT DISTINCT 
+	ReserveEntreprise.IDReserveEntreprise AS IDReserveEntreprise,	
+	ReserveEntreprise.RS AS RS,	
+	Operation.IDOperation AS IDOperation
+FROM 
+	ReserveEntreprise,	
+	Reserve,	
+	Lot,	
+	Tranche,	
+	Operation
+WHERE 
+	Operation.IDOperation = Tranche.IDOperation
+	AND		Tranche.IDTranche = Lot.IDTranche
+	AND		Lot.IDlot = Reserve.IDLot
+	AND		ReserveEntreprise.IDReserveEntreprise = Reserve.IDEntreprise
+	AND
+	(
+		Operation.IDOperation = {ParamIDOperation}
+	)
+ORDER BY 
+	RS ASC
+
+-- ============================================
+-- Requête : REQ_SAV_Promotion
+-- ============================================
+SELECT 
+	Acquereur.IDAcquereur AS IDAcquereur,	
+	Acquereur.NomComplet AS NomComplet,	
+	Lot.NumEtage AS NumEtage,	
+	Operation.Libelle AS Operation,	
+	Tranche.Libelle AS Tranche,	
+	Lot.Numlot AS Numlot,	
+	Lot.curDateResa AS curDateResa,	
+	Lot.curIDNatureAchat AS curIDNatureAchat,	
+	Lot.LocatairePatronyme AS LocatairePatronyme,	
+	Lot.LocatairePrenom AS LocatairePrenom,	
+	Lot.LocataireCivilite AS LocataireCivilite,	
+	Lot.LocataireTelephone AS LocataireTelephone,	
+	Lot.LocatairePortable AS LocatairePortable,	
+	Lot.curDateLivraison AS curDateLivraison,	
+	NatureAchat.Libelle AS NatureAchat,	
+	Acquereur.Téléphone AS Téléphone,	
+	Acquereur.Portable AS Portable,	
+	Operation.IDOperation AS IDOperation,	
+	Lot.IDlot AS IDLot,	
+	Destination.Libelle AS Destination,	
+	Lot.Adresse AS Adresse,	
+	Operation.CP AS CP,	
+	Operation.Commune AS commune,	
+	Acquereur.RS AS RS
+FROM 
+	Operation
+	RIGHT OUTER JOIN
+	(
+		Tranche
+		LEFT OUTER JOIN
+		(
+			Acquereur
+			RIGHT OUTER JOIN
+			(
+				NatureAchat
+				RIGHT OUTER JOIN
+				(
+					Destination
+					RIGHT OUTER JOIN
+					Lot
+					ON Destination.IDDestination = Lot.IDDestination
+				)
+				ON NatureAchat.IDNatureAchat = Lot.curIDNatureAchat
+			)
+			ON Acquereur.IDAcquereur = Lot.curIDAcquereur
+		)
+		ON Tranche.IDTranche = Lot.IDTranche
+	)
+	ON Operation.IDOperation = Tranche.IDOperation
+WHERE 
+	(
+	Tranche.IDOperation = {ParamIDOperation}
+	AND	Tranche.IDTranche = {ParamIDTranche}
+)
+ORDER BY 
+	Numlot ASC
+
+-- ============================================
+-- Requête : REQ_Tranche_StadeAvancement
+-- ============================================
+SELECT 
+	StadeAvancement.IDTranche AS IDTranche,	
+	StadeAvancement.DateReelle AS DateReelle,	
+	StadeAvancement.DatePrevMAJPromo AS DatePrevi,	
+	Avancement.Code AS Code
+FROM 
+	Avancement,	
+	StadeAvancement
+WHERE 
+	Avancement.IDListeAvancement = StadeAvancement.IDListeAvancement
+	AND
+	(
+		StadeAvancement.IDTranche = {ParamIDTranche}
+		AND	Avancement.Code = {ParamCode}
+	)
+
+-- ============================================
+-- Requête : REQ_Tranche_Situation_DernierMois_TRAVAUX
+-- ============================================
+SELECT 
+	Operation.Libelle AS Operation,	
+	Operation.Commune AS Commune,	
+	Tranche.Libelle AS Tranche,	
+	Tranche.StadeIDSituation AS StadeIDSituation,	
+	( Tranche.NbLogtIndiv + Tranche.NbLogtColl )  AS NbLogt,	
+	Tranche.StadeDepuisLe AS StadeDepuisLe
+FROM 
+	Operation,	
+	Tranche
+WHERE 
+	Operation.IDOperation = Tranche.IDOperation
+	AND
+	(
+		Tranche.StadeIDSituation = 2
+		AND	Tranche.StadeDepuisLe >= {ParamStadeDepuisLe}
+	)
+ORDER BY 
+	StadeDepuisLe DESC
+
+-- ============================================
+-- Requête : REQ_Tranche_Situation_DernierMois_LIV
+-- ============================================
+SELECT 
+	Operation.Libelle AS Operation,	
+	Operation.Commune AS Commune,	
+	Tranche.Libelle AS Tranche,	
+	Tranche.StadeIDSituation AS StadeIDSituation,	
+	Tranche.StadeDepuisLe AS StadeDepuisLe,	
+	( Tranche.NbLogtIndiv + Tranche.NbLogtColl )  AS NbLogt
+FROM 
+	Operation,	
+	Tranche
+WHERE 
+	Operation.IDOperation = Tranche.IDOperation
+	AND
+	(
+		Tranche.StadeIDSituation = 3
+		AND	Tranche.StadeDepuisLe >= {ParamStadeDepuisLe}
+	)
+ORDER BY 
+	StadeDepuisLe DESC
+
+-- ============================================
+-- Requête : REQ_SCCV_Creation_DernierMois
+-- ============================================
+SELECT 
+	StructureJuridique.RS AS RS,	
+	Operation.Commune AS Commune,	
+	Operation.Libelle AS Operation,	
+	StructureJuridique.DateLiquidation AS DateLiquidation,	
+	( Tranche.NbLogtIndiv + Tranche.NbLogtColl )  AS NbLogt,	
+	StructureJuridique.DateImmat AS DateImmat
+FROM 
+	StructureJuridique,	
+	Operation,	
+	Tranche
+WHERE 
+	Operation.IDOperation = Tranche.IDOperation
+	AND		StructureJuridique.IDStructureJuridique = Operation.IDStructureJuridique
+	AND
+	(
+		StructureJuridique.DateLiquidation IS NULL 
+		AND	StructureJuridique.DateImmat >= {ParamDateImmat}
+	)
+
+-- ============================================
+-- Requête : REQ_SCCV_Liquidation_DernierMois
+-- ============================================
+SELECT 
+	StructureJuridique.RS AS RS,	
+	Operation.Commune AS Commune,	
+	Operation.Libelle AS Operation,	
+	StructureJuridique.DateLiquidation AS DateLiquidation,	
+	( Tranche.NbLogtIndiv + Tranche.NbLogtColl )  AS NbLogt,	
+	StructureJuridique.DateImmat AS DateImmat
+FROM 
+	StructureJuridique,	
+	Operation,	
+	Tranche
+WHERE 
+	Operation.IDOperation = Tranche.IDOperation
+	AND		StructureJuridique.IDStructureJuridique = Operation.IDStructureJuridique
+	AND
+	(
+		StructureJuridique.DateLiquidation >= {ParamDateLiquidation}
+	)
+
+-- ============================================
+-- Requête : REQ_SansNom_PRomoComm1
+-- ============================================
+INSERT INTO StadeAvancement ( Ordre, IDListeAvancement, IDTranche )
+SELECT Avancement.Ordre, Avancement.IDListeAvancement, 305  
+FROM Avancement
+WHERE Avancement.Domaine = 'Chantier'
+ORDER BY Avancement.Ordre
+
+
+-- ============================================
+-- Requête : REQ_Financement_1_pourcent
+-- ============================================
+SELECT 
+	Financement.IDFinancement AS IDFinancement,	
+	Financement.IDTranche AS IDTranche,	
+	Financement.IDTypeFinancement AS IDTypeFinancement,	
+	Financement.EstSolde AS EstSolde,	
+	Financement.IDBanque AS IDBanque,	
+	Financement.DateVerstPret AS DateVerstPret,	
+	Financement.MontantPrevi AS MontantPrevi,	
+	Financement.InfosPretprevi AS InfosPretprevi,	
+	Financement.DateEnvoiDossier AS DateEnvoiDossier,	
+	Financement.DateSignature AS DateSignature,	
+	Financement.ContratMontant AS ContratMontant,	
+	Financement.ContratNbLogt AS ContratNbLogt,	
+	Financement.TauxPret AS TauxPret,	
+	Financement.DateDebutEcheance AS DateDebutEcheance,	
+	Financement.DateFinEcheance AS DateFinEcheance,	
+	Financement.MontantEcheance AS MontantEcheance,	
+	Financement.PretEmployeurDateDebutAmort AS PretEmployeurDateDebutAmort,	
+	Financement.PretEmployeurNumeroModifEcheance AS PretEmployeurNumeroModifEcheance
+FROM 
+	Financement
+WHERE 
+	Financement.IDTypeFinancement = 5
+	AND	Financement.IDTranche = {ParamIDTranche}
+
+-- ============================================
+-- Requête : REQ_DeblocagePSLA
+-- ============================================
+SELECT 
+	DeblocagePSLA.IDDeblocageFinancement AS IDDeblocageFinancement,	
+	DeblocagePSLA.IDFinancement AS IDFinancement,	
+	DeblocagePSLA.Montant AS Montant,	
+	DeblocagePSLA.DateDemande AS DateDemande,	
+	DeblocagePSLA.DateVersement AS DateVersement,	
+	DeblocagePSLA.Commentaire AS Commentaire,	
+	DeblocagePSLA.IDDeblocagePSLA AS IDDeblocagePSLA
+FROM 
+	DeblocagePSLA
+WHERE 
+	DeblocagePSLA.IDFinancement = {ParamIDFinancement}
+
+-- ============================================
+-- Requête : REQ_RemboursementAnticipe
+-- ============================================
+SELECT 
+	RemboursementAnticipe.IDRemboursementAnticipe AS IDRemboursementAnticipe,	
+	RemboursementAnticipe.IDFinancement AS IDFinancement,	
+	RemboursementAnticipe.Numero AS Numero,	
+	RemboursementAnticipe.Montant AS Montant,	
+	RemboursementAnticipe.Dat AS Dat,	
+	RemboursementAnticipe.NbLgt AS NbLgt,	
+	RemboursementAnticipe.Commentaire AS Commentaire
+FROM 
+	RemboursementAnticipe
+WHERE 
+	RemboursementAnticipe.IDFinancement = {ParamIDFinancement}
+
+-- ============================================
+-- Requête : REQ_Participation
+-- ============================================
+SELECT 
+	Participation.IDParticipation AS IDParticipation,	
+	Participation.IDStructureJuridique AS IDStructureJuridique,	
+	Participation.IDAssocie AS IDAssocie,	
+	Participation.Pourcentage AS Pourcentage,	
+	Participation.Commmentaires AS Commmentaires,	
+	Participation.ConvTreso AS ConvTreso,	
+	Participation.DateSignatureConv AS DateSignatureConv,	
+	Participation.DateApplication AS DateApplication,	
+	Participation.InfoTauxRemuneration AS InfoTauxRemuneration,	
+	Participation.IDPeriodicite_Versement AS IDPeriodicite_Versement,	
+	Participation.IDMotifRemunerationAssocie AS IDMotifRemunerationAssocie,	
+	Participation.IDIndexTaux_Remuneration AS IDIndexTaux_Remuneration,	
+	Participation.DateFinRemuneration AS DateFinRemuneration
+FROM 
+	Participation
+WHERE 
+	Participation.IDStructureJuridique = {ParamIDStructureJuridique}
+
+-- ============================================
+-- Requête : REQ_Operation_selon_StructureJuridique
+-- ============================================
+SELECT 
+	StructureJuridique.IDStructureJuridique AS IDStructureJuridique,	
+	Operation.IDOperation AS IDOperation,	
+	Operation.Libelle AS Libelle,	
+	Operation.CP AS CP,	
+	Operation.Commune AS Commune,	
+	Operation.SurRennesMetropole AS SurRennesMetropole,	
+	Operation.DureeChantierMois_old AS DureeChantierMois_old,	
+	Operation.ANRU AS ANRU,	
+	Operation.AnneeDGD AS AnneeDGD,	
+	Operation.Adresse AS Adresse,	
+	Operation.NomZAC AS NomZAC
+FROM 
+	StructureJuridique,	
+	Operation
+WHERE 
+	StructureJuridique.IDStructureJuridique = Operation.IDStructureJuridique
+	AND
+	(
+		StructureJuridique.IDStructureJuridique = {ParamIDStructureJuridique}
+	)
+
+-- ============================================
+-- Requête : REQ_Comptebancaire
+-- ============================================
+SELECT 
+	CompteBanque.IDCompteBanque AS IDCompteBanque,	
+	CompteBanque.IDBanque AS IDBanque,	
+	CompteBanque.IDTypeCompteBanque AS IDTypeCompteBanque,	
+	CompteBanque.IDUtilisationCompte AS IDUtilisationCompte,	
+	CompteBanque.NumCompte AS NumCompte,	
+	CompteBanque.IBAN AS IBAN,	
+	CompteBanque.BIC AS BIC,	
+	CompteBanque.EstCloture AS EstCloture,	
+	CompteBanque.Commentaires AS Commentaires,	
+	CompteBanque.IDStructureJuridique AS IDStructureJuridique
+FROM 
+	CompteBanque
+WHERE 
+	CompteBanque.IDStructureJuridique = {ParamIDStructureJuridique}
+
+-- ============================================
+-- Requête : REQ_CentreImpots
+-- ============================================
+SELECT 
+	StructureJuridique.IDStructureJuridique AS IDStructureJuridique,	
+	StructureJuridique.EDI_TVA AS EDI_TVA,	
+	StructureJuridique.EDI_Liasse AS EDI_Liasse,	
+	StructureJuridique.CpteFiscal AS CpteFiscal,	
+	StructureJuridique.IDSIE AS IDSIE,	
+	StructureJuridique.IDCivilite AS IDCivilite,	
+	StructureJuridique.InterlocuteurSIE AS InterlocuteurSIE,	
+	StructureJuridique.DateMandatSIE AS DateMandatSIE
+FROM 
+	StructureJuridique
+WHERE 
+	StructureJuridique.IDStructureJuridique = {ParamIDStructureJuridique}
+
+-- ============================================
+-- Requête : REQ_BilanStock
+-- ============================================
+SELECT 
+	Bilan_Stock.IDBilanStock AS IDBilanStock,	
+	Bilan_Stock.IDStructureJuridique AS IDStructureJuridique,	
+	Bilan_Stock.Annee AS Annee,	
+	Bilan_Stock.StockTotalDebit33a35 AS StockTotalDebit33a35,	
+	Bilan_Stock.StockTotalCredit33a35 AS StockTotalCredit33a35,	
+	Bilan_Stock.StockCredit713300 AS StockCredit713300,	
+	Bilan_Stock.StockPSLAPhaseLocNb AS StockPSLAPhaseLocNb,	
+	Bilan_Stock.StockPSLAPhaseLocCout AS StockPSLAPhaseLocCout,	
+	Bilan_Stock.StockInvenduNb AS StockInvenduNb,	
+	Bilan_Stock.StockInvenduCout AS StockInvenduCout
+FROM 
+	Bilan_Stock
+WHERE 
+	Bilan_Stock.IDStructureJuridique = {ParamIDStructureJuridique}
+ORDER BY 
+	Annee ASC
+
+-- ============================================
+-- Requête : REQ_Tranche_Situation_DernierMois_LIV_Graphique
+-- ============================================
+SELECT
+	FORMAT (tTranche.StadeDepuisLe , 'MMMM yyyy' ) AS MoisAnneeLIV,
+	FORMAT (tTranche.StadeDepuisLe , 'MMMM' ) AS MoisLIV,
+	FORMAT (tTranche.StadeDepuisLe , 'yyyy' ) AS AnneeLIV,
+	CAST( FORMAT (tTranche.StadeDepuisLe , 'yyyyMM' ) AS BIGINT ) AS MoisNum
+FROM
+	tTranche
+WHERE
+	tTranche.StadeIDSituation = 3
+GROUP BY
+	FORMAT (tTranche.StadeDepuisLe , 'MMMM yyyy' ),
+	FORMAT (tTranche.StadeDepuisLe , 'MMMM' ),
+	FORMAT (tTranche.StadeDepuisLe , 'yyyy' ),
+	CAST( FORMAT (tTranche.StadeDepuisLe , 'yyyyMM' ) AS BIGINT )
+ORDER BY
+	AnneeLIV ASC,
+	MoisNum ASC
+
+
+-- ============================================
+-- Requête : REQ_Operation_Simple
+-- ============================================
+SELECT 
+	Operation.IDOperation AS IDOperation,	
+	Operation.Libelle AS Libelle,	
+	StructureJuridique.RS AS RS,	
+	Operation.Commune AS Commune,	
+	Operation.CP AS CP,	
+	Operation.curNbTranche AS curNbTranche,	
+	Operation.curNbLot AS curNbLot,	
+	Operation.MasquerCommercial AS MasquerCommercial,	
+	Operation.MasquerComptable AS MasquerComptable,	
+	Operation.MasquerPromo AS MasquerPromo,	
+	( ( ChargeOp1.Patronyme +  ' ') + ChargeOp1.Prenom )  AS ChargeOpe1,	
+	( ( ChargeOp2.Patronyme +  ' ') + ChargeOp2.Prenom )  AS ChargeOpe2,	
+	Operation.curIDPersonne_ChargeOpe1 AS curIDPersonne_ChargeOpe1,	
+	Operation.curIDPersonne_ChargeOpe2 AS curIDPersonne_ChargeOpe2,	
+	StructureJuridique.SCCV_HF AS SCCV_HF,	
+	StructureJuridique.SCCV_HLM AS SCCV_HLM,	
+	Commune.ZonageABCRevise AS ZonageABCRevise,	
+	Operation.AvecAlerte AS AvecAlerte,	
+	Operation.IDPersonne_Assistante AS IDPersonne_Assistante,	
+	StructureJuridique.IDStructureJuridique AS IDStructureJuridique
+FROM 
+	Personne ChargeOp2
+	RIGHT OUTER JOIN
+	(
+		Personne ChargeOp1
+		RIGHT OUTER JOIN
+		(
+			StructureJuridique
+			INNER JOIN
+			(
+				Commune
+				INNER JOIN
+				Operation
+				ON Commune.Libelle = Operation.Commune
+			)
+			ON StructureJuridique.IDStructureJuridique = Operation.IDStructureJuridique
+		)
+		ON ChargeOp1.IDPersonne = Operation.curIDPersonne_ChargeOpe1
+	)
+	ON ChargeOp2.IDPersonne = Operation.curIDPersonne_ChargeOpe2
+WHERE 
+	(
+	
+	(
+		Operation.curIDPersonne_ChargeOpe1 = {ParamcurIDPersonne_ChargeOpe}
+		OR	Operation.curIDPersonne_ChargeOpe2 = {ParamcurIDPersonne_ChargeOpe}
+	)
+	AND	Operation.MasquerCommercial = {ParamMasquerCommercial}
+	AND	Operation.MasquerComptable = {ParamMasquerComptable}
+	AND	Operation.MasquerPromo = {ParamMasquerPromo}
+	AND	Operation.AvecAlerte = {ParamAvecAlerte}
+	AND	Operation.IDPersonne_Assistante = {ParamIDPersonne_Assistante}
+	AND	Operation.IDStructureJuridique = {ParamIDStructureJuridique}
+	AND	
+	(
+		Operation.Libelle LIKE %{ParamLibelle}%
+		OR	Operation.Commune LIKE %{ParamLibelle}%
+		OR	StructureJuridique.RS LIKE %{ParamLibelle}%
+	)
+)
+ORDER BY 
+	Commune ASC,	
+	RS ASC,	
+	Libelle ASC
+
+-- ============================================
+-- Requête : REQ_AcquereurAdresses
+-- ============================================
+SELECT 
+	Lot.IDlot AS IDlot,	
+	( ( ( ( Acquereur.AdresseActuelle +  ' ') + Acquereur.CPActuel ) +  ' ') + Acquereur.Communeactuelle )  AS AdresseAcquereur,	
+	( ( ( ( Lot.Adresse +  ' ') + Operation.CP ) +  ' ') + Operation.Commune )  AS AdresseCompleteLot,	
+	Acquereur.AdresseActuelle AS AdresseActuelle,	
+	Acquereur.CPActuel AS CPActuel,	
+	Acquereur.Communeactuelle AS Communeactuelle,	
+	Operation.CP AS CP,	
+	Operation.Commune AS Commune,	
+	Lot.Adresse AS AdresseLot,	
+	Commercialisation.IDCommercialisation AS IDCommercialisation,
+	Lot.curIDCommercialisation as curIDCommercialisation
+FROM 
+	Operation,	
+	Tranche,	
+	Lot,	
+	Acquereur,	
+	Commercialisation
+WHERE 
+	Tranche.IDTranche = Lot.IDTranche
+	AND		Operation.IDOperation = Tranche.IDOperation
+	AND		Lot.IDlot = Commercialisation.IDLot
+	AND		Acquereur.IDAcquereur = Commercialisation.IDAcquereur
+	AND
+	(
+		Lot.IDlot = {paramIDLot}
+	)
+
+-- ============================================
+-- Requête : REQ_Commercialisation_Resa
+-- ============================================
+SELECT 
+	Commercialisation.IDCommercialisation AS IDCommercialisation,	
+	Commercialisation.IDLot AS IDLot,	
+	Commercialisation.IDAcquereur AS IDAcquereur,	
+	Commercialisation.DateResa AS DateResa,	
+	Commercialisation.DateSignatureContratLoc AS DateSignatureContratLoc,	
+	Commercialisation.DateSignatureActeVEFA AS DateSignatureActeVEFA,	
+	Commercialisation.DateLivraison AS DateLivraison,	
+	Commercialisation.DateLeveeOption AS DateLeveeOption,	
+	Commercialisation.DateAnnulation AS DateAnnulation,	
+	Commercialisation.IDNatureAchat AS IDNatureAchat
+FROM 
+	Commercialisation
+WHERE 
+	Commercialisation.DateAnnulation IS NULL 
+	AND	Commercialisation.DateResa IS NOT NULL 
+
+-- ============================================
+-- Requête : REQ_Reserve_MultiEntreprise
+-- ============================================
+SELECT 
+	REQ_Reserve_tout.IDEntreprise AS IDEntreprise,	
+	REQ_Reserve_tout.Libelle AS libelle,	
+	REQ_Reserve_tout.Commune AS commune,	
+	REQ_Reserve_tout.RS AS RS,	
+	COUNT(REQ_Reserve_tout.RS) AS NbResa
+FROM 
+	REQ_Reserve_tout
+WHERE 
+	REQ_Reserve_tout.EnvoyerMail = 1
+	AND	REQ_Reserve_tout.IDOperation = {paramIDOperation}
+	AND	REQ_Reserve_tout.WindowsUser = {paramWindowsUser}
+GROUP BY 
+	REQ_Reserve_tout.IDEntreprise,	
+	REQ_Reserve_tout.Libelle,	
+	REQ_Reserve_tout.Commune,	
+	REQ_Reserve_tout.RS
+
+-- ============================================
+-- Requête : REQ_EnvoyerMail_Reset
+-- ============================================
+UPDATE 
+	Reserve
+SET
+	EnvoyerMail = 0
+WHERE 
+	Reserve.EnvoyerMail = 1
+	AND	Reserve.WindowsUser = {paramWindowsUser}
+
+-- ============================================
+-- Requête : REQ_ReserveEnCours_OperationEntreprise
+-- ============================================
+SELECT 
+	REQ_Reserve_tout.IDOperation AS IDOperation,	
+	REQ_Reserve_tout.IDReserveEntreprise AS IDReserveEntreprise,	
+	ReserveEntreprise.RS AS RS,	
+	Operation.Libelle AS Libelle,	
+	Operation.Commune AS Commune,	
+	COUNT(REQ_Reserve_tout.IDOperation) AS CompteDeIDOperation,	
+	ReserveEntreprise.EMail AS EMail
+FROM 
+	REQ_Reserve_tout,	
+	ReserveEntreprise,	
+	Operation
+WHERE 
+	REQ_Reserve_tout.IDReserveEntreprise = ReserveEntreprise.IDReserveEntreprise
+	AND		REQ_Reserve_tout.IDOperation = Operation.IDOperation
+	AND
+	(
+		REQ_Reserve_tout.TravauxEffectues = 0
+		AND	Operation.IDOperation = {paramIDOperation}
+	)
+GROUP BY 
+	REQ_Reserve_tout.IDOperation,	
+	REQ_Reserve_tout.IDReserveEntreprise,	
+	ReserveEntreprise.RS,	
+	Operation.Libelle,	
+	Operation.Commune,	
+	ReserveEntreprise.EMail
+
+-- ============================================
+-- Requête : REQ_Acquereur_Simple
+-- ============================================
+SELECT 
+	Acquereur.IDAcquereur AS IDAcquereur,	
+	Acquereur.NomComplet AS NomComplet
+FROM 
+	Acquereur
+ORDER BY 
+	NomComplet ASC
+
+-- ============================================
+-- Requête : REQ_Vendeur_Lot
+-- ============================================
+SELECT 
+	CommVendeur.IDCommVendeur AS IDCommVendeur,	
+	CommVendeur.IDLot AS IDLot
+FROM 
+	CommVendeur
+WHERE 
+	CommVendeur.IDLot = {ParamIDLot}
+
+-- ============================================
+-- Requête : REQ_CommVendeur_simple
+-- ============================================
+SELECT 
+	CommVendeur.IDCommVendeur AS IDCommVendeur,	
+	CommVendeur.IDLot AS IDLot,	
+	CommVendeur.IDCommercial AS IDCommercial
+FROM 
+	CommVendeur
+WHERE 
+	CommVendeur.IDLot = {ParamIDLot}
+	AND	CommVendeur.IDCommercial = {ParamIDCommercial}
+	AND	CommVendeur.IDCommercialisation = {ParamIDCommercialisation}
+	AND	CommVendeur.Evenement = {ParamEvenement}
+
+-- ============================================
+-- Requête : REQ_ChargeOp_selon_operation
+-- ============================================
+SELECT 
+	Operation_ChargeOpe.IDOperation_ChargeOpe AS IDOperation_ChargeOpe,	
+	Operation_ChargeOpe.IDPersonne AS IDPersonne,	
+	Operation_ChargeOpe.IDOperation AS IDOperation,	
+	Operation_ChargeOpe.Jusquau AS Jusquau
+FROM 
+	Operation_ChargeOpe
+WHERE 
+	Operation_ChargeOpe.IDOperation = {ParamIDOperation}
+
+-- ============================================
+-- Requête : REQ_ChargeOp
+-- ============================================
+SELECT 
+	Personne.IDPersonne AS idPersonne,	
+	( ( Personne.Patronyme +  ' ') + Personne.Prenom )  AS ChargeOp
+FROM 
+	Personne
+WHERE 
+	Personne.IDFonction = 2
+
+-- ============================================
+-- Requête : REQ_Avancement_selon_domaine
+-- ============================================
+SELECT
+	Avancement.IDListeAvancement AS IDListeAvancement,
+	Avancement.Libelle AS Libelle,
+	Avancement.Domaine AS Domaine,
+	Avancement.Ordre AS Ordre
+FROM
+	Avancement
+WHERE
+	Avancement.Domaine = {paramDomaine}
+	or
+	Avancement.InclureQuandCreationTranche = {paramInclureQuandCreationTranche}
+ORDER BY
+	Ordre ASC
+
+
+-- ============================================
+-- Requête : REQ_Tranche_selon_operation
+-- ============================================
+SELECT 
+	Tranche.IDTranche AS IDTranche,	
+	Tranche.Libelle AS Libelle,	
+	Tranche.NbLogtIndiv AS NbLogtIndiv,	
+	Tranche.NbLogtColl AS NbLogtColl,	
+	Tranche.DontLogtCollPSLA AS DontLogtCollPSLA,	
+	Tranche.DontLogtIndivPSLA AS DontLogtIndivPSLA,	
+	Tranche.IDOperation AS IDOperation,	
+	Tranche.DontLogtCollBRS AS DontLogtCollBRS,	
+	Tranche.DontLogtIndivBRS AS DontLogtIndivBRS
+FROM 
+	Tranche
+WHERE 
+	Tranche.IDOperation = {ParamIDOperation}
+ORDER BY 
+	IDOperation ASC
+
+-- ============================================
+-- Requête : REQ_Comm_Resa_4
+-- ============================================
+SELECT DISTINCT 
+	Lot.IDlot AS IDlot,	
+	Lot.IDTranche AS IDTranche,	
+	Lot.Numlot AS Numlot,	
+	Lot.curIDAcquereur AS curIDAcquereur,	
+	Acquereur.Patronyme + ' ' + Acquereur.Prenom AS Acquéreur2,	
+	Commercialisation.DateResa AS DateResa,	
+	Commercialisation.IDNatureAchat AS IDNatureAchat,	
+	Commercialisation.EstJustifFiscal AS EstJustifFiscal,	
+	Commercialisation.EstFiscalite AS EstFiscalite,	
+	FiscaliteAcquereur.Libelle AS Motif,	
+	Commercialisation.CommFisca AS Commentaires,	
+	Lot.MontantHonoCom AS MontantHonoCom,	
+	Commercial.Societe AS LeCommercial,	
+	Commercialisation.PasAideRM AS PasAideRM,	
+	Commercialisation.MontantSubv AS MontantSubv,	
+	Commercialisation.Loyer AS Loyer,	
+	Commercialisation.Epargne AS Epargne
+FROM 
+	FiscaliteAcquereur,	
+	Commercialisation,	
+	Lot,	
+	Acquereur,	
+	Commercial
+WHERE 
+	Commercial.IDCommercial = Acquereur.IDConseillerCommercial
+	AND		Acquereur.IDAcquereur = Commercialisation.IDAcquereur
+	AND		Lot.IDlot = Commercialisation.IDLot
+	AND		FiscaliteAcquereur.IDFiscaliteAcquereur = Commercialisation.IDFiscaliteAcquereur
+	AND
+	(
+		Commercialisation.DateResa IS NULL 
+	)
+
+-- ============================================
+-- Requête : REQ_InterlocuteurSIE
+-- ============================================
+SELECT DISTINCT 
+	StructureJuridique.InterlocuteurSIE AS InterlocuteurSIE
+FROM 
+	StructureJuridique
+ORDER BY 
+	InterlocuteurSIE ASC
+
+-- ============================================
+-- Requête : REQ_Associe
+-- ============================================
+SELECT 
+	Associe.IDAssocie AS IDAssocie,	
+	Associe.RS AS RS,	
+	Associe.RS +  ' (' + IIF(Associe.EstHLM =  1, 'HLM' , 'Non HLM' ) +  ')'  AS RS_HLM
+FROM 
+	Associe
+ORDER BY 
+	RS ASC
+
+-- ============================================
+-- Requête : REQ_Banque
+-- ============================================
+SELECT 
+	Banque.IDBanque AS IDBanque,	
+	Banque.Libelle AS Libelle
+FROM 
+	Banque
+ORDER BY 
+	Libelle ASC
+
+-- ============================================
+-- Requête : REQ_Acquereur_Dun_Lot
+-- ============================================
+SELECT 
+	Commercialisation.IDLot AS IDLot,	
+	Commercialisation.IDAcquereur AS IDAcquereur,	
+	Commercialisation.IDCommercialisation AS IDCommercialisation,	
+	Acquereur.Patronyme AS Patronyme,	
+	Acquereur.Prenom AS Prenom,	
+	Civilite.Libelle AS Civilite,	
+	( ( Acquereur.Patronyme +  ' ') + Acquereur.Prenom )  AS Acquereur
+FROM 
+	Civilite
+	RIGHT OUTER JOIN
+	(
+		Acquereur
+		INNER JOIN
+		Commercialisation
+		ON Acquereur.IDAcquereur = Commercialisation.IDAcquereur
+	)
+	ON Civilite.IDCivilite = Acquereur.IDCivilite
+WHERE 
+	(
+	Commercialisation.IDLot = {ParamIDLot}
+)
+ORDER BY 
+	Patronyme ASC
+
+-- ============================================
+-- Requête : REQ_XLPlanning_Tranche
+-- ============================================
+SELECT 
+	Tranche.IDTranche AS IDTranche,	
+	Tranche.Libelle AS LibelleTranche,	
+	Operation.Libelle AS Libelle,	
+	Operation.Commune AS Commune,	
+	Operation.IDOperation AS IDOperation,	
+	StructureJuridique.RS AS RS,	
+	Tranche.NbLogtIndiv AS NbLogtIndiv,	
+	Tranche.NbLogtColl AS NbLogtColl,	
+	Tranche.DureeChantierMois AS DureeChantierMois,	
+	Tranche.StadeLIV AS StadeLIV,	
+	Tranche.StadeOS AS StadeOS,	
+	Tranche.DateLivraisonContractuelle AS DateLivraisonContractuelle,	
+	Operation.MasquerPromo AS MasquerPromo,	
+	Tranche.StadePreviLIV AS StadePreviLIV,	
+	Tranche.StadePreviOS AS StadePreviOS,	
+	Operation.curPourcentageHF AS curPourcentageHF,	
+	Operation.curIDAssocieHorsHF AS curIDAssocieHorsHF,	
+	Associe.RS AS associé
+FROM 
+	StructureJuridique,	
+	Operation,	
+	Tranche,	
+	Associe
+WHERE 
+	StructureJuridique.IDStructureJuridique = Operation.IDStructureJuridique
+	AND		Associe.IDAssocie = Operation.curIDAssocieHorsHF
+	AND		Operation.IDOperation = Tranche.IDOperation
+	AND
+	(
+		Operation.MasquerPromo = 0
+	)
+ORDER BY 
+	Libelle ASC
+
+-- ============================================
+-- Requête : REQ_Participation_HF
+-- ============================================
+SELECT 
+	Participation.IDAssocie AS IDAssocie,	
+	Participation.Pourcentage AS PourcHF,	
+	Participation.IDStructureJuridique AS IDStructureJuridique,	
+	StructureJuridique.RS AS RS,	
+	Operation.IDOperation AS IDOperation
+FROM 
+	(
+		StructureJuridique
+		LEFT OUTER JOIN
+		Participation
+		ON StructureJuridique.IDStructureJuridique = Participation.IDStructureJuridique
+	)
+	LEFT OUTER JOIN
+	Operation
+	ON StructureJuridique.IDStructureJuridique = Operation.IDStructureJuridique
+WHERE 
+	(
+	Participation.IDAssocie = 1
+	and
+	Operation.IDOperation={paramIDOperation}
+)
+
+-- ============================================
+-- Requête : REQ_Participation_NonHF
+-- ============================================
+SELECT 
+	Participation.IDAssocie AS IDAssocie,	
+	Participation.Pourcentage AS PourcHF,	
+	Participation.IDStructureJuridique AS IDStructureJuridique,	
+	StructureJuridique.RS AS RS,	
+	Operation.IDOperation AS IDOperation
+FROM 
+	(
+		StructureJuridique
+		LEFT OUTER JOIN
+		Participation
+		ON StructureJuridique.IDStructureJuridique = Participation.IDStructureJuridique
+	)
+	LEFT OUTER JOIN
+	Operation
+	ON StructureJuridique.IDStructureJuridique = Operation.IDStructureJuridique
+WHERE 
+	(
+	Participation.IDAssocie <> 1
+	AND	Operation.IDOperation = {paramIDOperation}
+)
+ORDER BY 
+	PourcHF DESC
+
+-- ============================================
+-- Requête : REQ_Acquereur_Tout
+-- ============================================
+SELECT 
+	Acquereur.IDAcquereur AS IDAcquereur,	
+	Acquereur.Code AS Code,	
+	Acquereur.Patronyme AS Patronyme,	
+	Acquereur.Civilite AS Civilite,	
+	Acquereur.Prenom AS Prenom,	
+	Acquereur.RS AS RS,	
+	Operation.IDOperation AS IDOperation,	
+	Operation.Libelle AS Opération,	
+	Operation.Commune AS Commune,	
+	Tranche.Libelle AS Tranche,	
+	Lot.Numlot AS Numlot,	
+	Lot.LocatairePatronyme AS LocatairePatronyme,	
+	Lot.LocatairePrenom AS LocatairePrenom,	
+	Lot.LocataireCivilite AS LocataireCivilite,	
+	Lot.LocataireTelephone AS LocataireTelephone,	
+	Lot.LocatairePortable AS LocatairePortable,	
+	Acquereur.Portable AS Portable,	
+	Lot.Adresse AS Adresse,	
+	Acquereur.Téléphone AS Téléphone,	
+	Commercialisation.DateAnnulation AS DateAnnulation,	
+	Operation.CP AS CP,	
+	Acquereur.curIDLot AS curIDLot
+FROM 
+	Operation,	
+	Tranche,	
+	Lot,	
+	Acquereur,	
+	Commercialisation
+WHERE 
+	Tranche.IDTranche = Lot.IDTranche
+	AND		Operation.IDOperation = Tranche.IDOperation
+	AND		Lot.IDlot = Commercialisation.IDLot
+	AND		Acquereur.IDAcquereur = Commercialisation.IDAcquereur
+	AND
+	(
+		Acquereur.curIDLot > 0
+		AND	Operation.IDOperation = {paramIDOperation}
+	)
+ORDER BY 
+	Opération ASC,	
+	Patronyme ASC
+
+-- ============================================
+-- Requête : REQ_ListeTauxTVA
+-- ============================================
+SELECT 
+	ListetauxTVA.Taux AS Taux,	
+	 format (ListetauxTVA.Taux , '0.00 %' ) AS Expr1
+FROM 
+	ListetauxTVA
+
+-- ============================================
+-- Requête : REQ_Avancement
+-- ============================================
+SELECT 
+	Avancement.IDListeAvancement AS IDListeAvancement,	
+	( ( ( Avancement.Libelle +  ' (') + Avancement.Code ) +  ')')  AS Libelle
+FROM 
+	Avancement
+WHERE 
+	Avancement.IDListeAvancement = {ParamIDListeAvancement}
+	AND	Avancement.AvecHonoGestion = {paramAvecHonoGestion}
+
+-- ============================================
+-- Requête : REQ_Admin_PSLA
+-- ============================================
+SELECT 
+	PSLA.IDPSLA AS IDPSLA,	
+	PSLA.DateAgrementProvisoire AS DateAgrementProvisoire,	
+	PSLA.NumAgrement AS NumAgrement,	
+	PSLA.CoutTotal AS CoutTotal,	
+	PSLA.MontantPSLA AS MontantPSLA,	
+	PSLA.IDBanque AS IDBanque,	
+	PSLA.OrganismeGarantieEmprunt AS OrganismeGarantieEmprunt,	
+	PSLA.DateDeliberationGarantie AS DateDeliberationGarantie,	
+	PSLA.IDTranche AS IDTranche,	
+	PSLA.GarantieEmpruntActionDate AS GarantieEmpruntActionDate,	
+	PSLA.Commentaire AS Commentaire,	
+	PSLA.NbLogtAgrement AS NbLogtAgrement,	
+	PSLA.DateSignatureGarant AS DateSignatureGarant,	
+	PSLA.DateInfoAnnuelle AS DateInfoAnnuelle,	
+	PSLA.DateInfoFin AS DateInfoFin,	
+	PSLA.Commemtaires AS Commemtaires,	
+	PSLA.BanqueActionDate AS BanqueActionDate,	
+	PSLA.old_ActionDestinataire AS old_ActionDestinataire,	
+	PSLA.old_DateDepotDossierAgrement AS old_DateDepotDossierAgrement,	
+	PSLA.old_DateSignaturePretSCCV AS old_DateSignaturePretSCCV,	
+	PSLA.old_DateEnvoiPretGarant AS old_DateEnvoiPretGarant,	
+	PSLA.old_IDPhaseMontagePSLA AS old_IDPhaseMontagePSLA,	
+	PSLA.old_PSLACoutRevientAgrement AS old_PSLACoutRevientAgrement,	
+	PSLA.old_PSLADateDepotDdeAgrement AS old_PSLADateDepotDdeAgrement,	
+	PSLA.old_IDFinancement AS old_IDFinancement,	
+	PSLA.OrganismeAgrément AS OrganismeAgrément,	
+	PSLA.PreviAgrement AS PreviAgrement,	
+	PSLA.DateDepotDossierAgrement AS DateDepotDossierAgrement,	
+	PSLA.DateReceptionAgrement AS DateReceptionAgrement,	
+	PSLA.DateDecisionAgrement AS DateDecisionAgrement,	
+	PSLA.DateConventionEngagementReciproque AS DateConventionEngagementReciproque,	
+	PSLA.BanqueOperateurDate AS BanqueOperateurDate,	
+	PSLA.BanqueOperateur AS BanqueOperateur,	
+	PSLA.BanqueClientDate AS BanqueClientDate,	
+	PSLA.BanqueClient AS BanqueClient,	
+	PSLA.FinSuivi AS FinSuivi,	
+	PSLA.CFF_FI_Client AS CFF_FI_Client,	
+	PSLA.DureeAnneePSLA AS DureeAnneePSLA,	
+	PSLA.EstimPSLA AS EstimPSLA,	
+	PSLA.NumBureauGarantie AS NumBureauGarantie,	
+	PSLA.NumConventionGarantie AS NumConventionGarantie
+FROM 
+	PSLA
+WHERE 
+	PSLA.IDTranche = {ParamIDTranche}
+
+-- ============================================
+-- Requête : REQ_Contrat_PSLA
+-- ============================================
+SELECT 
+	PSLA.IDPSLA AS IDPSLA,	
+	PSLA.DateAgrementProvisoire AS DateAgrementProvisoire,	
+	PSLA.NumAgrement AS NumAgrement,	
+	PSLA.CoutTotal AS CoutTotal,	
+	PSLA.MontantPSLA AS MontantPSLA,	
+	PSLA.IDBanque AS IDBanque,	
+	PSLA.OrganismeGarantieEmprunt AS OrganismeGarantieEmprunt,	
+	PSLA.DateDeliberationGarantie AS DateDeliberationGarantie,	
+	PSLA.IDTranche AS IDTranche,	
+	PSLA.GarantieEmpruntActionDate AS GarantieEmpruntActionDate,	
+	PSLA.Commentaire AS Commentaire,	
+	PSLA.NbLogtAgrement AS NbLogtAgrement,	
+	PSLA.DateSignatureGarant AS DateSignatureGarant,	
+	PSLA.DateInfoAnnuelle AS DateInfoAnnuelle,	
+	PSLA.DateInfoFin AS DateInfoFin,	
+	PSLA.Commemtaires AS Commemtaires,	
+	PSLA.BanqueActionDate AS BanqueActionDate,	
+	PSLA.OrganismeAgrément AS OrganismeAgrément,	
+	PSLA.PreviAgrement AS PreviAgrement,	
+	PSLA.DateDepotDossierAgrement AS DateDepotDossierAgrement,	
+	PSLA.DateReceptionAgrement AS DateReceptionAgrement,	
+	PSLA.DateDecisionAgrement AS DateDecisionAgrement,	
+	PSLA.DateConventionEngagementReciproque AS DateConventionEngagementReciproque,	
+	PSLA.BanqueOperateurDate AS BanqueOperateurDate,	
+	PSLA.BanqueOperateur AS BanqueOperateur,	
+	PSLA.BanqueClientDate AS BanqueClientDate,	
+	PSLA.BanqueClient AS BanqueClient,	
+	PSLA.FinSuivi AS FinSuivi,	
+	PSLA.CFF_FI_Client AS CFF_FI_Client,	
+	PSLA.DureeAnneePSLA AS DureeAnneePSLA,	
+	PSLA.EstimPSLA AS EstimPSLA,	
+	PSLA.NumBureauGarantie AS NumBureauGarantie,	
+	PSLA.NumConventionGarantie AS NumConventionGarantie,	
+	PSLA.IDBanqueActionType AS IDBanqueActionType,	
+	PSLA.IDGarantieEmpruntActionType AS IDGarantieEmpruntActionType
+FROM 
+	PSLA
+WHERE 
+	PSLA.IDTranche = {ParamIDTranche}
+
+-- ============================================
+-- Requête : REQ_TypeFinancement_OC
+-- ============================================
+SELECT 
+	TypeFinancement.IDTypeFinancement AS IDTypeFinancement,	
+	TypeFinancement.Libelle AS Libelle,	
+	TypeFinancement.Categorie AS Categorie
+FROM 
+	TypeFinancement
+WHERE 
+	TypeFinancement.Categorie = 'OC'
+
+-- ============================================
+-- Requête : REQ_TypeFinancement_1_pourcent
+-- ============================================
+SELECT 
+	TypeFinancement.IDTypeFinancement AS IDTypeFinancement,	
+	TypeFinancement.Libelle AS Libelle,	
+	TypeFinancement.Categorie AS Categorie
+FROM 
+	TypeFinancement
+WHERE 
+	TypeFinancement.Categorie = '1%'
+
+-- ============================================
+-- Requête : REQ_DeblocagePSLA_1_pourcent
+-- ============================================
+SELECT 
+	DeblocagePSLA.IDDeblocageFinancement AS IDDeblocageFinancement,	
+	DeblocagePSLA.IDFinancement AS IDFinancement,	
+	DeblocagePSLA.Montant AS Montant,	
+	DeblocagePSLA.DateDemande AS DateDemande,	
+	DeblocagePSLA.DateVersement AS DateVersement,	
+	DeblocagePSLA.Commentaire AS Commentaire
+FROM 
+	DeblocagePSLA
+WHERE 
+	DeblocagePSLA.IDFinancement = {ParamIDFinancement}
+
+-- ============================================
+-- Requête : REQ_RemboursementAnticipe_1_pourcent
+-- ============================================
+SELECT 
+	RemboursementAnticipe.IDRemboursementAnticipe AS IDRemboursementAnticipe,	
+	RemboursementAnticipe.IDFinancement AS IDFinancement,	
+	RemboursementAnticipe.Numero AS Numero,	
+	RemboursementAnticipe.Montant AS Montant,	
+	RemboursementAnticipe.Dat AS Dat,	
+	RemboursementAnticipe.NbLgt AS NbLgt,	
+	RemboursementAnticipe.Commentaire AS Commentaire
+FROM 
+	RemboursementAnticipe
+WHERE 
+	RemboursementAnticipe.IDFinancement = {ParamIDFinancement}
+
+-- ============================================
+-- Requête : REQ_XLComm_Synthese
+-- ============================================
+SELECT 
+	Operation.Commune AS Commune,	
+	Operation.curPourcentageHF AS PourcentageHF,	
+	Operation.Libelle AS Programme,	
+	StructureJuridique.RS AS SCCV,	
+	Tranche.StadePreviCOM as Lancement_Comm,	
+	Tranche.StadeCOM as Previ_Lancement_Comm,	
+	Tranche.StadeOS AS Date_OS,	
+	Tranche.StadePreviOS AS Previ_OS,	
+	Tranche.DateLivraisonContractuelle AS Date_livraison,	
+	Tranche.NbLot AS Nb_logts,	
+	Tranche.NbLgtPSLA AS Nb_logts_PSLA,	
+	Tranche.NbLgtHorsPSLA AS Nb_logts_Hors_PSLA,	
+	Tranche.NbResa AS Nb_resa,	
+	( Tranche.NbLot - Tranche.NbResa )  AS Invendus,	
+	Tranche.NbResa_N AS Nb_resa_annee_en_cours,	
+	Tranche.NbResa_N_PSLA AS Nb_resa_PSLA_annee_en_cours,	
+	Tranche.NbActeVEFA AS Nb_acte_VEFA,	
+	Tranche.NbActeVEFA_N AS Nb_acte_VEFA_Annee_En_Cours,	
+	( Tranche.NbActeVEFA + Tranche.NbActeVEFA_N )  AS Total_Actes,	
+	Tranche.NbLeveeOption AS NbLeveeOption,	
+	Tranche.NbPhaseLoc AS NbPhaseLoc,	
+	Tranche.NbLeveeOption_N AS NbLeveeOption_annee_en_cours,	
+	( ( Tranche.NbLgtHorsPSLA - Tranche.NbResa_N ) + Tranche.NbPhaseLoc )  AS TotalResteASigner,	
+	( Tranche.NbLgtHorsPSLA - Tranche.NbResa_N )  AS DontLocAccession,	
+	( Tranche.NbResa_N * Operation.curPourcentageHF )  AS ProrataSCCVResa,	
+	( Tranche.NbResa_N_PSLA * Operation.curPourcentageHF )  AS ProrataSCCVPSLA,	
+	( Tranche.NbActeVEFA_N * Operation.curPourcentageHF )  AS ProrataSCCVActe,	
+	( Tranche.NbLeveeOption * Operation.curPourcentageHF )  AS ProrataSCCVLeveeOption
+FROM 
+	(
+		StructureJuridique
+		INNER JOIN
+		(
+			Associe
+			RIGHT OUTER JOIN
+			Operation
+			ON Associe.IDAssocie = Operation.curIDAssocieHorsHF
+		)
+		ON StructureJuridique.IDStructureJuridique = Operation.IDStructureJuridique
+	)
+	INNER JOIN
+	Tranche
+	ON Operation.IDOperation = Tranche.IDOperation
+WHERE 
+	(
+	Operation.MasquerCommercial = 0
+)
+
+-- ============================================
+-- Requête : REQ_SansNom1
+-- ============================================
+SELECT 
+	Tranche.StadeLIV AS StadeLIV,	
+	Tranche.StadeCode AS StadeCode,	
+	Tranche.StadeIDSituation AS StadeIDSituation
+FROM 
+	Tranche
+WHERE 
+	Tranche.IDTranche = {ParamIDTranche}
+	AND	Tranche.StadeOS IS NOT NULL 
+	AND	Tranche.StadeLIV IS NOT NULL 
+	AND	Tranche.StadeSAV IS NULL 
+
+-- ============================================
+-- Requête : REQ_Stat_Lot_Resa
+-- ============================================
+SELECT
+	COUNT(Commercialisation.IDLot) AS Nb,
+	Lot.IDTranche AS IDTranche
+FROM
+	Lot
+	INNER JOIN
+	Commercialisation
+	ON Lot.IDlot = Commercialisation.IDLot
+WHERE
+	(
+		Lot.IDTranche = {ParamIDTranche}
+		AND
+		Commercialisation.DateResa IS NOT NULL
+		AND
+		Commercialisation.DateAnnulation IS NULL
+		AND
+		(
+			Lot.FamilleDeBien = 'APPARTEMENT'
+			OR
+			Lot.FamilleDeBien = 'MAISON'
+		)
+	)
+GROUP BY
+	Lot.IDTranche
+
+
+-- ============================================
+-- Requête : REQ_Stat_Lot_Resa_N
+-- ============================================
+SELECT 
+	COUNT(Commercialisation.IDLot) AS Nb,
+	Lot.IDTranche
+FROM 
+	Lot,	
+	Commercialisation
+WHERE 
+	Lot.IDlot = Commercialisation.IDLot
+	AND
+	(
+		Lot.IDTranche = {ParamIDTranche}
+		AND	Commercialisation.DateResa IS not NULL 
+		AND	Commercialisation.DateAnnulation IS NULL 
+		AND	year(Commercialisation.DateResa) = year(GETDATE())
+	)
+	AND
+	(
+		Lot.FamilleDeBien='APPARTEMENT'
+		OR
+		Lot.FamilleDeBien='MAISON'
+	)
+GROUP BY 
+	Lot.IDTranche
+
+
+
+-- ============================================
+-- Requête : REQ_Stat_Lot_Resa_Nm1
+-- ============================================
+SELECT 
+COUNT(Commercialisation.IDLot) AS Nb,
+Lot.IDTranche
+FROM 
+Lot,	
+Commercialisation
+WHERE 
+Lot.IDLot = Commercialisation.IDLot
+AND
+(
+Lot.IDTranche = {ParamIDTranche}
+AND	Commercialisation.DateResa IS not NULL 
+AND	Commercialisation.DateAnnulation IS NULL 
+AND	year(Commercialisation.DateResa) = year(GETDATE( ) )-1
+)
+	AND
+	(
+		Lot.FamilleDeBien='APPARTEMENT'
+		OR
+		Lot.FamilleDeBien='MAISON'
+	)
+
+GROUP BY 
+Lot.IDTranche
+
+
+
+
+-- ============================================
+-- Requête : REQ_Stat_Lot_Resa_Nm2
+-- ============================================
+SELECT 
+COUNT(Commercialisation.IDLot) AS Nb,
+Lot.IDTranche
+FROM 
+Lot,	
+Commercialisation
+WHERE 
+Lot.IDLot = Commercialisation.IDLot
+AND
+(
+Lot.IDTranche = {ParamIDTranche}
+AND	Commercialisation.DateResa IS not NULL 
+AND	Commercialisation.DateAnnulation IS NULL 
+AND	year(Commercialisation.DateResa) = year(GETDATE( ) )-2
+
+)
+	AND
+	(
+		Lot.FamilleDeBien='APPARTEMENT'
+		OR
+		Lot.FamilleDeBien='MAISON'
+	)
+GROUP BY 
+Lot.IDTranche
+
+
+
+-- ============================================
+-- Requête : REQ_Stat_NbLogt_PSLA
+-- ============================================
+SELECT 
+	Lot.IDTranche AS IDTranche,	
+	COUNT(Lot.IDlot) AS Nb
+FROM 
+	Lot,	
+	Commercialisation
+WHERE 
+	Lot.IDlot = Commercialisation.IDLot
+	AND
+	(
+		Lot.IDDestination = 1
+		AND	Commercialisation.DateResa IS NOT NULL 
+		AND	Commercialisation.DateAnnulation IS NULL 
+		AND	Lot.IDTranche = {paramIDTranche}
+	)
+	AND
+	(
+		Lot.FamilleDeBien='APPARTEMENT'
+		OR
+		Lot.FamilleDeBien='MAISON'
+	)
+	
+GROUP BY 
+	Lot.IDTranche
+
+-- ============================================
+-- Requête : REQ_Stat_NbLogt_HorsPSLA
+-- ============================================
+SELECT 
+	Lot.IDTranche AS IDTranche,	
+	COUNT(Lot.IDlot) AS Nb
+FROM 
+	Lot,	
+	Commercialisation
+WHERE 
+	Lot.IDlot = Commercialisation.IDLot
+	AND
+	(
+		Commercialisation.DateResa IS NOT NULL 
+		AND	Commercialisation.DateAnnulation IS NULL 
+		AND	Lot.IDDestination <> 1
+		AND	Lot.IDTranche = {paramIDTranche}
+	)
+	AND
+	(
+		Lot.FamilleDeBien='APPARTEMENT'
+		OR
+		Lot.FamilleDeBien='MAISON'
+	)
+	
+GROUP BY 
+	Lot.IDTranche
+
+-- ============================================
+-- Requête : REQ_Stat_Lot_Resa_PSLA_N
+-- ============================================
+SELECT 
+	COUNT(Commercialisation.IDLot) AS Nb,
+	Lot.IDTranche
+FROM 
+	Lot,	
+	Commercialisation
+WHERE 
+	Lot.IDlot = Commercialisation.IDLot
+	AND
+	(
+		Lot.IDTranche = {ParamIDTranche}
+		AND	Commercialisation.DateResa IS NOT NULL 
+		AND	Commercialisation.DateAnnulation IS NULL 
+		AND	year(Commercialisation.DateResa) = year(GETDATE() )
+AND
+
+Lot.IDDestination = 1
+AND	Lot.IDTranche = {paramIDTranche}
+	AND
+	(
+		Lot.FamilleDeBien='APPARTEMENT'
+		OR
+		Lot.FamilleDeBien='MAISON'
+	)
+
+	)
+
+GROUP BY 
+	Lot.IDTranche
+
+-- ============================================
+-- Requête : REQ_Stat_Lot_VEFA_N
+-- ============================================
+SELECT 
+	COUNT(Commercialisation.IDLot) AS Nb,
+	Lot.IDTranche
+FROM 
+	Lot,	
+	Commercialisation
+WHERE 
+	Lot.IDlot = Commercialisation.IDLot
+	AND
+	(
+		Lot.IDTranche = {ParamIDTranche}
+		AND	Commercialisation.DateSignatureActeVEFA IS NOT NULL 
+		AND	Commercialisation.DateAnnulation IS NULL 
+		AND	year(Commercialisation.DateResa) = year(GETDATE() ) 
+
+		
+	)
+	AND
+	(
+		Lot.FamilleDeBien='APPARTEMENT'
+		OR
+		Lot.FamilleDeBien='MAISON'
+	)
+	
+GROUP BY 
+	Lot.IDTranche
+
+-- ============================================
+-- Requête : REQ_Stat_Lot_VEFA
+-- ============================================
+SELECT 
+	COUNT(Commercialisation.IDLot) AS Nb,	
+	Lot.IDTranche AS IDTranche
+FROM 
+	Lot,	
+	Commercialisation
+WHERE 
+	Lot.IDlot = Commercialisation.IDLot
+	AND
+	(
+		Lot.IDTranche = {ParamIDTranche}
+		AND	Commercialisation.DateSignatureActeVEFA IS NOT NULL 
+		AND	Commercialisation.DateAnnulation IS NULL 
+	)
+	AND
+	(
+		Lot.FamilleDeBien='APPARTEMENT'
+		OR
+		Lot.FamilleDeBien='MAISON'
+	)
+	
+GROUP BY 
+	Lot.IDTranche
+
+-- ============================================
+-- Requête : REQ_Stat_Lot_LeveeOption_N
+-- ============================================
+SELECT 
+	COUNT(Commercialisation.IDLot) AS Nb,
+	Lot.IDTranche
+FROM 
+	Lot,	
+	Commercialisation
+WHERE 
+	Lot.IDlot = Commercialisation.IDLot
+	AND
+	(
+		Lot.IDTranche = {ParamIDTranche}
+		AND	Commercialisation.DateLeveeOption IS not NULL 
+		AND	Commercialisation.DateAnnulation IS NULL 
+		AND	year(Commercialisation.DateResa) = year(GETDATE() )
+	)
+		AND
+		(
+			Lot.FamilleDeBien = 'APPARTEMENT'
+			OR
+			Lot.FamilleDeBien = 'MAISON'
+		)
+	
+GROUP BY 
+	Lot.IDTranche
+
+-- ============================================
+-- Requête : REQ_Stat_Lot_LeveeOption
+-- ============================================
+SELECT 
+	COUNT(Commercialisation.IDLot) AS Nb,
+	Lot.IDTranche
+FROM 
+	Lot,	
+	Commercialisation
+WHERE 
+	Lot.IDlot = Commercialisation.IDLot
+	AND
+	(
+		Lot.IDTranche = {ParamIDTranche}
+		AND	Commercialisation.DateLeveeOption IS not NULL 
+		AND	Commercialisation.DateAnnulation IS NULL 
+	)
+		AND
+		(
+			Lot.FamilleDeBien = 'APPARTEMENT'
+			OR
+			Lot.FamilleDeBien = 'MAISON'
+		)
+	
+GROUP BY 
+	Lot.IDTranche
+
+-- ============================================
+-- Requête : REQ_Stat_NbPhase_Loc
+-- ============================================
+SELECT 
+	COUNT(Commercialisation.IDLot) AS Nb,	
+	Lot.IDTranche AS IDTranche,	
+	Tranche.StadeLIV AS DateResa
+FROM 
+	Lot,	
+	Commercialisation,
+	tranche
+WHERE 
+	Lot.IDlot = Commercialisation.IDLot
+	and lot.IDTranche = Tranche.IDTranche
+	AND
+	(
+		Lot.IDTranche = {ParamIDTranche}
+		AND	Commercialisation.DateLeveeOption IS NULL 
+		AND	Commercialisation.DateAnnulation IS NULL 
+		AND	lot.IDDestination=1 
+		AND	Commercialisation.DateResa IS NOT NULL 
+		and (Tranche.StadeLIV<(getdate())  OR Tranche.StadeLIV IS not NULL)
+	)
+	AND
+	(
+		Lot.FamilleDeBien='APPARTEMENT'
+		OR
+		Lot.FamilleDeBien='MAISON'
+	)
+	
+GROUP BY 
+	Lot.IDTranche,	
+	Tranche.StadeLIV
+
+-- ============================================
+-- Requête : REQ_PrestataireOperation
+-- ============================================
+SELECT 
+	Prestataire.IDPrestataire AS IDPrestataire,	
+	Prestataire.Libelle AS Libelle
+FROM 
+	Prestataire
+WHERE 
+	Prestataire.AfficherOperation = 1
+ORDER BY 
+	Libelle ASC
+
+-- ============================================
+-- Requête : REQ_FraisFinancierPub
+-- ============================================
+SELECT
+	FraisFinancierPub.IDFraisFinancierPub AS IDFraisFinancierPub,
+	FraisFinancierPub.IDCategorieFrais AS IDCategorieFrais,
+	FraisFinancierPub.BudgetMontant AS BudgetMontant,
+	FraisFinancierPub.ActuaMontant AS ActuaMontant,
+	FraisFinancierPub.ConsommeMontant AS ConsommeMontant,
+	FraisFinancierPub.ReelMontant AS ReelMontant,
+	FraisFinancierPub.IDTranche AS IDTranche,
+	FraisFinancierPub.UsageFrais
+FROM
+	FraisFinancierPub
+WHERE
+	FraisFinancierPub.IDTranche = {ParamIDTranche}
+
+-- ============================================
+-- Requête : REQ_HonoCommHFFacture
+-- ============================================
+SELECT 
+	HonoCommHFFacture.IDHonoCommHFFacture AS IDHonoCommHFFacture,	
+	HonoCommHFFacture.IDTranche AS IDTranche,	
+	HonoCommHFFacture.NumFacture AS NumFacture,	
+	HonoCommHFFacture.DateFacture AS DateFacture,	
+	HonoCommHFFacture.NbResa AS NbResa,	
+	HonoCommHFFacture.NbCLA AS NbCLA,	
+	HonoCommHFFacture.NbActe AS NbActe,	
+	HonoCommHFFacture.MontantResa AS MontantResa,	
+	HonoCommHFFacture.MontantCLA AS MontantCLA,	
+	HonoCommHFFacture.MontantActe AS MontantActe,	
+	HonoCommHFFacture.NbLeveeOption AS NbLeveeOption,	
+	HonoCommHFFacture.MontantLeveeOption AS MontantLeveeOption,	
+	HonoCommHFFacture.Commentaires AS Commentaires,	
+	( ( (  iif (HonoCommHFFacture.MontantResa IS NULL , 0,HonoCommHFFacture.MontantResa  )+  iif (HonoCommHFFacture.MontantActe IS NULL , 0,HonoCommHFFacture.MontantActe  )) +  iif (HonoCommHFFacture.MontantCLA IS NULL , 0,HonoCommHFFacture.MontantCLA  )) +  iif (HonoCommHFFacture.MontantLeveeOption IS NULL , 0,HonoCommHFFacture.MontantLeveeOption  ))  AS TotalFacture,	
+	HonoCommHFFacture.IDBaremeHonoComm AS IDBaremeHonoComm,	
+	HonoCommHFFacture.IDPrestataire AS IDPrestataire
+FROM 
+	HonoCommHFFacture
+WHERE 
+	HonoCommHFFacture.IDTranche = {ParamIDTranche}
+	AND	HonoCommHFFacture.IDPrestataire = {paramIDPrestataire}
+
+-- ============================================
+-- Requête : REQ_ProfilClient
+-- ============================================
+SELECT 
+	AcquereurTrancheAge.Libelle AS TrancheAge,	
+	SituationFamille.Libelle AS SituationFamille,	
+	Acquereur.Communeactuelle AS Communeactuelle,	
+	Acquereur.NombreEnfants AS NombreEnfants,	
+	Acquereur.AgeEnfant1 AS AgeEnfant1,	
+	Acquereur.AgeEnfant2 AS AgeEnfant2,	
+	Acquereur.AgeEnfant3 AS AgeEnfant3,	
+	Acquereur.AgeEnfant4 AS AgeEnfant4,	
+	Acquereur.AgeEnfant5 AS AgeEnfant5,	
+	Acquereur.Adulte1Metier AS Adulte1Metier,	
+	Acquereur.Adulte2Metier AS Adulte2Metier,	
+	Acquereur.Adulte1CommuneTravail AS Adulte1CommuneTravail,	
+	Acquereur.Adulte2CommuneTravail AS Adulte2CommuneTravail,	
+	Acquereur.RevenusFoyerFiscal AS RevenusFoyerFiscal,	
+	Acquereur.RevenuNetFoyerMensuel AS RevenuNetFoyerMensuel,	
+	Acquereur.PensionEtAutresRevenus AS PensionEtAutresRevenus,	
+	( Acquereur.RevenuNetFoyerMensuel + Acquereur.PensionEtAutresRevenus )  AS TotalRevenu,	
+	Acquereur.ApportReelADateHorsSubvention AS ApportReelADateHorsSubvention,	
+	TypeLogementActuel.Libelle AS TypeLogementActuel,	
+	Acquereur.LoyerActuel AS LoyerActuel,	
+	Lot.TypeDeBien AS TypeDeBien,	
+	Acquereur.MensualiteDuFinancementClient AS MensualiteDuFinancementClient,	
+	Acquereur.DureeFinancementEnMois AS DureeFinancementEnMois,	
+	Acquereur.TauxEffort AS TauxEffort,	
+	( ( CAST( Acquereur.RevenuNetFoyerMensuel  AS INTEGER ) + CAST( Acquereur.PensionEtAutresRevenus  AS INTEGER ) ) - CAST( Acquereur.MensualiteDuFinancementClient  AS INTEGER ) )  AS ResteAVivre,	
+	( ( Acquereur.Patronyme +  ' ') + Acquereur.Prenom )  AS Acquereur,	
+	Destination.Libelle AS Destination,	
+	Acquereur.IDAcquereur AS IDAcquereur
+FROM 
+	Destination
+	RIGHT OUTER JOIN
+	(
+		Lot
+		RIGHT OUTER JOIN
+		(
+			(
+				AcquereurTrancheAge
+				RIGHT OUTER JOIN
+				(
+					SituationFamille
+					RIGHT OUTER JOIN
+					(
+						TypeLogementActuel
+						RIGHT OUTER JOIN
+						Acquereur
+						ON TypeLogementActuel.IDTypeLogementActuel = Acquereur.IDTypeLogementActuel
+					)
+					ON SituationFamille.IDSituationFamille = Acquereur.IDSituationFamille
+				)
+				ON AcquereurTrancheAge.IDAcquereurTrancheAge = Acquereur.IDAcquereurTrancheAge
+			)
+			LEFT OUTER JOIN
+			Commercialisation
+			ON Acquereur.IDAcquereur = Commercialisation.IDAcquereur
+		)
+		ON Lot.IDlot = Commercialisation.IDLot
+	)
+	ON Destination.IDDestination = Lot.IDDestination
+WHERE 
+	(
+	Lot.IDlot IS NOT NULL 
+)
+
+-- ============================================
+-- Requête : REQ_GFA_2
+-- ============================================
+SELECT 
+	GFA.IDGFA AS IDGFA,	
+	GFA.IDTranche AS IDTranche,	
+	GFA.HFCautionGFA AS HFCautionGFA,	
+	GFA.Taux AS taux,	
+	GFA.IDPeriodeTauxGFA AS IDPeriodeTauxGFA,	
+	GFA.DureeMoisGFA AS DureeMoisGFA,	
+	GFA.CommGFA AS CommGFA,	
+	GFA.BaseInitialeGFA AS BaseInitialeGFA,	
+	GFA.CommissionCautionMontant AS CommissionCautionMontant,	
+	GFA.DatePremierPrlevtGFA AS DatePremierPrlevtGFA,	
+	GFA.FraisDossier AS FraisDossier,	
+	GFA.PrecomGFAPourc AS PrecomGFAPourc,	
+	GFA.CATTCminGFA AS CATTCminGFA,	
+	GFA.CommCondGFA AS CommCondGFA
+FROM 
+	GFA
+WHERE 
+	GFA.IDTranche = {ParamIDTranche}
+
+-- ============================================
+-- Requête : REQ_ReducGFA
+-- ============================================
+SELECT 
+	ReducGFA.IDReducGFA AS IDReducGFA,	
+	ReducGFA.IDGFA AS IDGFA,	
+	ReducGFA.Montant AS Montant,	
+	ReducGFA.DateReduc AS DateReduc,	
+	ReducGFA.Comm AS Comm
+FROM 
+	ReducGFA
+WHERE 
+	ReducGFA.IDGFA = {ParamIDGFA}
+
+-- ============================================
+-- Requête : REQ_Financement_2
+-- ============================================
+SELECT 
+	Financement.IDFinancement AS IDFinancement,	
+	Financement.IDTranche AS IDTranche,	
+	Financement.ApportPromoteur AS ApportPromoteur,	
+	Financement.BlocageHonoOCMontant AS BlocageHonoOCMontant,	
+	Financement.BlocageHonoOCFin AS BlocageHonoOCFin,	
+	Financement.BlocageHonoOCComment AS BlocageHonoOCComment,	
+	Financement.EstHFCautionOC AS EstHFCautionOC,	
+	Financement.IDStatutApport AS IDStatutApport,	
+	Financement.IDMandatHypothequer AS IDMandatHypothequer,	
+	Financement.MandatCoutMontant AS MandatCoutMontant,	
+	Financement.IDStatutCoutMandat AS IDStatutCoutMandat
+FROM 
+	Financement
+WHERE 
+	Financement.IDTranche = {ParamIDTranche}
+	AND	Financement.IDTypeFinancement <> 1
+	AND	Financement.IDTypeFinancement <> 5
+
+-- ============================================
+-- Requête : REQ_VersementDepotGarantie
+-- ============================================
+SELECT 
+	VersementDepotGarantie.IDVersementDepotGarantie AS IDVersementDepotGarantie,	
+	VersementDepotGarantie.MontantVerse AS MontantVerse,	
+	VersementDepotGarantie.DateRemise AS DateRemise,	
+	VersementDepotGarantie.Commentaire AS Commentaire,	
+	VersementDepotGarantie.DateCreation AS DateCreation,	
+	VersementDepotGarantie.IDCommercialisation AS IDCommercialisation
+FROM 
+	VersementDepotGarantie
+WHERE 
+	VersementDepotGarantie.IDCommercialisation = {ParamIDCommercialisation}
+
+-- ============================================
+-- Requête : REQ_IDCommercialisation_courante
+-- ============================================
+SELECT 
+	CommVendeur.IDCommercialisation AS IDCommercialisation,	
+	CommVendeur.IDLot AS IDLot,	
+	CommVendeur.Evenement AS Evenement
+FROM 
+	CommVendeur
+WHERE 
+	CommVendeur.IDLot = {ParamIDLot}
+ORDER BY 
+	IDCommercialisation ASC,	
+	Evenement ASC
+
+-- ============================================
+-- Requête : REQ_StadeAvancement_Planning
+-- ============================================
+SELECT 
+	StadeAvancement.IDStadeAvancement AS IDStadeAvancement,	
+	StadeAvancement.IDListeAvancement AS IDListeAvancement,	
+	StadeAvancement.IDTranche AS IDTranche,	
+	StadeAvancement.DatePrevComptaDebutAnnee AS DatePrevComptaDebutAnnee,	
+	StadeAvancement.DatePrevMAJPromo AS DatePrevMAJPromo,	
+	StadeAvancement.DateReelle AS DateReelle,	
+	StadeAvancement.Commentaire AS Commentaire,	
+	StadeAvancement.AjoutNbMois AS AjoutNbMois,	
+	StadeAvancement.Ordre AS Ordre,	
+	StadeAvancement.PourcentageAvancementReel AS PourcentageAvancementReel,	
+	StadeAvancement.MontantPrevi AS MontantPrevi,	
+	Avancement.PourcentageStandard AS PourcentageStandard,	
+	Tranche.IDTranche AS Tranche,	
+	Tranche.Libelle AS Libelle,	
+	Operation.IDOperation AS IDOperation,	
+	Operation.Libelle AS Operation,	
+	Operation.Commune AS Commune,	
+	Avancement.Code AS Code,	
+	Avancement.Libelle AS Avancement,	
+	Avancement.GanttAffiche AS GanttAffiche,	
+	Avancement.GanttJalon AS GanttJalon,	
+	Avancement.GanttDureeDepuisStade AS GanttDureeDepuisStade,	
+	Avancement.CouleurJalonFond AS CouleurJalonFond,	
+	Avancement.CouleurJalonPolice AS CouleurJalonPolice,	
+	Avancement.CouleurPeriodeFond AS CouleurPeriodeFond,	
+	Avancement.CouleurPeriodePolice AS CouleurPeriodePolice
+FROM 
+	Avancement,	
+	StadeAvancement,	
+	Tranche,	
+	Operation
+WHERE 
+	Avancement.IDListeAvancement = StadeAvancement.IDListeAvancement
+	AND		Tranche.IDTranche = StadeAvancement.IDTranche
+	AND		Operation.IDOperation = Tranche.IDOperation
+	AND
+	(
+		StadeAvancement.IDTranche = {ParamIDTranche}
+		AND	Avancement.GanttAffiche = 1
+	)
+ORDER BY 
+	Ordre ASC
+
+-- ============================================
+-- Requête : REQ_Tranche_Planning
+-- ============================================
+SELECT 
+	Tranche.IDTranche AS IDTranche,	
+	Tranche.Libelle AS Tranche,	
+	Tranche.StadeOS AS StadeOS,	
+	Operation.IDOperation AS IDOperation,	
+	Operation.Libelle AS Operation,	
+	Operation.Commune AS Commune,	
+	Operation.MasquerPromo AS MasquerPromo,	
+	Operation.curIDPersonne_ChargeOpe1 AS curIDPersonne_ChargeOpe1,	
+	( ( Personne.Patronyme +  ' ') + Personne.Prenom )  AS ChargeOpe
+FROM 
+	(
+		Personne
+		RIGHT OUTER JOIN
+		Operation
+		ON Personne.IDPersonne = Operation.curIDPersonne_ChargeOpe1
+	)
+	INNER JOIN
+	Tranche
+	ON Operation.IDOperation = Tranche.IDOperation
+WHERE 
+	(
+	Operation.MasquerPromo = 0
+	AND	Operation.curIDPersonne_ChargeOpe1 IN ({paramcurIDPersonne_ChargeOpe1}) 
+	AND	Operation.Commune IN ({paramCommune}) 
+	AND	Operation.IDOperation IN ({paramIDOperation}) 
+	AND	Tranche.IDTranche IN ({paramIDTranche}) 
+)
+ORDER BY 
+	{paramTri1},	
+	{paramTri2},	
+	{paramTri3}
+
+-- ============================================
+-- Requête : REQ_Operation_Tranche
+-- ============================================
+SELECT
+	Tranche.IDTranche AS IDTranche,
+	Tranche.Libelle AS Tranche,
+	Operation.Libelle AS Operation,
+	Operation.Commune AS Commune,
+	( ( ( ( Operation.Libelle + ' | ') + Operation.Commune ) + ' | ') + Tranche.Libelle ) AS LibelleComplet
+FROM
+	Operation,
+	Tranche
+WHERE
+	Operation.IDOperation = Tranche.IDOperation
+	AND
+	(
+		Tranche.IDTranche = {ParamIDTranche}
+	)
+order by
+	Commune,
+	Operation
+
+
+-- ============================================
+-- Requête : REQ_StadeAvancement_DatePrevi
+-- ============================================
+SELECT 
+	StadeAvancement.IDStadeAvancement AS IDStadeAvancement,	
+	StadeAvancement.IDTranche AS IDTranche,	
+	StadeAvancement.DatePrevMAJPromo AS DatePrevMAJPromo,	
+	Avancement.NePasDecalerAuto AS NePasDecalerAuto
+FROM 
+	StadeAvancement,	
+	Avancement
+WHERE 
+	StadeAvancement.IDListeAvancement = Avancement.IDListeAvancement
+	AND
+	(
+		StadeAvancement.DatePrevMAJPromo >= {ParamDatePrevMAJPromo}
+		AND	StadeAvancement.IDTranche = {ParamIDTranche}
+		AND	StadeAvancement.DateReelle IS NULL 
+		AND	Avancement.NePasDecalerAuto = 0
+	)
+
+-- ============================================
+-- Requête : REQ_Min_StadeAvancement_Promo
+-- ============================================
+SELECT 
+	MIN(StadeAvancement.DatePrevMAJPromo) AS le_minimum_DatePrevMAJPromo,	
+	Operation.MasquerPromo AS MasquerPromo
+FROM 
+	Tranche,	
+	StadeAvancement,	
+	Operation
+WHERE 
+	Operation.IDOperation = Tranche.IDOperation
+	AND		Tranche.IDTranche = StadeAvancement.IDTranche
+	AND
+	(
+		Operation.MasquerPromo = 0
+	)
+GROUP BY 
+	Operation.MasquerPromo
+
+-- ============================================
+-- Requête : REQ_Max_StadeAvancement_Promo
+-- ============================================
+SELECT 
+	MAX(StadeAvancement.DatePrevMAJPromo) AS le_maximum_DatePrevMAJPromo,	
+	Operation.MasquerPromo AS MasquerPromo
+FROM 
+	Tranche,	
+	StadeAvancement,	
+	Operation
+WHERE 
+	Tranche.IDTranche = StadeAvancement.IDTranche
+	AND		Operation.IDOperation = Tranche.IDOperation
+	AND
+	(
+		Operation.MasquerPromo = 0
+	)
+GROUP BY 
+	Operation.MasquerPromo
+
+-- ============================================
+-- Requête : REQ_Commercialisation
+-- ============================================
+SELECT 
+	Commercialisation.IDCommercialisation AS IDCommercialisation,	
+	Commercialisation.IDLot AS IDLot,	
+	Commercialisation.IDAcquereur AS IDAcquereur,	
+	Commercialisation.DateResa AS DateResa,	
+	Commercialisation.DateSignatureContratLoc AS DateSignatureContratLoc,	
+	Commercialisation.DateSignatureActeVEFA AS DateSignatureActeVEFA,	
+	Commercialisation.DateLivraison AS DateLivraison,	
+	Commercialisation.DateLeveeOption AS DateLeveeOption,	
+	Commercialisation.DateAnnulation AS DateAnnulation,	
+	Commercialisation.DatePrevueSignatureActe AS DatePrevueSignatureActe,	
+	Commercialisation.PrixDeVenteReelTTC AS PrixDeVenteReelTTC,	
+	Commercialisation.PrestataireComm1 AS PrestataireComm1,	
+	Commercialisation.PrestataireComm2 AS PrestataireComm2,	
+	Commercialisation.TauxCommResa AS TauxCommResa,	
+	Commercialisation.TauxCommActe AS TauxCommActe,	
+	Commercialisation.CommVendeurAVerserResa AS CommVendeurAVerserResa,	
+	Commercialisation.CommVendeurAVerserActe AS CommVendeurAVerserActe,	
+	Commercialisation.PasAideRM AS PasAideRM,	
+	Commercialisation.MontantSubv AS MontantSubv,	
+	Commercialisation.DateSignatureComm AS DateSignatureComm,	
+	Commercialisation.EstFiscalite AS EstFiscalite,	
+	Commercialisation.IDFiscaliteAcquereur AS IDFiscaliteAcquereur,	
+	Commercialisation.CommFisca AS CommFisca,	
+	Commercialisation.EstJustifFiscal AS EstJustifFiscal,	
+	Commercialisation.Loyer AS Loyer,	
+	Commercialisation.Epargne AS Epargne,	
+	Commercialisation.IDNatureAchat AS IDNatureAchat,	
+	Commercialisation.LivraisonDateEnvoiCourrier AS LivraisonDateEnvoiCourrier,	
+	Commercialisation.LivraisonTrimestrePrevueAuContrat AS LivraisonTrimestrePrevueAuContrat,	
+	Commercialisation.MontantDepotGarantie AS MontantDepotGarantie,	
+	Commercialisation.curNbCommVendeur AS curNbCommVendeur,	
+	Commercialisation.MontantSubvAcpte AS MontantSubvAcpte,	
+	Commercialisation.SoldeDemande AS SoldeDemande,	
+	Commercialisation.TauxTVAReel AS TauxTVAReel,	
+	Commercialisation.RemiseClientTTC AS RemiseClientTTC,	
+	Commercialisation.PrixDeVenteReelHT AS PrixDeVenteReelHT,	
+	Commercialisation.NbTMA AS NbTMA,	
+	Commercialisation.TMA_PMR_Montant AS TMAMontantPMR,	
+	Commercialisation.CDVTechnique AS CDV_technique,	
+	Commercialisation.AvecTMA AS AvecTMA
+FROM 
+	Commercialisation
+WHERE 
+	Commercialisation.IDCommercialisation = {paramIDCommercialisation}
+
+-- ============================================
+-- Requête : REQ_TMA_Nb
+-- ============================================
+SELECT 
+	TMA.IDCommercialisation AS IDCommercialisation,	
+	COUNT(TMA.IDTMA) AS Nb
+FROM 
+	TMA,	
+	Commercialisation
+WHERE 
+	TMA.IDCommercialisation = Commercialisation.IDCommercialisation
+	AND
+	(
+		Commercialisation.IDCommercialisation = {paramIDCommercialisation}
+	)
+GROUP BY 
+	TMA.IDCommercialisation
+
+-- ============================================
+-- Requête : REQ_Lot_Adresse_SelonNatureAchat
+-- ============================================
+SELECT 
+	Lot.IDlot AS IDlot,	
+	Lot.Adresse AS Adresse,	
+	Commercialisation.IDNatureAchat AS IDNatureAchat
+FROM 
+	Lot
+	INNER JOIN
+	Commercialisation
+	ON Lot.IDlot = Commercialisation.IDLot
+WHERE 
+	(
+	Lot.IDTranche = {paramIDTranche}
+	
+	AND	Commercialisation.IDNatureAchat NOT IN ({param_NOT_IDNatureAchat}) 
+)
+
+-- ============================================
+-- Requête : REQ_Promo_Acquereur
+-- ============================================
+SELECT 
+	Acquereur.IDCivilite AS IDCivilite,	
+	Acquereur.Civilite AS Civilite,	
+	Acquereur.Patronyme AS Patronyme,	
+	Acquereur.Prenom AS Prenom,	
+	Acquereur.RS AS RS,	
+	Acquereur.Téléphone AS Telephone1,	
+	Acquereur.Portable AS Telephone2,	
+	Acquereur.Email AS Email,	
+	Acquereur.Email2 AS Email2,	
+	Acquereur.AdresseActuelle AS AdresseActuelle,	
+	Acquereur.CPActuel AS CPActuel,	
+	Acquereur.Communeactuelle AS Communeactuelle,	
+	Acquereur.IDAcquereur AS IDAcquereur,	
+	Acquereur.IDConseillerCommercial AS IDConseillerCommercial,	
+	Acquereur.IDConseillerTechnique AS IDConseillerTechnique,	
+	Acquereur.Adulte1DateNaissance AS Adulte1DateNaissance,	
+	Acquereur.Adulte2DateNaissance AS Adulte2DateNaissance,	
+	Acquereur.Adulte1LieuDeNaissance AS Adulte1LieuDeNaissance,	
+	Acquereur.Adulte2LieuDeNaissance AS Adulte2LieuDeNaissance,	
+	Acquereur.IDCivilite2 AS IDCivilite2,	
+	Acquereur.Patronyme2 AS Patronyme2,	
+	Acquereur.Prenom2 AS Prenom2,	
+	Acquereur.IDCivilite3 AS IDCivilite3,	
+	Acquereur.Patronyme3 AS Patronyme3,	
+	Acquereur.Prenom3 AS Prenom3
+FROM 
+	Acquereur
+WHERE 
+	Acquereur.IDAcquereur = {paramIDAcquereur}
+
+-- ============================================
+-- Requête : REQ_Operation_AvecAlerte
+-- ============================================
+SELECT DISTINCT 
+	Tranche.IDOperation AS IDOperation,	
+	COUNT(Tranche.AlerteStadeAvancement_Texte) AS Nb
+FROM 
+	Tranche
+GROUP BY 
+	Tranche.IDOperation
+
+-- ============================================
+-- Requête : REQ_Tranche_AlerteStadeTexte
+-- ============================================
+SELECT 
+	Tranche.IDTranche AS IDTranche,	
+	Tranche.IDOperation AS IDOperation,	
+	Tranche.AlerteStadeAvancement_Texte AS AlerteStadeAvancement_Texte
+FROM 
+	Tranche
+WHERE 
+	Tranche.IDTranche = {ParamIDTranche}
+
+-- ============================================
+-- Requête : REQ_XL_AdminClient_0
+-- ============================================
+SELECT 
+	Destination.Libelle AS Destination,	
+	Lot.Numlot AS Numlot,	
+	Tranche.Libelle AS Libelle,	
+	Lot.TypeDeBien AS TypeDeBien,	
+	Lot.NumEtage AS NumEtage,	
+	Civilite.Libelle AS Civilite_Libelle,	
+	Civilite.LibelleCourt AS Civilite_Court,	
+	Civilite.Client AS Civilite_Client,	
+	Acquereur.Prenom AS Prenom,	
+	Acquereur.Patronyme AS Patronyme,	
+	Acquereur.AdresseActuelle AS AdresseActuelle,	
+	Acquereur.CPActuel AS CPActuel,	
+	Acquereur.Communeactuelle AS Communeactuelle,	
+	Acquereur.Portable AS Portable,	
+	Acquereur.Téléphone AS Téléphone,	
+	Acquereur.Email AS Email,	
+	Lot.Adresse AS Adresse,	
+	Operation.CP AS CP,	
+	Operation.Commune AS Commune,	
+	Commercialisation.DateSignatureContratLoc AS DateSignatureContratLoc,	
+	Commercialisation.DateSignatureActeVEFA AS DateSignatureActeVEFA,	
+	TypeAcquereur.Libelle AS TypeAquereur,	
+	Commercialisation.LivraisonDateEnvoiCourrier AS LivraisonDateEnvoiCourrier,	
+	Commercialisation.LivraisonTrimestrePrevueAuContrat AS LivraisonTrimestrePrevueAuContrat,	
+	( ( Commercial.Prenom +  ' ') + Commercial.Denomination )  AS Commercial,	
+	Commercial.Fonction AS Fonction,	
+	NatureAchat.Libelle AS NatureAchat,	
+	Tranche.IDTranche AS IDTranche,	
+	Commercialisation.TroisMoisAvantLivraisonDateEnvoiCourrier AS TroisMoisAvantLivraisonDateEnvoiCourrier,	
+	Commercialisation.TroisMoisAvantLivraisonPeriode AS TroisMoisAvantLivraisonPeriode
+FROM 
+	(
+		Operation
+		LEFT OUTER JOIN
+		Tranche
+		ON Operation.IDOperation = Tranche.IDOperation
+	)
+	LEFT OUTER JOIN
+	(
+		(
+			Lot
+			LEFT OUTER JOIN
+			Destination
+			ON Lot.IDDestination = Destination.IDDestination
+		)
+		LEFT OUTER JOIN
+		(
+			NatureAchat
+			RIGHT OUTER JOIN
+			(
+				Civilite
+				RIGHT OUTER JOIN
+				(
+					(
+						Commercial
+						RIGHT OUTER JOIN
+						Acquereur
+						ON Commercial.IDCommercial = Acquereur.IDConseillerCommercial
+					)
+					RIGHT OUTER JOIN
+					(
+						Commercialisation
+						, 
+						TypeAcquereur
+						
+					)
+					ON Acquereur.IDAcquereur = Commercialisation.IDAcquereur
+				)
+				ON Civilite.IDCivilite = Acquereur.IDCivilite
+			)
+			ON NatureAchat.IDNatureAchat = Commercialisation.IDNatureAchat
+		)
+		ON Lot.IDlot = Commercialisation.IDLot
+	)
+	ON Tranche.IDTranche = Lot.IDTranche
+WHERE 
+	(
+	Commercialisation.DateAnnulation IS NULL 
+	AND	Operation.IDOperation = {paramIDOperation}
+	AND	Tranche.IDTranche = {ParamIDTranche}
+)
+ORDER BY 
+	Numlot ASC
+
+-- ============================================
+-- Requête : REQ_XL_TMA
+-- ============================================
+SELECT 
+	Operation.Libelle AS Operation,	
+	Tranche.Libelle AS Tranche,	
+	Lot.Numlot AS Numlot,	
+	Lot.NumEtage AS NumEtage,	
+	Civilite.Libelle AS Civilité,	
+	Acquereur.Prenom AS Prenom,	
+	Acquereur.Patronyme AS Nom,	
+	Acquereur.RS AS RS,	
+	Acquereur.Téléphone AS Téléphone,	
+	Commercialisation.AvecTMA AS AvecTMA,	
+	Commercialisation.TMA_PMR_Montant AS TMA_PMR_Montant
+FROM 
+	Operation
+	INNER JOIN
+	(
+		Tranche
+		INNER JOIN
+		(
+			(
+				(
+					Civilite
+					RIGHT OUTER JOIN
+					Acquereur
+					ON Civilite.IDCivilite = Acquereur.IDCivilite
+				)
+				INNER JOIN
+				Lot
+				ON Acquereur.IDAcquereur = Lot.curIDAcquereur
+			)
+			INNER JOIN
+			Commercialisation
+			ON Lot.curIDCommercialisation = Commercialisation.IDCommercialisation
+		)
+		ON Tranche.IDTranche = Lot.IDTranche
+	)
+	ON Operation.IDOperation = Tranche.IDOperation
+WHERE 
+	(
+	Operation.IDOperation = {paramIDOperation}
+	AND	Tranche.IDTranche = {ParamIDTranche}
+)
+
+-- ============================================
+-- Requête : REQ_Subvention_Simple
+-- ============================================
+SELECT 
+	Subvention.IDSubvention AS IDSubvention,	
+	Subvention.IDTranche AS IDTranche,	
+	Subvention.IDCategorieSubvention AS IDCategorieSubvention,	
+	Subvention.IDOrganismeSubvention AS IDOrganismeSubvention,	
+	Subvention.DateConvention AS DateConvention,	
+	Subvention.BudgetPreviMontant AS BudgetPreviMontant,	
+	Subvention.BudgetPreviCommentaire AS BudgetPreviCommentaire
+FROM 
+	Subvention
+WHERE 
+	Subvention.IDTranche = {paramIDTranche}
+
+-- ============================================
+-- Requête : REQ_StadeAvancement
+-- ============================================
+SELECT 
+	StadeAvancement.IDStadeAvancement AS IDStadeAvancement,	
+	StadeAvancement.IDListeAvancement AS IDListeAvancement,	
+	StadeAvancement.IDTranche AS IDTranche,	
+	StadeAvancement.DatePrevComptaDebutAnnee AS DatePrevComptaDebutAnnee,	
+	StadeAvancement.DatePrevMAJPromo AS DatePrevMAJPromo,	
+	StadeAvancement.DateReelle AS DateReelle,	
+	StadeAvancement.Commentaire AS Commentaire,	
+	StadeAvancement.AjoutNbMois AS AjoutNbMois,	
+	StadeAvancement.Ordre AS Ordre,	
+	StadeAvancement.PourcentageAvancementReel AS PourcentageAvancementReel,	
+	Avancement.PourcentageAvancement AS PourcentageAvancement,	
+	StadeAvancement.MontantPrevi AS MontantPrevi,	
+	StadeAvancement.AvecAppelFondClientSuppl AS AvecAppelFondClientSuppl,	
+	Avancement.Code AS Code,	
+	DomaineStadeAvancement.CodeDomaineStadeAvancement AS CodeDomaineStadeAvancement,	
+	Avancement.Libelle AS Libelle,	
+	Avancement.PourcentageStandard AS PourcentageStandard,
+	Avancement.AvecSynchroEntreTranche,
+	StadeAvancement.LienHypertexte
+FROM 
+	DomaineStadeAvancement
+	RIGHT OUTER JOIN
+	(
+		Avancement
+		INNER JOIN
+		StadeAvancement
+		ON Avancement.IDListeAvancement = StadeAvancement.IDListeAvancement
+	)
+	ON DomaineStadeAvancement.CodeDomaineStadeAvancement = Avancement.Domaine
+WHERE 
+	(
+	StadeAvancement.IDStadeAvancement = {ParamIDStadeAvancement}
+	AND	StadeAvancement.IDListeAvancement = {ParamIDListeAvancement}
+	AND	StadeAvancement.IDTranche = {ParamIDTranche}
+	AND	DomaineStadeAvancement.CodeDomaineStadeAvancement = {ParamCodeDomaineStadeAvancement}
+)
+
+-- ============================================
+-- Requête : REQ_INSERT_ArchiveStadeAvancement
+-- ============================================
+INSERT INTO ArchiveStadeAvancementListe ( IDOperation, IDTranche, IDListeAvancement, Operation, Tranche, Commune, IDArchiveStadeAvancement, DatePrevMAJPromo, DateReelle, Ordre, Domaine, CodeStadeAvancement, StadeAvancement, LibelleMission, NbLogtIndiv, NbLogtColl, NbAutresLocaux, NbTerrain, curPourcentageHF, AnneeStade, DateStade, IDTypeDateStadeAvancement, TypeDateStadeAvancement )
+
+SELECT 
+	tOperation.IDOperation as IDOperation,
+	tTranche.IDTranche as IDTranche,
+	tStadeAvancement.IDListeAvancement AS IDListeAvancement,	
+	tOperation.Libelle as Opération,
+	tTranche.Libelle as Tranche,	
+	tOperation.Commune as Commune,
+	{paramIDArchiveStadeAvancement} AS IDArchiveStadeAvancement,
+	tStadeAvancement.DatePrevMAJPromo AS DatePrevMAJPromo,	
+	tStadeAvancement.DateReelle AS DateReelle,	
+	tStadeAvancement.Ordre AS Ordre,	
+	tListeAvancement.Domaine AS Domaine,	
+	tListeAvancement.Code AS CodeStadeAvancement,	
+	tListeAvancement.Libelle AS StadeAvancement,	
+	tListeAvancement.LibelleMission AS LibelleMission,
+	tTranche.NbLogtIndiv AS NbLogtIndiv,
+	tTranche.NbLogtColl AS NbLogtColl,
+	tTranche.NbAutresLocaux AS NbAutresLocaux,
+	tTranche.NbTerrain AS NbTerrain,
+	tOperation.curPourcentageHF AS curPourcentageHF,
+	IIf(Not (IsNull(tStadeAvancement.DateReelle)),year(tStadeAvancement.DateReelle),IIf(Not (IsNull(tStadeAvancement.DatePrevMAJPromo)),year(tStadeAvancement.DatePrevMAJPromo),Null)) as AnneeStade,
+	IIf(Not (IsNull(tStadeAvancement.DateReelle)),tStadeAvancement.DateReelle,IIf(Not (IsNull(tStadeAvancement.DatePrevMAJPromo)),tStadeAvancement.DatePrevMAJPromo,Null)) as DateStade,
+	IIf(NOT (ISNULL(tStadeAvancement.DateReelle)),2,IIf(NOT (ISNULL(tStadeAvancement.DatePrevMAJPromo)),1,NULL)) as IDTypeDateStadeAvancement,
+	IIf(NOT (ISNULL(tStadeAvancement.DateReelle)),'Date réelle',IIf(NOT (ISNULL(tStadeAvancement.DatePrevMAJPromo)),'Date prévisionnelle',NULL)) as TypeDateStadeAvancement
+FROM 
+	tListeAvancement,	
+	tStadeAvancement,
+	tOperation,
+	tTranche
+WHERE 
+	tListeAvancement.IDListeAvancement = tStadeAvancement.IDListeAvancement AND
+	tStadeAvancement.IDTranche = tTranche.IDTranche AND
+	tTranche.IDOperation = tOperation.IDOperation
+	AND
+	tListeAvancement.AvecArchive=true
+
+-- ============================================
+-- Requête : REQ_ArchiveStadeAvancement_Export
+-- ============================================
+SELECT 
+	ArchiveStadeAvancement.Libelle AS ArchiveStadeAvancement,	
+	ArchiveStadeAvancementListe.Operation AS Opération,	
+	ArchiveStadeAvancementListe.Tranche AS Tranche,	
+	ArchiveStadeAvancementListe.IDArchiveStadeAvancementListe AS IDArchiveStadeAvancementListe,	
+	ArchiveStadeAvancementListe.IDArchiveStadeAvancement AS IDArchiveStadeAvancement,	
+	ArchiveStadeAvancementListe.IDListeAvancement AS IDListeAvancement,	
+	ArchiveStadeAvancementListe.IDTranche AS IDTranche,	
+	 format (ArchiveStadeAvancementListe.DateStade , 'DD/MM/YYYY' ) AS DateReelle,	
+	ArchiveStadeAvancementListe.StatutDate AS StatutDate,	
+	ArchiveStadeAvancementListe.Ordre AS Ordre,	
+	ArchiveStadeAvancementListe.Domaine AS Domaine,	
+	ArchiveStadeAvancementListe.CodeStadeAvancement AS CodeStadeAvancement,	
+	ArchiveStadeAvancementListe.StadeAvancement AS StadeAvancement,	
+	ArchiveStadeAvancementListe.LibelleMission AS LibelleMission,	
+	ArchiveStadeAvancementListe.IDOperation AS IDOperation
+FROM 
+	ArchiveStadeAvancement,	
+	ArchiveStadeAvancementListe
+WHERE 
+	ArchiveStadeAvancement.IDArchiveStadeAvancement = ArchiveStadeAvancementListe.IDArchiveStadeAvancement
+
+ORDER BY 
+	ArchiveStadeAvancement ASC,	
+	Opération ASC,	
+	Tranche ASC
+
+-- ============================================
+-- Requête : REQ_Interface_Operation_Tranche
+-- ============================================
+SELECT 
+	Tranche.IDTranche AS IDTranche,	
+	Tranche.Libelle AS Libelle,	
+	Tranche.IDConcept AS IDConcept,	
+	Tranche.IDOperation AS IDOperation,	
+	Tranche.NbLogtIndiv AS NbLogtIndiv,	
+	Tranche.NbLogtColl AS NbLogtColl,	
+	Tranche.NbAutresLocaux AS NbAutresLocaux,	
+	Tranche.NbTerrain AS NbTerrain,	
+	Tranche.DontLogtCollPSLA AS DontLogtCollPSLA,	
+	Tranche.DontLogtIndivPSLA AS DontLogtIndivPSLA,	
+	Tranche.Commentaire AS Commentaire,	
+	Tranche.DateLivraisonContractuelle AS DateLivraisonContractuelle,	
+	Tranche.MontantHonoParLogt AS MontantHonoParLogt,	
+	Tranche.PasDeCommercialisation AS PasDeCommercialisation,	
+	Tranche.Adresse AS Adresse,	
+	Tranche.DureeChantierMois AS DureeChantierMois,	
+	Tranche.TerrainMontantHT AS TerrainMontantHT,	
+	Tranche.TerrainAcompte AS TerrainAcompte,	
+	Tranche.TerrainComm AS TerrainComm,	
+	Tranche.CoutPrevPSLA AS CoutPrevPSLA,	
+	Tranche.CoutPrevVEFA AS CoutPrevVEFA,	
+	Tranche.CoutPrevAutre AS CoutPrevAutre,	
+	Tranche.CoutPrevCommentaire AS CoutPrevCommentaire,	
+	Tranche.CoutReelPSLA AS CoutReelPSLA,	
+	Tranche.CoutReelVEFA AS CoutReelVEFA,	
+	Tranche.CoutReelAutre AS CoutReelAutre,	
+	Tranche.CoutReelCommentaire AS CoutReelCommentaire,	
+	Tranche.IDModeRepartQuotePart AS IDModeRepartQuotePart,	
+	Tranche.QuotePartPSLA AS QuotePartPSLA,	
+	Tranche.QuotePartVEFA_Normal AS QuotePartVEFA_Normal,	
+	Tranche.QuotePartVEFA_Reduit AS QuotePartVEFA_Reduit,	
+	Tranche.QuotePartAutre AS QuotePartAutre,	
+	Tranche.QuotePartCommentaire AS QuotePartCommentaire,	
+	Tranche.NbLVOPrev AS NbLVOPrev,	
+	Tranche.NbLVOPrevAnnee AS NbLVOPrevAnnee,	
+	Tranche.FinCommercialisation AS FinCommercialisation,	
+	Tranche.FinTabborAnnuel AS FinTabborAnnuel,	
+	Concept.Libelle AS Concept,	
+	Architecte.RS AS Architecte,	
+	Tranche.DontLogtCollBRS AS DontLogtCollBRS,	
+	Tranche.DontLogtIndivBRS AS DontLogtIndivBRS,	
+	Tranche.AlerteStadeAvancement_Texte AS AlerteStadeAvancement_Texte,	
+	Tranche.IDCertification AS IDCertification,	
+	Tranche.IDLabel AS IDLabel,	
+	Tranche.IDPerformanceEnergetique AS IDPerformanceEnergetique,	
+	Tranche.EstMOEInterne AS EstMOEInterne,	
+	Tranche.IDMissionMOEInterne AS IDMissionMOEInterne,	
+	Tranche.CommentaireAvancement AS CommentaireAvancement,	
+	Tranche.CommentaireActionAMener AS CommentaireActionAMener
+FROM 
+	(
+		Architecte
+		RIGHT OUTER JOIN
+		Concept
+		ON Architecte.IDArchitecte = Concept.IDArchitecte
+	)
+	RIGHT OUTER JOIN
+	Tranche
+	ON Concept.IDConcept = Tranche.IDConcept
+WHERE 
+	(
+	Tranche.IDOperation = {ParamIDOperation}
+	AND	Tranche.IDTranche = {ParamIDTranche}
+)
+
+-- ============================================
+-- Requête : REQ_AvancementSuivi
+-- ============================================
+SELECT 
+	Avancement.IDListeAvancement AS IDListeAvancement,	
+	Avancement.Code AS Code,	
+	Avancement.Libelle AS Libelle,	
+	Avancement.Ordre AS Ordre,	
+	Avancement.AvecSuivi AS AvecSuivi
+FROM 
+	Avancement
+WHERE 
+	Avancement.AvecSuivi = 1
+ORDER BY 
+	Ordre ASC
+
+-- ============================================
+-- Requête : REQ_IDListeAvancement_selon_DateReelle
+-- ============================================
+SELECT 
+	StadeAvancement.IDListeAvancement AS IDListeAvancement,	
+	StadeAvancement.IDTranche AS IDTranche,	
+	StadeAvancement.DateReelle AS DateReelle,	
+	StadeAvancement.Ordre AS Ordre
+FROM 
+	StadeAvancement
+WHERE 
+	StadeAvancement.DateReelle = {ParamDateReelle}
+	AND	StadeAvancement.IDTranche = {paramIDTranche}
+	AND	StadeAvancement.IDListeAvancement <> {paramIDListeAvancement}
+ORDER BY 
+	Ordre ASC
+
+-- ============================================
+-- Requête : REQ_StadeAvancementSuivi_DateReelleMax
+-- ============================================
+SELECT 
+	MAX(StadeAvancement.DateReelle) AS le_maximum_DateReelle
+FROM 
+	Avancement,	
+	StadeAvancement
+WHERE 
+	Avancement.IDListeAvancement = StadeAvancement.IDListeAvancement
+	AND
+	(
+		StadeAvancement.IDTranche = {ParamIDTranche}
+		AND	Avancement.AvecSuivi = {ParamAvecSuivi}
+	)
+
+-- ============================================
+-- Requête : REQ_StadeAvancementSuivi_NextDateRevi
+-- ============================================
+SELECT 
+	StadeAvancement.DatePrevMAJPromo AS DatePrevMAJPromo
+FROM 
+	Avancement,	
+	StadeAvancement
+WHERE 
+	Avancement.IDListeAvancement = StadeAvancement.IDListeAvancement
+	AND
+	(
+		StadeAvancement.IDTranche = {ParamIDTranche}
+		AND	Avancement.AvecSuivi = {ParamAvecSuivi}
+		AND	StadeAvancement.DatePrevMAJPromo > {ParamDatePrevMAJPromo}
+		AND	StadeAvancement.DatePrevMAJPromo IS NOT NULL 
+	)
+
+-- ============================================
+-- Requête : REQ_IDListeAvancement_selon_DatePrevi
+-- ============================================
+SELECT 
+	StadeAvancement.IDListeAvancement AS IDListeAvancement,	
+	StadeAvancement.IDTranche AS IDTranche,	
+	StadeAvancement.DatePrevMAJPromo AS DatePrevMAJPromo,	
+	StadeAvancement.Ordre AS Ordre
+FROM 
+	StadeAvancement
+WHERE 
+	StadeAvancement.DatePrevMAJPromo > {ParamDatePrevMAJPromo}
+	AND	StadeAvancement.IDTranche = {paramIDTranche}
+	AND	StadeAvancement.IDListeAvancement <> {paramIDListeAvancement}
+	AND	StadeAvancement.DateReelle IS NULL 
+ORDER BY 
+	Ordre ASC
+
+-- ============================================
+-- Requête : REQ_StadeAvancementIntervalle
+-- ============================================
+SELECT 
+	COUNT(StadeAvancement.IDStadeAvancement) AS Comptage_1,	
+	StadeAvancement.IDListeAvancement AS IDListeAvancement,	
+	StadeAvancement.DatePrevComptaDebutAnnee AS DatePrevComptaDebutAnnee,	
+	StadeAvancement.DatePrevMAJPromo AS DatePrevMAJPromo,	
+	StadeAvancement.DateReelle AS DateReelle,	
+	StadeAvancement.Commentaire AS Commentaire,	
+	StadeAvancement.AjoutNbMois AS AjoutNbMois,	
+	StadeAvancement.Ordre AS Ordre,	
+	StadeAvancement.PourcentageAvancementReel AS PourcentageAvancementReel,	
+	StadeAvancement.MontantPrevi AS MontantPrevi,	
+	StadeAvancement.AvecAppelFondClientSuppl AS AvecAppelFondClientSuppl,	
+	Avancement.Code AS Code,	
+	StadeAvancement.IDTranche AS IDTranche,	
+	TypeBatimentStade.IntervalleDureeMois AS IntervalleDureeMois,	
+	TypeBatimentStade.IntervalleDureeMoisEtage AS IntervalleDureeMoisEtage
+FROM 
+	TypeBatiment,	
+	TypeBatimentStade,	
+	Avancement,	
+	StadeAvancement
+WHERE 
+	Avancement.IDListeAvancement = StadeAvancement.IDListeAvancement
+	AND		Avancement.IDListeAvancement = TypeBatimentStade.IDListeAvancement
+	AND		TypeBatiment.IDTypeBatiment = TypeBatimentStade.IDTypeBatiment
+	AND
+	(
+		StadeAvancement.IDStadeAvancement = {ParamIDStadeAvancement}
+		AND	StadeAvancement.IDListeAvancement = {ParamIDListeAvancement}
+		AND	StadeAvancement.IDTranche = {ParamIDTranche}
+	)
+GROUP BY 
+	StadeAvancement.IDListeAvancement,	
+	StadeAvancement.DatePrevComptaDebutAnnee,	
+	StadeAvancement.DatePrevMAJPromo,	
+	StadeAvancement.DateReelle,	
+	StadeAvancement.Commentaire,	
+	StadeAvancement.AjoutNbMois,	
+	StadeAvancement.Ordre,	
+	StadeAvancement.PourcentageAvancementReel,	
+	StadeAvancement.MontantPrevi,	
+	StadeAvancement.AvecAppelFondClientSuppl,	
+	Avancement.Code,	
+	StadeAvancement.IDTranche,	
+	TypeBatimentStade.IntervalleDureeMois,	
+	TypeBatimentStade.IntervalleDureeMoisEtage
+
+-- ============================================
+-- Requête : REQ_Reserve_tout_tri_entreprise
+-- ============================================
+SELECT 
+	Operation.IDOperation AS IDOperation,	
+	Reserve.IDTypeReserve AS IDTypeReserve,	
+	Reserve.DateReclamation AS DateReclamation,	
+	Reserve.TravauxEffectues AS TravauxEffectues,	
+	Reserve.IDPiece AS IDPiece,	
+	Reserve.ReserveCode AS ReserveCode,	
+	Reserve.IDReserve AS IDReserve,	
+	Acquereur.IDAcquereur AS IDAcquereur,	
+	Reserve.Reserve AS Reserve,	
+	ReserveEntreprise.RS AS RS,	
+	ReserveEntreprise.Telephone AS EntrepriseTelephone,	
+	ReserveEntreprise.Contact AS Contact,	
+	ReserveEntreprise.EMail AS EMail,	
+	Acquereur.Patronyme AS Patronyme,	
+	Acquereur.Civilite AS Civilite,	
+	Acquereur.Prenom AS Prenom,	
+	Lot.Numlot AS Numlot,	
+	Lot.Adresse AS Adresse,	
+	Acquereur.Téléphone AS Téléphone,	
+	Acquereur.Portable AS Portable,	
+	Lot.LocatairePatronyme AS LocatairePatronyme,	
+	Lot.LocatairePrenom AS LocatairePrenom,	
+	Lot.LocataireCivilite AS LocataireCivilite,	
+	Lot.LocataireTelephone AS LocataireTelephone,	
+	Lot.LocatairePortable AS LocatairePortable,	
+	ReserveEntreprise.IDReserveEntreprise AS IDReserveEntreprise,	
+	Lot.IDTranche AS IDTranche,	
+	Operation.Libelle AS Libelle,	
+	Operation.Commune AS Commune,	
+	Reserve.DateDIntervention AS DateDIntervention,	
+	Reserve.EnvoyerMailDate AS EnvoyerMailDate,	
+	Reserve.IDEntreprise AS IDEntreprise,	
+	Civilite.LibelleCourt AS LibelleCourt,	
+	ReservePiece.Libelle AS Pièce,	
+	Reserve.EnvoyerMail AS EnvoyerMail,	
+	Acquereur.InfoPourEntreprise AS InfoPourEntreprise,	
+	Lot.curDateLivraison AS DateLivraison,	
+	Reserve.WindowsUser AS WindowsUser
+FROM 
+	(
+		(
+			Operation
+			INNER JOIN
+			Tranche
+			ON Operation.IDOperation = Tranche.IDOperation
+		)
+		INNER JOIN
+		(
+			ReservePiece
+			RIGHT OUTER JOIN
+			(
+				ReserveEntreprise
+				INNER JOIN
+				(
+					Lot
+					INNER JOIN
+					Reserve
+					ON Lot.IDlot = Reserve.IDLot
+				)
+				ON ReserveEntreprise.IDReserveEntreprise = Reserve.IDEntreprise
+			)
+			ON ReservePiece.IDReservePiece = Reserve.IDPiece
+		)
+		ON Tranche.IDTranche = Lot.IDTranche
+	)
+	LEFT OUTER JOIN
+	(
+		Civilite
+		RIGHT OUTER JOIN
+		Acquereur
+		ON Civilite.IDCivilite = Acquereur.IDCivilite
+	)
+	ON Lot.curIDAcquereur = Acquereur.IDAcquereur
+WHERE 
+	(
+	ReserveEntreprise.IDReserveEntreprise = {ParamIDReserveEntreprise}
+	AND	Operation.IDOperation = {ParamIDOperation}
+	AND	Reserve.TravauxEffectues = {ParamTravauxEffectues}
+	AND	Acquereur.IDAcquereur = {ParamIDAcquereur}
+	AND	Reserve.EnvoyerMail = {paramEnvoyerMail}
+	AND	Reserve.WindowsUser = {paramWindowsUser}
+)
+ORDER BY 
+	Libelle ASC,	
+	RS ASC,	
+	Numlot ASC
+
+-- ============================================
+-- Requête : REQ_Reserve_tout_tri_lot
+-- ============================================
+SELECT 
+	Operation.IDOperation AS IDOperation,	
+	Reserve.IDTypeReserve AS IDTypeReserve,	
+	Reserve.DateReclamation AS DateReclamation,	
+	Reserve.TravauxEffectues AS TravauxEffectues,	
+	Reserve.IDPiece AS IDPiece,	
+	Reserve.ReserveCode AS ReserveCode,	
+	Reserve.IDReserve AS IDReserve,	
+	Acquereur.IDAcquereur AS IDAcquereur,	
+	Reserve.Reserve AS Reserve,	
+	ReserveEntreprise.RS AS RS,	
+	ReserveEntreprise.Telephone AS EntrepriseTelephone,	
+	ReserveEntreprise.Contact AS Contact,	
+	ReserveEntreprise.EMail AS Email,	
+	Acquereur.Patronyme AS Patronyme,	
+	Acquereur.Civilite AS Civilite,	
+	Acquereur.Prenom AS Prenom,	
+	Lot.Numlot AS Numlot,	
+	Lot.Adresse AS Adresse,	
+	Acquereur.Téléphone AS Téléphone,	
+	Acquereur.Portable AS Portable,	
+	Lot.LocatairePatronyme AS LocatairePatronyme,	
+	Lot.LocatairePrenom AS LocatairePrenom,	
+	Lot.LocataireCivilite AS LocataireCivilite,	
+	Lot.LocataireTelephone AS LocataireTelephone,	
+	Lot.LocatairePortable AS LocatairePortable,	
+	ReserveEntreprise.IDReserveEntreprise AS IDReserveEntreprise,	
+	Lot.IDTranche AS IDTranche,	
+	Operation.Libelle AS Libelle,	
+	Operation.Commune AS Commune,	
+	Reserve.DateDIntervention AS DateDIntervention,	
+	Reserve.EnvoyerMailDate AS EnvoyerMailDate,	
+	Reserve.IDEntreprise AS IDEntreprise,	
+	Civilite.LibelleCourt AS LibelleCourt,	
+	ReservePiece.Libelle AS Pièce,	
+	Reserve.EnvoyerMail AS EnvoyerMail,	
+	Acquereur.InfoPourEntreprise AS InfoPourEntreprise,	
+	Lot.curDateLivraison AS DateLivraison,	
+	Reserve.WindowsUser AS WindowsUser
+FROM 
+	(
+		(
+			Operation
+			INNER JOIN
+			Tranche
+			ON Operation.IDOperation = Tranche.IDOperation
+		)
+		INNER JOIN
+		(
+			ReservePiece
+			RIGHT OUTER JOIN
+			(
+				ReserveEntreprise
+				INNER JOIN
+				(
+					Lot
+					INNER JOIN
+					Reserve
+					ON Lot.IDlot = Reserve.IDLot
+				)
+				ON ReserveEntreprise.IDReserveEntreprise = Reserve.IDEntreprise
+			)
+			ON ReservePiece.IDReservePiece = Reserve.IDPiece
+		)
+		ON Tranche.IDTranche = Lot.IDTranche
+	)
+	LEFT OUTER JOIN
+	(
+		Civilite
+		RIGHT OUTER JOIN
+		Acquereur
+		ON Civilite.IDCivilite = Acquereur.IDCivilite
+	)
+	ON Lot.curIDAcquereur = Acquereur.IDAcquereur
+WHERE 
+	(
+	ReserveEntreprise.IDReserveEntreprise = {ParamIDReserveEntreprise}
+	AND	Operation.IDOperation = {ParamIDOperation}
+	AND	Reserve.TravauxEffectues = {ParamTravauxEffectues}
+	AND	Acquereur.IDAcquereur = {ParamIDAcquereur}
+	AND	Reserve.EnvoyerMail = {paramEnvoyerMail}
+	AND	Reserve.WindowsUser = {paramWindowsUser}
+)
+ORDER BY 
+	Libelle ASC,	
+	Numlot ASC,	
+	RS ASC
+
+-- ============================================
+-- Requête : REQ_Reserve_tout_tri_lot_2
+-- ============================================
+SELECT 
+	Operation.IDOperation AS IDOperation,	
+	Reserve.IDTypeReserve AS IDTypeReserve,	
+	Reserve.DateReclamation AS DateReclamation,	
+	Reserve.TravauxEffectues AS TravauxEffectues,	
+	Reserve.IDPiece AS IDPiece,	
+	Reserve.ReserveCode AS ReserveCode,	
+	Reserve.IDReserve AS IDReserve,	
+	Acquereur.IDAcquereur AS IDAcquereur,	
+	Reserve.Reserve AS Reserve,	
+	ReserveEntreprise.RS AS RS,	
+	ReserveEntreprise.Telephone AS EntrepriseTelephone,	
+	ReserveEntreprise.Contact AS Contact,	
+	ReserveEntreprise.EMail AS EMail,	
+	Acquereur.Patronyme AS Patronyme,	
+	Acquereur.Civilite AS Civilite,	
+	Acquereur.Prenom AS Prenom,	
+	Lot.Numlot AS Numlot,	
+	Lot.Adresse AS Adresse,	
+	Acquereur.Téléphone AS Téléphone,	
+	Acquereur.Portable AS Portable,	
+	Lot.LocatairePatronyme AS LocatairePatronyme,	
+	Lot.LocatairePrenom AS LocatairePrenom,	
+	Lot.LocataireCivilite AS LocataireCivilite,	
+	Lot.LocataireTelephone AS LocataireTelephone,	
+	Lot.LocatairePortable AS LocatairePortable,	
+	ReserveEntreprise.IDReserveEntreprise AS IDReserveEntreprise,	
+	Lot.IDTranche AS IDTranche,	
+	Operation.Libelle AS Libelle,	
+	Operation.Commune AS Commune,	
+	Reserve.DateDIntervention AS DateDIntervention,	
+	Reserve.EnvoyerMailDate AS EnvoyerMailDate,	
+	Reserve.IDEntreprise AS IDEntreprise,	
+	Civilite.LibelleCourt AS LibelleCourt,	
+	ReservePiece.Libelle AS Pièce,	
+	Reserve.EnvoyerMail AS EnvoyerMail,	
+	Acquereur.InfoPourEntreprise AS InfoPourEntreprise,	
+	Lot.curDateLivraison AS DateLivraison,	
+	Reserve.WindowsUser AS WindowsUser
+FROM 
+	(
+		(
+			Operation
+			INNER JOIN
+			Tranche
+			ON Operation.IDOperation = Tranche.IDOperation
+		)
+		INNER JOIN
+		(
+			ReservePiece
+			RIGHT OUTER JOIN
+			(
+				ReserveEntreprise
+				INNER JOIN
+				(
+					Lot
+					INNER JOIN
+					Reserve
+					ON Lot.IDlot = Reserve.IDLot
+				)
+				ON ReserveEntreprise.IDReserveEntreprise = Reserve.IDEntreprise
+			)
+			ON ReservePiece.IDReservePiece = Reserve.IDPiece
+		)
+		ON Tranche.IDTranche = Lot.IDTranche
+	)
+	LEFT OUTER JOIN
+	(
+		Civilite
+		RIGHT OUTER JOIN
+		Acquereur
+		ON Civilite.IDCivilite = Acquereur.IDCivilite
+	)
+	ON Lot.curIDAcquereur = Acquereur.IDAcquereur
+WHERE 
+	(
+	ReserveEntreprise.IDReserveEntreprise = {ParamIDReserveEntreprise}
+	AND	Operation.IDOperation = {ParamIDOperation}
+	AND	Reserve.TravauxEffectues = {ParamTravauxEffectues}
+	AND	Acquereur.IDAcquereur = {ParamIDAcquereur}
+	AND	Reserve.EnvoyerMail = {paramEnvoyerMail}
+	AND	Reserve.WindowsUser = {paramWindowsUser}
+)
+ORDER BY 
+	Libelle ASC,	
+	RS ASC,	
+	Numlot ASC
+
+-- ============================================
+-- Requête : REQ_SansNom_PRomoComm3
+-- ============================================
+SELECT 
+	Lot.IDlot AS IDLot,	
+	Tranche.IDOperation AS IDOperation,	
+	Lot.Numlot AS Numlot,	
+	INSTR(Lot.Numlot ,  '/', 1, 1)  AS Expr1
+FROM 
+	Tranche,	
+	Lot
+WHERE 
+	Tranche.IDTranche = Lot.IDTranche
+	AND
+	(
+		Tranche.IDOperation = 265
+	)
+
+-- ============================================
+-- Requête : REQ_Financement_PSLA_2
+-- ============================================
+SELECT 
+	Financement.IDFinancement AS IDFinancement,	
+	Financement.IDTranche AS IDTranche,	
+	Financement.IDTypeFinancement AS IDTypeFinancement,	
+	Financement.IDBanque AS IDBanque,	
+	Financement.MontantFinancement AS MontantFinancement,	
+	Financement.DateSignature AS DateSignature,	
+	Financement.DateDebutMobilisation AS DateDebutMobilisation,	
+	Financement.DateFinMobilisation AS DateFinMobilisation,	
+	Financement.IndexTaux AS IndexTaux,	
+	Financement.MargeBanque AS MargeBanque,	
+	Financement.CommissionEngagementPourc AS CommissionEngagementPourc,	
+	Financement.FraisDossier AS FraisDossier,	
+	Financement.Commentaire AS Commentaire,	
+	Financement.NumContrat AS NumContrat,	
+	Financement.EstPhaseAmortissement AS EstPhaseAmortissement,	
+	Financement.SurOpe AS SurOpe,	
+	Financement.ApportPromoteur AS ApportPromoteur,	
+	Financement.IDListeFinPret AS IDListeFinPret,	
+	Financement.DateButoir AS DateButoir,	
+	Financement.PartSocialeMontant AS PartSocialeMontant,	
+	Financement.IDListeStatutPartSociale AS IDListeStatutPartSociale,	
+	Financement.DateStatutPartSociale AS DateStatutPartSociale,	
+	Financement.EstSolde AS EstSolde,	
+	Financement.MontantPrevi AS MontantPrevi,	
+	Financement.InfosPretprevi AS InfosPretprevi,	
+	Financement.DateEnvoiDossier AS DateEnvoiDossier,	
+	Financement.ContratMontant AS ContratMontant,	
+	Financement.ContratNbLogt AS ContratNbLogt,	
+	Financement.DateDebutEcheance AS DateDebutEcheance,	
+	Financement.DateFinEcheance AS DateFinEcheance,	
+	Financement.TauxPret AS TauxPret,	
+	Financement.MontantEcheance AS MontantEcheance,	
+	Financement.DureeMoisMobPSLA AS DureeMoisMobPSLA,	
+	Financement.Periodicite AS Periodicite,	
+	Financement.DateVerstPret AS DateVerstPret,	
+	Financement.PrevMtOC AS PrevMtOC,	
+	Financement.IDActionAlerte AS IDActionAlerte,	
+	Financement.EstPrlvFraisDossier AS EstPrlvFraisDossier,	
+	Financement.EstAmortDiffére AS EstAmortDiffére,	
+	Financement.AmortissementDiffereDuree AS AmortissementDiffereDuree,	
+	Financement.AmortissementDiffereFinDate AS AmortissementDiffereFinDate
+FROM 
+	Financement
+WHERE 
+	Financement.IDTypeFinancement = 1
+	AND	Financement.IDTranche = {ParamIDTranche}
+
+-- ============================================
+-- Requête : REQ_Assistante
+-- ============================================
+SELECT 
+	Personne.IDPersonne AS IDPersonne,	
+	( ( Personne.Patronyme +  ' ') + Personne.Prenom )  AS Assistante
+FROM 
+	Personne
+WHERE 
+	Personne.IDFonction = 4
+
+-- ============================================
+-- Requête : REQ_OperationCommune
+-- ============================================
+SELECT 
+	Operation.IDOperation AS IDOperation,	
+	( ( Operation.Libelle +  ' ') + Operation.Commune )  AS LibelleCommune,	
+	Operation.Libelle AS Libelle,	
+	Operation.Commune AS Commune
+FROM 
+	Operation
+ORDER BY 
+	Libelle ASC,	
+	Commune ASC
+
+-- ============================================
+-- Requête : REQ_RechercheAcquereur
+-- ============================================
+SELECT 
+	Acquereur.Patronyme AS Patronyme,	
+	Acquereur.Prenom AS Prenom,	
+	Acquereur.RS AS RS,	
+	Acquereur.Téléphone AS Téléphone,	
+	Acquereur.Portable AS Portable,	
+	Acquereur.Email AS Email,	
+	Acquereur.AdresseActuelle AS AdresseActuelle,	
+	Acquereur.CPActuel AS CPActuel,	
+	Acquereur.Communeactuelle AS Communeactuelle,	
+	Acquereur.NomComplet AS NomComplet,	
+	Acquereur.Patronyme2 AS Patronyme2,	
+	Acquereur.Prenom2 AS Prenom2,	
+	Acquereur.IDAcquereur AS IDAcquereur,	
+	Acquereur.IDCivilite AS IDCivilite,	
+	Acquereur.IDCivilite2 AS IDCivilite2,	
+	Acquereur.IDCivilite3 AS IDCivilite3,	
+	Acquereur.Patronyme3 AS Patronyme3,	
+	Acquereur.Prenom3 AS Prenom3,	
+	Acquereur.DescriptionLotCourant AS DescriptionLotCourant
+FROM 
+	Acquereur
+WHERE 
+	Acquereur.Patronyme LIKE %{paramReche}%
+	OR	Acquereur.Prenom LIKE %{paramReche}%
+	OR	Acquereur.RS LIKE %{paramReche}%
+	OR	Acquereur.Téléphone LIKE %{paramReche}%
+	OR	Acquereur.Portable LIKE %{paramReche}%
+	OR	Acquereur.Email LIKE %{paramReche}%
+	OR	Acquereur.AdresseActuelle LIKE %{paramReche}%
+	OR	Acquereur.CPActuel LIKE %{paramReche}%
+	OR	Acquereur.Communeactuelle LIKE %{paramReche}%
+	OR	Acquereur.NomComplet LIKE %{paramReche}%
+ORDER BY 
+	Patronyme ASC,	
+	Prenom ASC
+
+-- ============================================
+-- Requête : REQ_Acquereur_selon_Commercialisation
+-- ============================================
+SELECT 
+	Commercialisation.IDCommercialisation AS IDCommercialisation,	
+	Commercialisation.IDLot AS IDLot,	
+	Commercialisation.IDAcquereur AS IDAcquereur,	
+	Commercialisation.DateResa AS DateResa,	
+	Commercialisation.DateAnnulation AS DateAnnulation,	
+	Commercialisation.IDNatureAchat AS IDNatureAchat,	
+	Commercialisation.PrixDeVenteReelHT AS PrixDeVenteReelHT,	
+	Commercialisation.PrixDeVenteReelTTC AS PrixDeVenteReelTTC,	
+	Commercialisation.TauxTVAReel AS TauxTVAReel,	
+	Commercialisation.RemiseClientTTC AS RemiseClientTTC,	
+	Commercialisation.DateLivraison AS DateLivraison
+FROM 
+	Commercialisation
+WHERE 
+	Commercialisation.DateResa IS NOT NULL 
+	AND	Commercialisation.DateAnnulation IS NULL 
+	AND	Commercialisation.IDLot = {ParamIDLot}
+
+-- ============================================
+-- Requête : REQ_SansNom_PRomoComm4
+-- ============================================
+SELECT 
+	AcquereurTrancheAge.IDAcquereurTrancheAge AS IDAcquereurTrancheAge
+FROM 
+	AcquereurTrancheAge
+
+-- ============================================
+-- Requête : REQ_SansNom3
+-- ============================================
+DELETE FROM 
+	Lot
+WHERE 
+	Lot.IDTranche = {paramIDTranche}
+
+-- ============================================
+-- Requête : REQ_InterlocuteurNotaire
+-- ============================================
+SELECT 
+	EtudeNotaire.NomEtude AS NomEtude,	
+	InterlocuteurNotaire.IDInterlocuteurNotaire AS IDInterlocuteurNotaire,	
+	( ( InterlocuteurNotaire.Patronyme +  ' ') +  IIF (InterlocuteurNotaire.Prenom IS NULL , '',InterlocuteurNotaire.Prenom  ))  AS InterlocuteurNotaire,	
+	( ( EtudeNotaire.NomEtude +  ' > ') + ( ( InterlocuteurNotaire.Patronyme +  ' ') +  IIF (InterlocuteurNotaire.Prenom IS NULL , '',InterlocuteurNotaire.Prenom  )) )  AS NomComplet
+FROM 
+	EtudeNotaire
+	INNER JOIN
+	InterlocuteurNotaire
+	ON EtudeNotaire.IDEtudeNotaire = InterlocuteurNotaire.IDEtudeNotaire
+ORDER BY 
+	NomComplet ASC
+
+-- ============================================
+-- Requête : REQ_InterlocuteurNotaire_Operation
+-- ============================================
+SELECT
+	InterlocuteurNotaire.IDEtudeNotaire AS IDEtudeNotaire,
+	InterlocuteurNotaire.IDInterlocuteurNotaire AS IDInterlocuteurNotaire,
+	Operation.IDInterlocuteurNotaire_Clerc_Foncier AS IDInterlocuteurNotaire_Clerc_Foncier,
+	Operation.IDInterlocuteurNotaire_Clerc_Vente AS IDInterlocuteurNotaire_Clerc_Vente,
+	Operation.IDInterlocuteurNotaire_Notaire_Foncier AS IDInterlocuteurNotaire_Notaire_Foncier,
+	Operation.IDInterlocuteurNotaire_Notaire_Vente AS IDInterlocuteurNotaire_Notaire_Vente
+FROM
+	InterlocuteurNotaire,
+	Operation
+WHERE
+	(
+		InterlocuteurNotaire.IDInterlocuteurNotaire = Operation.IDInterlocuteurNotaire_Clerc_Vente
+		or
+		InterlocuteurNotaire.IDInterlocuteurNotaire = Operation.IDInterlocuteurNotaire_Clerc_Vente
+		or
+		InterlocuteurNotaire.IDInterlocuteurNotaire = Operation.IDInterlocuteurNotaire_Notaire_Foncier
+		or
+		InterlocuteurNotaire.IDInterlocuteurNotaire = Operation.IDInterlocuteurNotaire_Notaire_Vente
+	)
+	and
+	(
+		IDEtudeNotaire= {paramIDEtudeNotaire}
+	)
+
+
+-- ============================================
+-- Requête : REQ_SynchroTrancheDate
+-- ============================================
+SELECT 
+	StadeAvancement.IDStadeAvancement AS IDStadeAvancement,	
+	Tranche.Libelle AS Libelle,	
+	StadeAvancement.DatePrevMAJPromo AS DatePrevMAJPromo,	
+	StadeAvancement.DateReelle AS DateReelle
+FROM 
+	Tranche,	
+	StadeAvancement
+WHERE 
+	Tranche.IDTranche = StadeAvancement.IDTranche
+	AND
+	(
+		Tranche.IDTranche <> {paramIDTranche}
+		AND	Tranche.IDOperation = {paramIDOperation}
+		AND	StadeAvancement.IDListeAvancement = {paramIDListeAvancement}
+	)
+
+-- ============================================
+-- Requête : REQ_SynchroTrancheDate2
+-- ============================================
+SELECT 
+	StadeAvancement.IDStadeAvancement AS IDStadeAvancement,	
+	Tranche.Libelle AS Libelle,	
+	StadeAvancement.DatePrevMAJPromo AS DatePrevMAJPromo,	
+	StadeAvancement.DateReelle AS DateReelle
+FROM 
+	Tranche,	
+	StadeAvancement
+WHERE 
+	Tranche.IDTranche = StadeAvancement.IDTranche
+	AND
+	(
+		Tranche.IDTranche <> {paramIDTranche}
+		AND	Tranche.IDOperation = {paramIDOperation}
+		AND	StadeAvancement.IDListeAvancement = {paramIDListeAvancement}
+	)
+
+-- ============================================
+-- Requête : REQ_DateADecaler
+-- ============================================
+SELECT 
+	StadeAvancement.IDStadeAvancement AS IDStadeAvancement,	
+	StadeAvancement.IDTranche AS IDTranche,	
+	StadeAvancement.DatePrevMAJPromo AS DatePrevMAJPromo,	
+	StadeAvancement.DateReelle AS DateReelle,	
+	Avancement.NePasDecalerAuto AS NePasDecalerAuto,	
+	Avancement.Libelle AS LibelleAvancement,	
+	StadeAvancement.Ordre AS Ordre
+FROM 
+	StadeAvancement,	
+	Avancement
+WHERE 
+	StadeAvancement.IDListeAvancement = Avancement.IDListeAvancement
+	AND
+	(
+		StadeAvancement.IDTranche = {ParamIDTranche}
+	)
+
+-- ============================================
+-- Requête : REQ_SansNom2
+-- ============================================
+SELECT 
+	Tranche.IDOperation AS IDOperation,	
+	StadeAvancement.DatePrevMAJPromo AS DatePrevMAJPromo,	
+	StadeAvancement.DateReelle AS DateReelle,	
+	StadeAvancement.IDListeAvancement AS IDListeAvancement
+FROM 
+	Tranche,	
+	StadeAvancement
+WHERE 
+	Tranche.IDTranche = StadeAvancement.IDTranche
+	AND
+	(
+		Tranche.IDOperation = {ParamIDOperation}
+		AND	StadeAvancement.IDListeAvancement = {ParamIDListeAvancement}
+	)
+
+-- ============================================
+-- Requête : REQ_AvancementAuto_DatePrevi
+-- ============================================
+SELECT 
+	StadeAvancement.IDStadeAvancement AS IDStadeAvancement,	
+	Avancement.Ordre AS Ordre,	
+	Avancement.IDListeAvancement AS IDListeAvancement,	
+	Avancement.DatePreviPromoAuto_IDListeAvancement AS DatePreviPromoAuto_IDListeAvancement,	
+	Avancement.DatePreviPromoAuto_QteDecalage AS DatePreviPromoAuto_QteDecalage,	
+	Avancement.DatePreviPromoAuto_IDDecalageUniteTemps AS DatePreviPromoAuto_IDDecalageUniteTemps,	
+	Avancement.AvecSynchroEntreTranche AS AvecSynchroEntreTranche
+FROM 
+	StadeAvancement,	
+	Avancement
+WHERE 
+	StadeAvancement.IDListeAvancement = Avancement.IDListeAvancement
+	AND
+	(
+		StadeAvancement.IDTranche = {paramIDTranche}
+		AND	Avancement.DatePreviPromoAuto_IDListeAvancement > 0
+	)
+ORDER BY 
+	Ordre ASC
+
+-- ============================================
+-- Requête : REQ_AvancementAuto_DatePrevi_Internal
+-- ============================================
+SELECT 
+	StadeAvancement.DatePrevMAJPromo AS DatePrevMAJPromo,	
+	Avancement.IDListeAvancement AS IDListeAvancement
+FROM 
+	StadeAvancement,	
+	Avancement
+WHERE 
+	StadeAvancement.IDListeAvancement = Avancement.IDListeAvancement
+	AND
+	(
+		StadeAvancement.IDTranche = {paramIDTranche}
+		AND	Avancement.IDListeAvancement = {paramIDListeAvancement}
+	)
+
+-- ============================================
+-- Requête : REQ_AvancementAuto_DatePreviObjectif
+-- ============================================
+SELECT 
+	StadeAvancement.DatePrevMAJPromo,
+	StadeAvancement.IDStadeAvancement,
+	Avancement.Ordre AS Ordre,	
+	Avancement.DatePreviObjectifAuto_DecalageMoisPreviPromo AS DatePreviObjectifAuto_DecalageMoisPreviPromo,	
+	Avancement.AvecSynchroEntreTranche AS AvecSynchroEntreTranche
+FROM 
+	StadeAvancement,	
+	Avancement
+WHERE 
+	StadeAvancement.IDListeAvancement = Avancement.IDListeAvancement
+	AND
+	(
+		StadeAvancement.IDTranche = {paramIDTranche}
+		AND	Avancement.DatePreviObjectifAuto_DecalageMoisPreviPromo IS NOT NULL 
+	)
+ORDER BY 
+	Ordre ASC
+
+-- ============================================
+-- Requête : REQ_PrestataireComm1
+-- ============================================
+SELECT 
+	Prestataire.IDPrestataire AS IDPrestataire,	
+	Prestataire.Libelle AS Libelle
+FROM 
+	Prestataire
+WHERE 
+	Prestataire.MasquerComm1 = 0
+	OR	Prestataire.MasquerComm1 IS NULL 
+ORDER BY 
+	Libelle ASC
+
+-- ============================================
+-- Requête : REQ_PrestataireMission
+-- ============================================
+SELECT 
+	Prestataire.IDPrestataire AS IDPrestataire,	
+	Prestataire.Libelle AS Libelle
+FROM 
+	Prestataire
+WHERE 
+	Prestataire.AfficherMission = 1
+ORDER BY 
+	Libelle ASC
+
+-- ============================================
+-- Requête : REQ_Lot_Adresse_NonVide
+-- ============================================
+SELECT 
+	COUNT(*) AS NbNonVide
+FROM 
+	Lot
+	INNER JOIN
+	Commercialisation
+	ON Lot.IDlot = Commercialisation.IDLot
+WHERE 
+	(
+	Lot.IDTranche = {paramIDTranche}
+	AND	
+	(
+		Lot.Adresse IS NOT NULL 
+		OR	Lot.Adresse <> ''
+	)
+)
+
+-- ============================================
+-- Requête : REQ_Commune_UI
+-- ============================================
+SELECT 
+	upper( Commune.Libelle  )  AS NomCommuneMajuscule
+FROM 
+	Commune
+
+-- ============================================
+-- Requête : REQ_Commercialisation_selon_Tranche
+-- ============================================
+SELECT 
+	Commercialisation.IDCommercialisation AS IDCommercialisation
+FROM 
+	Tranche
+	INNER JOIN
+	(
+		Lot
+		INNER JOIN
+		Commercialisation
+		ON Lot.IDlot = Commercialisation.IDLot
+	)
+	ON Tranche.IDTranche = Lot.IDTranche
+WHERE 
+	(
+	Tranche.IDTranche = {paramIDTranche}
+)
+
+-- ============================================
+-- Requête : REQ_SansNom4
+-- ============================================
+
+
+-- ============================================
+-- Requête : REQ_AcquereurPourEnquete_Test
+-- ============================================
+SELECT 
+	Acquereur.Identifiant AS Identifiant,	
+	Lot.Numlot AS Numlot,	
+	Lot.TypeDeBien AS Typologie,	
+	Acquereur.Etage AS Etage,	
+	Lot.SurfHabitable AS surface,	
+	Acquereur.Patronyme AS Patronyme,	
+	Acquereur.Prenom AS Prenom,	
+	Acquereur.Adulte1DateNaissance AS Adulte1DateNaissance,	
+	Acquereur.Adulte2DateNaissance AS Adulte2DateNaissance,	
+	Acquereur.Téléphone AS Téléphone,	
+	Acquereur.Email AS Email,	
+	Acquereur.AdresseActuelle AS AdresseActuelle,	
+	Acquereur.CPActuel AS CPActuel,	
+	Acquereur.Communeactuelle AS Communeactuelle,	
+	TypeLogementActuel.Libelle AS Origine,	
+	Acquereur.RevenusFoyerFiscal AS Revenus_foyer_fiscal,	
+	AcquereurRevenuFoyerFiscalParQuartile.Libelle AS Libelle,	
+	Acquereur.AnneeDeDeclaration AS AnneeDeDeclaration,	
+	Acquereur.NombreAdultes AS NombreAdultes,	
+	Acquereur.NombreEnfants AS NombreEnfants,	
+	Acquereur.EnfantAVenir AS EnfantAVenir,	
+	AcquereurPlafondRessources.Libelle AS Libelle_Ac,	
+	 Format (Commercialisation.PrixDeVenteReelTTC , '0' ) AS Formule1,	
+	Commercialisation.TauxTVAReel AS TauxTVAReel,	
+	Acquereur.ApportReelADateHorsSubvention AS ApportReelADateHorsSubvention,	
+	Acquereur.Subvention AS Subvention,	
+	Commercialisation.DateResa AS DateResa,	
+	Commercialisation.DateSignatureContratLoc AS DateSignatureContratLoc,	
+	Commercialisation.DateSignatureActeVEFA AS DateSignatureActeVEFA,	
+	 IIf (( Tranche.NbLogtIndiv >  0) ,Lot.Adresse ,Tranche.Adresse  ) AS Adresse_programme,	
+	Operation.CP AS CP_programme,	
+	Operation.Commune AS Ville_programme,	
+	Operation.Libelle AS Nom_programme,	
+	Acquereur."Type de programme" AS Type_de_programme,	
+	 IIf (( Lot.FamilleDeBien =  'APPARTEMENT') , 'oui', 'non' ) AS Formule2,	
+	 IIf (Operation.ANRU=1 , 'oui', 'non' ) AS Formule3,	
+	Acquereur."Type d'acquisition" AS Type_d_acquisition,	
+	Acquereur.PrimoAccedant AS PrimoAccedant,	
+	Acquereur.Modifications AS Modifications,	
+	Acquereur.ReservesDE AS ReservesDE,	
+	Acquereur."Date prévisionnelle livraison" AS Date_prévisionnelle_livraison,	
+	Acquereur."Date réelle livraison" AS Date_réelle_livraison,	
+	AcquereurTrancheAge.Libelle AS Libelle_Ac1,	
+	Acquereur.Etape AS Etape,	
+	Commercial.Denomination AS Denomination,	
+	Commercial.EMail AS EMail_Co,	
+	Personne_1.Patronyme AS Patronyme_Pe,	
+	Personne_1.EMail AS EMail_Pe,	
+	Acquereur.Adulte1CSP AS Adulte1CSP,	
+	Acquereur.Adulte2CSP AS Adulte2CSP,	
+	Acquereur.Adulte1Metier AS Adulte1Metier,	
+	Acquereur.Adulte2Metier AS Adulte2Metier,	
+	Acquereur.EnqueteA AS EnquêteA,	
+	Acquereur.EnqueteB AS EnquêteB,	
+	Acquereur.EnqueteC AS EnquêteC,	
+	Operation.MasquerComptable AS MasquerComptable,	
+	Commercialisation.DateAnnulation AS DateAnnulation
+FROM 
+	(
+		Operation
+		RIGHT OUTER JOIN
+		Tranche
+		ON Operation.IDOperation = Tranche.IDOperation
+	)
+	RIGHT OUTER JOIN
+	(
+		Lot
+		RIGHT OUTER JOIN
+		(
+			(
+				(
+					(
+						(
+							(
+								(
+									Acquereur
+									LEFT OUTER JOIN
+									TypeLogementActuel
+									ON Acquereur.IDTypeLogementActuel = TypeLogementActuel.IDTypeLogementActuel
+								)
+								LEFT OUTER JOIN
+								AcquereurRevenuFoyerFiscalParQuartile
+								ON Acquereur.IDAcquereurRevenuFoyerFiscalParQuartile = AcquereurRevenuFoyerFiscalParQuartile.IDAcquereurRevenuFoyerFiscalParQuartile
+							)
+							LEFT OUTER JOIN
+							AcquereurTrancheAge
+							ON Acquereur.IDAcquereurTrancheAge = AcquereurTrancheAge.IDAcquereurTrancheAge
+						)
+						LEFT OUTER JOIN
+						AcquereurPlafondRessources
+						ON Acquereur.IDAcquereurPlafondRessources = AcquereurPlafondRessources.IDAcquereurPlafondRessources
+					)
+					LEFT OUTER JOIN
+					Personne Personne_1
+					ON Acquereur.IDConseillerTechnique = Personne_1.IDPersonne
+				)
+				LEFT OUTER JOIN
+				Commercial
+				ON Acquereur.IDConseillerCommercial = Commercial.IDCommercial
+			)
+			LEFT OUTER JOIN
+			Commercialisation
+			ON Acquereur.IDAcquereur = Commercialisation.IDAcquereur
+		)
+		ON Lot.IDlot = Commercialisation.IDLot
+	)
+	ON Tranche.IDTranche = Lot.IDTranche
+WHERE 
+	(
+	Operation.MasquerComptable = 0
+	AND	Commercialisation.DateAnnulation IS NULL 
+)
+
+-- ============================================
+-- Requête : REQ_Interface_GrilleHonoGestion
+-- ============================================
+SELECT 
+	*
+FROM 
+	GrilleHonoGestion
+WHERE 
+	GrilleHonoGestion.IDListeAvancement = {ParamIDListeAvancement}
+
+-- ============================================
+-- Requête : REQ_ParticipationPourc_selon_partenaire
+-- ============================================
+SELECT DISTINCT 
+	SUM(Participation.Pourcentage) AS PourcHF,	
+	Participation.IDStructureJuridique AS IDStructureJuridique,	
+	Operation.IDOperation AS IDOperation
+FROM 
+	(
+		StructureJuridique
+		LEFT OUTER JOIN
+		(
+			Associe
+			INNER JOIN
+			Participation
+			ON Associe.IDAssocie = Participation.IDAssocie
+		)
+		ON StructureJuridique.IDStructureJuridique = Participation.IDStructureJuridique
+	)
+	LEFT OUTER JOIN
+	Operation
+	ON StructureJuridique.IDStructureJuridique = Operation.IDStructureJuridique
+WHERE 
+	(
+	Participation.IDAssocie IN ({paramIDAssocie}) 
+	AND	Participation.IDAssocie NOT IN ({paramNotIDAssocie}) 
+	AND	Operation.IDOperation = {paramIDOperation}
+	AND	StructureJuridique.IDStructureJuridique = {paramIDStructureJuridique}
+)
+GROUP BY 
+	Participation.IDStructureJuridique,	
+	StructureJuridique.RS,	
+	Operation.IDOperation
+
+-- ============================================
+-- Requête : REQ_SansNom5
+-- ============================================
+UPDATE
+	StructureJuridique
+SET
+	curPourcKPI=0.35,
+	curPourcKGI=0.75,
+	curPourcMH=0.35,
+	curPourcAutre2=0.17,
+	curAutreNom='GAMBETTA  DEVELOPPT (ex Gamb.Promotion), COOPEA, COOPALIS , LE LOGIS BRETON',
+	curAutreNomPourc='GAMBETTA  DEVELOPPT (ex Gamb.Promotion) à 65%, COOPEA à 20%, COOPALIS  à 5%, LE LOGIS BRETON à 5%'
+WHERE
+	IDStructureJuridique=46
+
+
+-- ============================================
+-- Requête : REQ_SCCV_Liste
+-- ============================================
+SELECT
+	StructureJuridique.IDStructureJuridique AS IDStructureJuridique,
+	StructureJuridique.RS + CASE WHEN ( StructureJuridique.DateLiquidation <>  null)  THEN ' (liquidée le ' + FORMAT(StructureJuridique.DateLiquidation  ,  'dd/MM/yyyy' ) + ')' else ''  END AS LibelleSCCV,
+	StructureJuridique.DateLiquidation AS DateLiquidation
+FROM
+	StructureJuridique
+WHERE
+(
+    {paramEstLiquidee} = -1
+    OR ({paramEstLiquidee} = 1 AND StructureJuridique.DateLiquidation IS NOT NULL)
+    OR ({paramEstLiquidee} = 0 AND StructureJuridique.DateLiquidation IS NULL)
+)
+order by
+	LibelleSCCV
+

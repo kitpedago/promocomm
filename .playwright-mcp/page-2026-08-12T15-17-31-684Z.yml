@@ -1,0 +1,24 @@
+- generic:
+  - main:
+    - generic:
+      - paragraph: PromoComm
+      - heading [level=1]: Connexion
+      - generic:
+        - generic:
+          - generic: Service
+          - combobox [expanded]:
+            - generic: Sélectionnez un service
+          - combobox
+        - generic:
+          - generic: Mot de passe
+          - textbox
+        - button [disabled]: Se connecter
+  - button [ref=f2e15] [cursor=pointer]
+  - listbox [ref=f2e17]:
+    - option "Promotion" [active] [ref=f2e18]
+    - option "Comptabilité" [ref=f2e21]
+    - option "Consultation" [ref=f2e24]
+    - option "Direction commercial" [ref=f2e27]
+    - option "Administrateur" [ref=f2e30]
+    - option "Juridique" [ref=f2e33]
+    - option "Direction Promotion" [ref=f2e36]
