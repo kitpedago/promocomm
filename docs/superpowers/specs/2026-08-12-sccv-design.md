@@ -38,9 +38,10 @@ sont pas reproduits).
   (double, **fraction 0–1** en legacy), `commentaires`, `conv_treso`,
   `motif_remuneration_associe_id`, `date_signature_conv`, `date_application`,
   `date_fin_remuneration`, `index_taux_remuneration_id`,
-  `info_taux_remuneration`, `periodicite_versement` integer **sans FK**
-  (la table legacy `Periodicite` n'a qu'un code texte sans ID — vérifier les
-  valeurs réelles à l'implémentation, FK ajoutée si une cible existe).
+  `info_taux_remuneration`, `periodicite_versement` **text** nullable
+  (vérifié le 2026-08-12 : `IDPeriodicite_Versement` legacy est à 0 sur les
+  299 lignes et la table `Periodicite` n'a que 2 codes texte sans ID —
+  combo statique ANNUEL/TRIM, colonne absente de l'ETL).
 - `associe` : `rs`, `forme_juridique`, `siren`, `adresse1`, `adresse2`, `cp`,
   `commune`, `tel`, `est_hlm`, `contact_nom_complet`, `contact_fonction`,
   `email`, `commentaire`.
