@@ -220,6 +220,7 @@ export const getSubventionsFn = createServerFn({ method: 'GET' })
         dateConvention: subvention.dateConvention,
         dateCaducite: subvention.dateCaducite,
         budgetPreviMontant: subvention.budgetPreviMontant,
+        budgetPreviCommentaire: subvention.budgetPreviCommentaire,
         montantAgrement: subvention.montantAgrement,
         montantProvisoire: subvention.montantProvisoire,
         montantDefinitif: subvention.montantDefinitif,

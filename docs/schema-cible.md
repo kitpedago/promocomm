@@ -75,6 +75,31 @@ Informations diverses (certification, label, performance énergétique, MOE inte
 | `versement_depot_garantie` | tVersementDepotGarantie | 1 676  | `commercialisation_id` nullable (26 hérités)                |
 | `tma`                      | tTMA                    | 178    | devis travaux modificatifs                                  |
 
+**Dimension financière (phase 6, 2026-08-12)** — nomenclatures (21) : `banque` (17,
+partagée avec le module SCCV — contacts CC/Prêt), `index_taux`, `type_financement`,
+`fin_pret`, `statut_part_sociale`, `action_alerte`, `statut_apport`, `mandat_hypothequer`,
+`statut_cout_mandat`, `periode_taux_gfa`, `action_fin_gfa_type`,
+`statut_apport_promoteur_gfa`, `banque_action_type`, `garantie_emprunt_action_type`,
+`organisme_agrement`, `organisme_garantie_emprunt`, `mode_repart_quote_part`,
+`liste_budget`, `usage_frais` (0), `categorie_frais` (13), `type_mission_budget_architecte` (0).
+
+| Table                    | Source              | Lignes | Notes                                                                             |
+| ------------------------ | ------------------- | ------ | --------------------------------------------------------------------------------- |
+| `financement`            | tFinancement        | 228    | tous types ; découpage écran : type 1 = PSLA, 5 = Prêt 1 %, reste = Financements |
+| `psla`                   | tPSLA               | 101    | colonnes `old_*` exclues ; `commentaires` = `Commemtaires` (sic legacy)           |
+| `deblocage_psla`         | tDeblocagePSLA      | 357    | PK `IDDeblocagePSLA` ; FK financement + psla                                      |
+| `remboursement_anticipe` | tRemboursementAnticipe | 613 | rattaché à `financement`                                                          |
+| `gfa`                    | tGFA                | 108    | admin + conditions financières ; taux stockés en fraction (0.003 → 0,30 %)        |
+| `reduc_gfa`              | ReducGFA            | 0      | table vide dans le legacy, structure reprise                                      |
+| `deblocage_subvention`   | tDeblocageSubvention | 291   | `tSubvention` retenue (pas `tSubvention2`, colonnes typées texte — à arbitrer)    |
+| `frais_financier`        | FraisFinancierPub   | 694    | ordre affiché = `categorie_frais.ordre`                                           |
+| `budget`                 | tBudget             | 264    | validations de budget ; pas d'écran dans FEN_Compta                               |
+
+`tranche` porte en plus les blocs Suivi résultat (CAHT/Subv/HonoComm/Coût/QuotePart prévi-réel
+par nature PSLA / VEFA réduit / VEFA normal / Autre — le coût VEFA est unique, cellule
+fusionnée WinDev —, LVO prévi, mode de répartition) et Suivi détaillé frais (dates et
+commentaires Budget/Actualisé/Consommé/Réel, stade budget, mission budget architecte).
+
 ## Vérifications effectuées (2026-07-04)
 
 - Volumes cibles = volumes sources pour les 30 tables.

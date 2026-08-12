@@ -33,6 +33,7 @@ export const getOperationsCommFn = createServerFn({ method: 'GET' }).handler(
         commune: operation.commune,
         sccv: structureJuridique.rs,
         masquerCommercial: operation.masquerCommercial,
+        masquerComptable: operation.masquerComptable,
       })
       .from(operation)
       .leftJoin(

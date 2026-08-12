@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as AuthedIndexRouteImport } from './routes/_authed/index'
 import { Route as AuthedOperationsRouteImport } from './routes/_authed/operations'
+import { Route as AuthedComptaRouteImport } from './routes/_authed/compta'
 import { Route as AuthedCommercialisationRouteImport } from './routes/_authed/commercialisation'
 import { Route as AuthedAcquereursRouteImport } from './routes/_authed/acquereurs'
 import { Route as AuthedModuleRouteImport } from './routes/_authed/$module'
@@ -36,6 +37,11 @@ const AuthedIndexRoute = AuthedIndexRouteImport.update({
 const AuthedOperationsRoute = AuthedOperationsRouteImport.update({
   id: '/operations',
   path: '/operations',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedComptaRoute = AuthedComptaRouteImport.update({
+  id: '/compta',
+  path: '/compta',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedCommercialisationRoute = AuthedCommercialisationRouteImport.update({
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/$module': typeof AuthedModuleRoute
   '/acquereurs': typeof AuthedAcquereursRoute
   '/commercialisation': typeof AuthedCommercialisationRoute
+  '/compta': typeof AuthedComptaRoute
   '/operations': typeof AuthedOperationsRoute
   '/admin/import': typeof AuthedAdminImportRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByTo {
   '/$module': typeof AuthedModuleRoute
   '/acquereurs': typeof AuthedAcquereursRoute
   '/commercialisation': typeof AuthedCommercialisationRoute
+  '/compta': typeof AuthedComptaRoute
   '/operations': typeof AuthedOperationsRoute
   '/': typeof AuthedIndexRoute
   '/admin/import': typeof AuthedAdminImportRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   '/_authed/$module': typeof AuthedModuleRoute
   '/_authed/acquereurs': typeof AuthedAcquereursRoute
   '/_authed/commercialisation': typeof AuthedCommercialisationRoute
+  '/_authed/compta': typeof AuthedComptaRoute
   '/_authed/operations': typeof AuthedOperationsRoute
   '/_authed/': typeof AuthedIndexRoute
   '/_authed/admin/import': typeof AuthedAdminImportRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
     | '/$module'
     | '/acquereurs'
     | '/commercialisation'
+    | '/compta'
     | '/operations'
     | '/admin/import'
     | '/api/auth/$'
@@ -113,6 +123,7 @@ export interface FileRouteTypes {
     | '/$module'
     | '/acquereurs'
     | '/commercialisation'
+    | '/compta'
     | '/operations'
     | '/'
     | '/admin/import'
@@ -124,6 +135,7 @@ export interface FileRouteTypes {
     | '/_authed/$module'
     | '/_authed/acquereurs'
     | '/_authed/commercialisation'
+    | '/_authed/compta'
     | '/_authed/operations'
     | '/_authed/'
     | '/_authed/admin/import'
@@ -164,6 +176,13 @@ declare module '@tanstack/react-router' {
       path: '/operations'
       fullPath: '/operations'
       preLoaderRoute: typeof AuthedOperationsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/compta': {
+      id: '/_authed/compta'
+      path: '/compta'
+      fullPath: '/compta'
+      preLoaderRoute: typeof AuthedComptaRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/commercialisation': {
@@ -208,6 +227,7 @@ interface AuthedRouteChildren {
   AuthedModuleRoute: typeof AuthedModuleRoute
   AuthedAcquereursRoute: typeof AuthedAcquereursRoute
   AuthedCommercialisationRoute: typeof AuthedCommercialisationRoute
+  AuthedComptaRoute: typeof AuthedComptaRoute
   AuthedOperationsRoute: typeof AuthedOperationsRoute
   AuthedIndexRoute: typeof AuthedIndexRoute
   AuthedAdminImportRoute: typeof AuthedAdminImportRoute
@@ -217,6 +237,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedModuleRoute: AuthedModuleRoute,
   AuthedAcquereursRoute: AuthedAcquereursRoute,
   AuthedCommercialisationRoute: AuthedCommercialisationRoute,
+  AuthedComptaRoute: AuthedComptaRoute,
   AuthedOperationsRoute: AuthedOperationsRoute,
   AuthedIndexRoute: AuthedIndexRoute,
   AuthedAdminImportRoute: AuthedAdminImportRoute,

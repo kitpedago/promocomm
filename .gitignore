@@ -15,3 +15,7 @@ data/bak/*
 !data/bak/.gitkeep
 migration_windev/PromoComm_WinDev/
 .superpowers
+
+# artefacts de session (Playwright MCP, config Claude locale)
+.playwright-mcp/
+.claude/

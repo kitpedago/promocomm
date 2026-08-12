@@ -1,7 +1,7 @@
 // Panneau maître « Opérations » (pattern WinDev : liste à gauche, recherche
 // « Contient » ≥ 3 caractères sans accent, case « Inclure les Masquer … »,
-// compteur, repliable). Spécifique commercial pour l'instant ; à généraliser
-// quand les autres modules en auront besoin (SCCV, compta…).
+// compteur, repliable). Le flag de masquage filtré dépend du module
+// (commercial par défaut, comptable pour Compta & Finances).
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronsLeft, ChevronsRight } from 'lucide-react'
@@ -13,9 +13,12 @@ import { sansAccents } from '#/lib/utils.ts'
 export default function PanneauOperations({
   selectedId,
   onSelect,
+  masquerFlag = 'masquerCommercial',
 }: {
   selectedId: number | null
   onSelect: (id: number) => void
+  // flag de masquage filtré par la case « Inclure les Masquer … » (par module)
+  masquerFlag?: 'masquerCommercial' | 'masquerComptable'
 }) {
   const [replie, setReplie] = useState(false)
   const [recherche, setRecherche] = useState('')
@@ -29,7 +32,7 @@ export default function PanneauOperations({
 
   const filtrees = useMemo(() => {
     let liste = operations.data ?? []
-    if (!inclureMasques) liste = liste.filter((o) => !o.masquerCommercial)
+    if (!inclureMasques) liste = liste.filter((o) => !o[masquerFlag])
     const q = sansAccents(recherche.trim())
     if (q.length >= 3) {
       liste = liste.filter((o) =>
@@ -89,7 +92,11 @@ export default function PanneauOperations({
             onCheckedChange={setInclureMasques}
             className="scale-75"
           />
-          Inclure les « Masquer commercial »
+          Inclure les «{' '}
+          {masquerFlag === 'masquerComptable'
+            ? 'Masquer comptable'
+            : 'Masquer commercial'}{' '}
+          »
         </label>
         <p className="text-[13px] font-bold text-[var(--ink)]">
           {operations.isLoading
