@@ -2,9 +2,8 @@
 // tri sur toutes les colonnes, largeurs ajustables, menu « Affichage »
 // (colonnes : afficher/masquer, réordonner ; lignes : 1 seule ligne, ligne
 // compacte), compteur d'éléments, filtre mis en évidence,
-// pagination (10/20/50/100/500 max), paramètres mémorisés par table
-// (localStorage — par navigateur en attendant un stockage par utilisateur
-// côté serveur).
+// pagination (10/20/50/100/500 max), paramètres mémorisés par table et par
+// utilisateur (table user_pref, clé « table:<id> » — cf. src/lib/preferences.ts).
 import { useEffect, useMemo, useState } from 'react'
 import {
   flexRender,
@@ -34,6 +33,7 @@ import {
   SelectValue,
 } from '#/components/ui/select'
 import { Switch } from '#/components/ui/switch'
+import { usePref } from '#/lib/preferences.ts'
 
 import type {
   ColumnDef,
@@ -66,17 +66,6 @@ const DEFAUTS: TableParams = {
   pageSize: 50,
   uneLigne: true,
   ligneCompacte: false,
-}
-
-const cle = (id: string) => `promocomm:table:${id}`
-
-function lireParams(id: string, base: TableParams): TableParams {
-  try {
-    const brut = localStorage.getItem(cle(id))
-    return brut ? { ...base, ...JSON.parse(brut) } : base
-  } catch {
-    return base
-  }
 }
 
 export interface DataTableProps<T> {
@@ -117,17 +106,7 @@ export default function DataTable<T>({
     }),
     [defaultHidden],
   )
-  // rendu SSR avec les défauts, puis restauration après montage (pas de
-  // localStorage côté serveur, et l'hydratation doit correspondre)
-  const [params, setParams] = useState<TableParams>(base)
-  const [restaure, setRestaure] = useState(false)
-  useEffect(() => {
-    setParams(lireParams(id, base))
-    setRestaure(true)
-  }, [id, base])
-  useEffect(() => {
-    if (restaure) localStorage.setItem(cle(id), JSON.stringify(params))
-  }, [id, params, restaure])
+  const [params, setParams] = usePref<TableParams>(`table:${id}`, base)
 
   const set =
     <TCle extends keyof TableParams>(k: TCle) =>
