@@ -777,7 +777,7 @@ function PageSccv() {
       dernierClic.current.id === r.id && maintenant - dernierClic.current.t < 400
     dernierClic.current = estDoubleClic ? { id: -1, t: 0 } : { id: r.id, t: maintenant }
     void navigate({ search: { sccv: r.id } })
-    if (estDoubleClic) {
+    if (estDoubleClic && !lectureSeule) {
       void queryClient
         .fetchQuery({
           queryKey: ['sccv-detail', r.id],
@@ -1348,8 +1348,11 @@ function ModaleCentreImpots({
   })
   const [valeurs, setValeurs] = useState(() => volet(fiche))
   useEffect(() => {
+    // dépendance sur fiche.id (pas fiche) : l'objet fiche change d'identité à
+    // chaque refetch (staleTime 0, refetchOnWindowFocus) sans que la modale
+    // rouvre — ne pas réinitialiser le formulaire en pleine saisie
     if (open) setValeurs(volet(fiche))
-  }, [open, fiche])
+  }, [open, fiche.id])
 
   const enregistrer = useMutation({
     mutationFn: () =>
