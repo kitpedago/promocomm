@@ -12,10 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as AuthedIndexRouteImport } from './routes/_authed/index'
+import { Route as AuthedTicketsRouteImport } from './routes/_authed/tickets'
 import { Route as AuthedSccvRouteImport } from './routes/_authed/sccv'
 import { Route as AuthedSavRouteImport } from './routes/_authed/sav'
 import { Route as AuthedParametresRouteImport } from './routes/_authed/parametres'
 import { Route as AuthedOperationsRouteImport } from './routes/_authed/operations'
+import { Route as AuthedNouveautesRouteImport } from './routes/_authed/nouveautes'
 import { Route as AuthedHonorairesRouteImport } from './routes/_authed/honoraires'
 import { Route as AuthedDeclarationsRouteImport } from './routes/_authed/declarations'
 import { Route as AuthedComptaRouteImport } from './routes/_authed/compta'
@@ -40,6 +42,11 @@ const AuthedIndexRoute = AuthedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedTicketsRoute = AuthedTicketsRouteImport.update({
+  id: '/tickets',
+  path: '/tickets',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedSccvRoute = AuthedSccvRouteImport.update({
   id: '/sccv',
   path: '/sccv',
@@ -58,6 +65,11 @@ const AuthedParametresRoute = AuthedParametresRouteImport.update({
 const AuthedOperationsRoute = AuthedOperationsRouteImport.update({
   id: '/operations',
   path: '/operations',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedNouveautesRoute = AuthedNouveautesRouteImport.update({
+  id: '/nouveautes',
+  path: '/nouveautes',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedHonorairesRoute = AuthedHonorairesRouteImport.update({
@@ -116,10 +128,12 @@ export interface FileRoutesByFullPath {
   '/compta': typeof AuthedComptaRoute
   '/declarations': typeof AuthedDeclarationsRoute
   '/honoraires': typeof AuthedHonorairesRoute
+  '/nouveautes': typeof AuthedNouveautesRoute
   '/operations': typeof AuthedOperationsRoute
   '/parametres': typeof AuthedParametresRoute
   '/sav': typeof AuthedSavRoute
   '/sccv': typeof AuthedSccvRoute
+  '/tickets': typeof AuthedTicketsRoute
   '/admin/import': typeof AuthedAdminImportRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -132,10 +146,12 @@ export interface FileRoutesByTo {
   '/compta': typeof AuthedComptaRoute
   '/declarations': typeof AuthedDeclarationsRoute
   '/honoraires': typeof AuthedHonorairesRoute
+  '/nouveautes': typeof AuthedNouveautesRoute
   '/operations': typeof AuthedOperationsRoute
   '/parametres': typeof AuthedParametresRoute
   '/sav': typeof AuthedSavRoute
   '/sccv': typeof AuthedSccvRoute
+  '/tickets': typeof AuthedTicketsRoute
   '/': typeof AuthedIndexRoute
   '/admin/import': typeof AuthedAdminImportRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -151,10 +167,12 @@ export interface FileRoutesById {
   '/_authed/compta': typeof AuthedComptaRoute
   '/_authed/declarations': typeof AuthedDeclarationsRoute
   '/_authed/honoraires': typeof AuthedHonorairesRoute
+  '/_authed/nouveautes': typeof AuthedNouveautesRoute
   '/_authed/operations': typeof AuthedOperationsRoute
   '/_authed/parametres': typeof AuthedParametresRoute
   '/_authed/sav': typeof AuthedSavRoute
   '/_authed/sccv': typeof AuthedSccvRoute
+  '/_authed/tickets': typeof AuthedTicketsRoute
   '/_authed/': typeof AuthedIndexRoute
   '/_authed/admin/import': typeof AuthedAdminImportRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -171,10 +189,12 @@ export interface FileRouteTypes {
     | '/compta'
     | '/declarations'
     | '/honoraires'
+    | '/nouveautes'
     | '/operations'
     | '/parametres'
     | '/sav'
     | '/sccv'
+    | '/tickets'
     | '/admin/import'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
@@ -187,10 +207,12 @@ export interface FileRouteTypes {
     | '/compta'
     | '/declarations'
     | '/honoraires'
+    | '/nouveautes'
     | '/operations'
     | '/parametres'
     | '/sav'
     | '/sccv'
+    | '/tickets'
     | '/'
     | '/admin/import'
     | '/api/auth/$'
@@ -205,10 +227,12 @@ export interface FileRouteTypes {
     | '/_authed/compta'
     | '/_authed/declarations'
     | '/_authed/honoraires'
+    | '/_authed/nouveautes'
     | '/_authed/operations'
     | '/_authed/parametres'
     | '/_authed/sav'
     | '/_authed/sccv'
+    | '/_authed/tickets'
     | '/_authed/'
     | '/_authed/admin/import'
     | '/api/auth/$'
@@ -243,6 +267,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedIndexRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/tickets': {
+      id: '/_authed/tickets'
+      path: '/tickets'
+      fullPath: '/tickets'
+      preLoaderRoute: typeof AuthedTicketsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/sccv': {
       id: '/_authed/sccv'
       path: '/sccv'
@@ -269,6 +300,13 @@ declare module '@tanstack/react-router' {
       path: '/operations'
       fullPath: '/operations'
       preLoaderRoute: typeof AuthedOperationsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/nouveautes': {
+      id: '/_authed/nouveautes'
+      path: '/nouveautes'
+      fullPath: '/nouveautes'
+      preLoaderRoute: typeof AuthedNouveautesRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/honoraires': {
@@ -345,10 +383,12 @@ interface AuthedRouteChildren {
   AuthedComptaRoute: typeof AuthedComptaRoute
   AuthedDeclarationsRoute: typeof AuthedDeclarationsRoute
   AuthedHonorairesRoute: typeof AuthedHonorairesRoute
+  AuthedNouveautesRoute: typeof AuthedNouveautesRoute
   AuthedOperationsRoute: typeof AuthedOperationsRoute
   AuthedParametresRoute: typeof AuthedParametresRoute
   AuthedSavRoute: typeof AuthedSavRoute
   AuthedSccvRoute: typeof AuthedSccvRoute
+  AuthedTicketsRoute: typeof AuthedTicketsRoute
   AuthedIndexRoute: typeof AuthedIndexRoute
   AuthedAdminImportRoute: typeof AuthedAdminImportRoute
 }
@@ -361,10 +401,12 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedComptaRoute: AuthedComptaRoute,
   AuthedDeclarationsRoute: AuthedDeclarationsRoute,
   AuthedHonorairesRoute: AuthedHonorairesRoute,
+  AuthedNouveautesRoute: AuthedNouveautesRoute,
   AuthedOperationsRoute: AuthedOperationsRoute,
   AuthedParametresRoute: AuthedParametresRoute,
   AuthedSavRoute: AuthedSavRoute,
   AuthedSccvRoute: AuthedSccvRoute,
+  AuthedTicketsRoute: AuthedTicketsRoute,
   AuthedIndexRoute: AuthedIndexRoute,
   AuthedAdminImportRoute: AuthedAdminImportRoute,
 }
