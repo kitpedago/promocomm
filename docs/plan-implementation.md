@@ -192,6 +192,7 @@ Réservé Comptabilité/Administrateur. Le plus gros morceau ETL :
 - **Préférences de table mémorisées par page et par utilisateur** (filtres, largeurs,
   colonnes visibles, ordre) — à stocker hors du périmètre du transform pour survivre
   aux réimports (cf. « Cycle des données »).
+  ✅ Livré (2026-08-12) : table `user_pref` (clé/valeur JSONB), hook `usePref`, contexte de route au beforeLoad. Conception : [superpowers/specs/2026-08-12-preferences-utilisateur-design.md](superpowers/specs/2026-08-12-preferences-utilisateur-design.md).
 - **Cases à cocher : uniquement des toggles** (interrupteurs type `Switch`), pas de
   checkbox classique.
 - **Volet Opérations** : sur le côté gauche, avec recherche et position mémorisée, commun à plusieurs pages + **Combo Tranche** en haut (ou opération qui se déroule pour afficher les tranches)

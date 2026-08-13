@@ -131,6 +131,34 @@ par nature PSLA / VEFA réduit / VEFA normal / Autre — le coût VEFA est uniqu
 fusionnée WinDev —, LVO prévi, mode de répartition) et Suivi détaillé frais (dates et
 commentaires Budget/Actualisé/Consommé/Réel, stade budget, mission budget architecte).
 
+## Tables applicatives (2)
+
+Stockage non métier, hors du périmètre du transform `scripts/transform-legacy.ts`. Ces
+tables survivent aux réimports `.bak`.
+
+**`user_pref`** (préférences d'interface) — Largeurs de colonnes, onglets actifs, état du
+volet Opérations, opération et tranche sélectionnées par utilisateur. Forme clé/valeur
+JSONB : une écriture ne touche qu'une ligne, deux navigateurs concurrents ne s'écrasent
+pas. Chargées une fois au beforeLoad des pages authentifiées, lues/écrites par le hook
+`usePref()` (`src/lib/preferences.ts`).
+- `user_id` : texte, clé primaire (composée avec `cle`), FK vers `user(id)` avec suppression
+  en cascade ;
+- `cle` : texte, clé primaire (composée avec `user_id`), max 64 caractères ;
+- `valeur` : jsonb, max 20 KB ;
+- `updated_at` : timestamp, mis à jour automatiquement.
+
+**`import_runs`** (suivi des imports `.bak`) — Enregistrement du statut (running / done /
+error), étape courante, log, et compteurs de tables traitées pour chaque chargement.
+Utilisée par la page interne `/admin/import`.
+- `id` : entier, clé primaire ;
+- `status` : texte, valeurs running | done | error ;
+- `step` : texte, étape courante affichée ;
+- `log` : texte, journal du run ;
+- `tables_done` : entier, nombre de tables traitées ;
+- `tables_total` : entier, nombre total de tables à traiter ;
+- `started_at` : timestamp, début du run ;
+- `finished_at` : timestamp, fin du run (NULL si en cours).
+
 ## Vérifications effectuées (2026-07-04)
 
 - Volumes cibles = volumes sources pour les 30 tables.
