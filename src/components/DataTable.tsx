@@ -308,42 +308,80 @@ export default function DataTable<T>({
           className="border-collapse text-[13px]"
           style={{ width: table.getCenterTotalSize(), minWidth: '100%' }}
         >
-          <thead>
+          {/* sticky sur thead (et plus sur les th) : avec les sur-entêtes il y a
+              deux rangées, chacune doit rester visible au défilement */}
+          <thead className="sticky top-0 z-10">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id} className="bg-[var(--cream)]">
-                {hg.headers.map((h) => (
-                  <th
-                    key={h.id}
-                    style={{ width: h.getSize() }}
-                    className={`sticky top-0 z-10 border-b border-[var(--line)] bg-[var(--cream)] ${padCell} text-left text-[11px] font-bold tracking-wide text-[var(--ink-faded)] uppercase select-none`}
-                  >
-                    <button
-                      onClick={h.column.getToggleSortingHandler()}
-                      className="flex w-full cursor-pointer items-center gap-1 uppercase"
-                    >
-                      <span className="truncate">
-                        {flexRender(h.column.columnDef.header, h.getContext())}
-                      </span>
-                      {h.column.getIsSorted() === 'asc' ? (
-                        <ArrowUp className="h-3 w-3 shrink-0 text-[var(--gold-deep)]" />
-                      ) : h.column.getIsSorted() === 'desc' ? (
-                        <ArrowDown className="h-3 w-3 shrink-0 text-[var(--gold-deep)]" />
-                      ) : (
-                        <ChevronsUpDown className="h-3 w-3 shrink-0 opacity-40" />
-                      )}
-                    </button>
-                    <div
-                      onMouseDown={h.getResizeHandler()}
-                      onTouchStart={h.getResizeHandler()}
-                      onClick={(e) => e.stopPropagation()}
-                      className={`absolute top-0 right-0 h-full w-1.5 cursor-col-resize touch-none select-none ${
-                        h.column.getIsResizing()
-                          ? 'bg-[var(--gold)]'
-                          : 'hover:bg-[var(--line)]'
+                {hg.headers.map((h) => {
+                  // teinte de fond optionnelle (sur-entêtes de groupes,
+                  // colonnes à en-tête coloré) via meta.classeEntete
+                  const classeEntete = (
+                    h.column.columnDef.meta
+                  )?.classeEntete
+                  // sur-entête de groupe (ou cellule vide au-dessus d'une
+                  // colonne sans groupe) : libellé centré, pas de tri/resize
+                  if (h.isPlaceholder || h.column.columns.length > 0) {
+                    return (
+                      <th
+                        key={h.id}
+                        colSpan={h.colSpan}
+                        className={`border-b border-[var(--line)] ${padCell} text-center text-[11px] font-bold tracking-wide uppercase select-none ${
+                          !h.isPlaceholder && classeEntete
+                            ? classeEntete
+                            : 'bg-[var(--cream)] text-[var(--ink-faded)]'
+                        }`}
+                      >
+                        {h.isPlaceholder
+                          ? null
+                          : flexRender(
+                              h.column.columnDef.header,
+                              h.getContext(),
+                            )}
+                      </th>
+                    )
+                  }
+                  return (
+                    <th
+                      key={h.id}
+                      colSpan={h.colSpan}
+                      style={{ width: h.getSize() }}
+                      className={`border-b border-[var(--line)] ${padCell} text-left text-[11px] font-bold tracking-wide uppercase select-none ${
+                        classeEntete ??
+                        'bg-[var(--cream)] text-[var(--ink-faded)]'
                       }`}
-                    />
-                  </th>
-                ))}
+                    >
+                      <button
+                        onClick={h.column.getToggleSortingHandler()}
+                        className="flex w-full cursor-pointer items-center gap-1 uppercase"
+                      >
+                        <span className="truncate">
+                          {flexRender(
+                            h.column.columnDef.header,
+                            h.getContext(),
+                          )}
+                        </span>
+                        {h.column.getIsSorted() === 'asc' ? (
+                          <ArrowUp className="h-3 w-3 shrink-0 text-[var(--gold-deep)]" />
+                        ) : h.column.getIsSorted() === 'desc' ? (
+                          <ArrowDown className="h-3 w-3 shrink-0 text-[var(--gold-deep)]" />
+                        ) : (
+                          <ChevronsUpDown className="h-3 w-3 shrink-0 opacity-40" />
+                        )}
+                      </button>
+                      <div
+                        onMouseDown={h.getResizeHandler()}
+                        onTouchStart={h.getResizeHandler()}
+                        onClick={(e) => e.stopPropagation()}
+                        className={`absolute top-0 right-0 h-full w-1.5 cursor-col-resize touch-none select-none ${
+                          h.column.getIsResizing()
+                            ? 'bg-[var(--gold)]'
+                            : 'hover:bg-[var(--line)]'
+                        }`}
+                      />
+                    </th>
+                  )
+                })}
               </tr>
             ))}
           </thead>
@@ -392,19 +430,17 @@ export default function DataTable<T>({
                     key={col.id}
                     className={`sticky bottom-0 z-10 border-t border-[var(--line)] bg-[var(--cream)] ${padCell} font-semibold text-[var(--ink)]`}
                   >
-                    {i === 0 ? (
-                      'Total'
-                    ) : col.id in totaux ? (
-                      // la somme passe par le formateur de cellule de la
-                      // colonne (fmtEuro, %…) pour garder unité et nombre de
-                      // décimales identiques aux lignes ; les renderers du
-                      // dépôt ne lisent que getValue()
-                      flexRender(col.columnDef.cell, {
-                        getValue: () => totaux[col.id],
-                      } as never)
-                    ) : (
-                      ''
-                    )}
+                    {i === 0
+                      ? 'Total'
+                      : col.id in totaux
+                        ? // la somme passe par le formateur de cellule de la
+                          // colonne (fmtEuro, %…) pour garder unité et nombre de
+                          // décimales identiques aux lignes ; les renderers du
+                          // dépôt ne lisent que getValue()
+                          flexRender(col.columnDef.cell, {
+                            getValue: () => totaux[col.id],
+                          } as never)
+                        : ''}
                   </td>
                 ))}
               </tr>

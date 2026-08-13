@@ -986,34 +986,68 @@ function ModaleResultat({
 }
 
 // ---------------------------------------------------------------------------
-// Colonnes des quatre tables
+// Colonnes des quatre tables — sur-entêtes de groupes iso-WinDev, teintes
+// transposées vers la charte (rouge → danger, orange → or, vert → ok,
+// bleu/violet → info)
 // ---------------------------------------------------------------------------
+
+const T_ROUGE = 'bg-[var(--danger-tint)] text-[var(--danger)]'
+const T_OR = 'bg-[var(--gold-tint)] text-[var(--gold-ink)]'
+const T_VERT = 'bg-[var(--ok-tint)] text-[var(--ink)]'
+const T_BLEU = 'bg-[var(--info-tint)] text-[var(--ink)]'
+
+const groupe = <T,>(
+  header: string,
+  classeEntete: string,
+  columns: Array<ColumnDef<T, any>>,
+): ColumnDef<T, any> => ({
+  id: header,
+  header,
+  meta: { classeEntete },
+  columns,
+})
+
+// a × b, null si l'un des deux manque (colonnes Compta HF / QP fiscale HF)
+const produit = (a: number | null, b: number | null) =>
+  a != null && b != null ? a * b : null
 
 const COLONNES_STOCK: Array<ColumnDef<LigneStock, any>> = [
   colAnnee<LigneStock>(),
-  colEuro('stockTotalDebit33a35', 'Balance 33-35 : débit', 150),
-  colEuro('stockTotalCredit33a35', 'Balance 33-35 : crédit', 150),
-  colEuro('stockCredit713300', 'Variation : crédit 713300', 170),
-  colEntier('stockPslaPhaseLocNb', 'Logt PSLA : nb', 110),
-  colEuro('stockPslaPhaseLocCout', 'Logt PSLA : coût', 140),
-  colEntier('stockInvenduNb', 'Invendus VEFA : nb', 140),
-  colEuro('stockInvenduCout', 'Invendus VEFA : coût', 150),
+  groupe('Balance 33 à 35', T_OR, [
+    colEuro('stockTotalDebit33a35', 'Total débit', 150),
+    colEuro('stockTotalCredit33a35', 'Total crédit', 150),
+  ]),
+  groupe('Variation', T_VERT, [
+    colEuro('stockCredit713300', 'Crédit 713300', 170),
+  ]),
+  groupe('Logt PSLA', T_ROUGE, [
+    colEntier('stockPslaPhaseLocNb', 'Nb', 90),
+    colEuro('stockPslaPhaseLocCout', 'Coût', 140),
+  ]),
+  groupe('Invendus logt VEFA', T_BLEU, [
+    colEntier('stockInvenduNb', 'Nb', 90),
+    colEuro('stockInvenduCout', 'Coût', 140),
+  ]),
 ]
 
 const COLONNES_CAHT: Array<ColumnDef<LigneCaht, any>> = [
   colAnnee<LigneCaht>(),
-  colEuro('cahtVefa', 'VEFA'),
-  colEuro('cahtLvPsla', 'Levée PSLA'),
-  colEuro('cahtLoyers', 'Loyers PSLA'),
-  colEuro('cahtTma', 'TMA', 110),
-  colEuro('cahtTerrain', 'Terrain', 110),
-  colEuro('cahtAutres', 'Autres', 110),
-  colTexte('cahtCommentaire', 'Commentaires', 200),
-  colEuroCalc('cahtTotal', 'Total', (r) => cahtTotal(r)),
-  colEntier('nbLotVefa', 'Nb lots VEFA', 110),
-  colEntier('nbLotLvPsla', 'Nb lots levée PSLA', 140),
-  colEntier('nbLotAutre', 'Nb lots autres', 120),
-  colTexte('nbLotCommentaire', 'Commentaire lots', 180),
+  groupe('CA HT', T_VERT, [
+    colEuro('cahtVefa', 'VEFA'),
+    colEuro('cahtLvPsla', 'Levée PSLA'),
+    colEuro('cahtLoyers', 'Loyers PSLA'),
+    colEuro('cahtTma', 'TMA', 110),
+    colEuro('cahtTerrain', 'Terrain', 110),
+    colEuro('cahtAutres', 'Autres', 110),
+    colTexte('cahtCommentaire', 'Commentaires', 200),
+    colEuroCalc('cahtTotal', 'Total', (r) => cahtTotal(r)),
+  ]),
+  groupe('Nombre de lots', T_OR, [
+    colEntier('nbLotVefa', 'VEFA', 100),
+    colEntier('nbLotLvPsla', 'Levée PSLA', 120),
+    colEntier('nbLotAutre', 'Autres', 100),
+    colTexte('nbLotCommentaire', 'Commentaire', 180),
+  ]),
 ]
 const CAHT_MASQUEES = [
   'nbLotVefa',
@@ -1022,50 +1056,41 @@ const CAHT_MASQUEES = [
   'nbLotCommentaire',
 ]
 
-const COLONNES_RESULTATS: Array<ColumnDef<LigneResultat, any>> = [
-  colAnnee<LigneResultat>(),
-  colEuro('resultCptaSccvTotal', 'Compta'),
-  colEuro('ranSccv', 'Report à nouveau'),
-  colEuro('cpteCourantSccv', 'Compte courant'),
-  colEuroCalc(
-    'affectationTotal',
-    'Total affectation',
-    (r) => affectationTotal(r),
-    140,
-  ),
-  colDate('datePvag', 'Date PVAG', 110),
-  colEuro('resultAcompteMontant', 'Résultat acompte', 130),
-  colDate('resultAcompteDateVersement', 'Date versement acompte', 170),
-  colEuro('reintegrationFiscaleSccv', 'Réintégration fiscale', 150),
-  colEuro('deductionFiscaleSccv', 'Déduction fiscale', 140),
-  colEuroCalc(
-    'resultatFiscal',
-    'Résultat fiscal SCCV',
-    (r) => resultatFiscal(r),
-    150,
-  ),
-  colTexte('reintegrationFiscaleComm', 'Commentaire réintégration', 200),
-  colTexte('deductionFiscaleComm', 'Commentaire déduction', 200),
-]
-const RESULTATS_MASQUEES = ['reintegrationFiscaleComm', 'deductionFiscaleComm']
-
-function colonnesIsNonIs(
+// libellés « HF » iso-capture de l'accordéon Résultats (l'accordéon
+// IS - Non IS parle de « KPI » — même associé n°1, nommages legacy)
+function colonnesResultats(
   pourcKpiActuel: number | null,
 ): Array<ColumnDef<LigneResultat, any>> {
   return [
     colAnnee<LigneResultat>(),
-    colEuro('resultFiscaSccvIs', 'Résultat SCCV IS', 140),
-    colEuro('resultFiscaSccvNonIs', 'Résultat SCCV non IS', 150),
-    colEuroCalc(
-      'totalFiscalSccv',
-      'Total SCCV',
-      (r) => totalFiscalSccv(r),
-      130,
-    ),
+    colEuro('resultCptaSccvTotal', 'Compta'),
+    groupe('Affectation résultats SCCV', T_ROUGE, [
+      colEuro('ranSccv', 'Report à nouveau'),
+      colEuro('cpteCourantSccv', 'Compte courant'),
+      colEuroCalc('affectationTotal', 'Total', (r) => affectationTotal(r), 140),
+      colDate('datePvag', 'Date PVAG', 110),
+    ]),
+    groupe('Acompte', T_OR, [
+      colEuro('resultAcompteMontant', 'Résultat acompte', 130),
+      colDate('resultAcompteDateVersement', 'Date versement', 130),
+    ]),
+    groupe('Résultat fiscal de la SCCV', T_VERT, [
+      colEuro('reintegrationFiscaleSccv', 'Réintégration fiscale', 150),
+      colEuro('deductionFiscaleSccv', 'Déduction fiscale', 140),
+      colEuroCalc(
+        'resultatFiscal',
+        'Résultat fiscal SCCV',
+        (r) => resultatFiscal(r),
+        150,
+      ),
+      colTexte('reintegrationFiscaleComm', 'Commentaire réintégration', 200),
+      colTexte('deductionFiscaleComm', 'Commentaire déduction', 200),
+    ]),
     {
-      id: 'rappelPourcKpi',
-      header: 'Rappel % KPI actuel',
-      size: 140,
+      id: 'rappelPourcHf',
+      header: 'Rappel % HF actuel',
+      size: 130,
+      meta: { classeEntete: T_OR },
       accessorFn: () => pourcKpiActuel,
       cell: () => (
         <span className="block text-right tabular-nums">
@@ -1073,6 +1098,59 @@ function colonnesIsNonIs(
         </span>
       ),
     },
+    {
+      accessorKey: 'pourcHfAnnee',
+      header: "% HF de l'année",
+      size: 120,
+      cell: (c) => (
+        <span className="block text-right tabular-nums">
+          {fmtPourc(c.getValue())}
+        </span>
+      ),
+    },
+    colTexte('commentairePourcHf', 'Commentaires % HF', 180),
+    {
+      ...colEuroCalc<LigneResultat>('comptaHf', 'Compta HF', (r) =>
+        produit(r.cpteCourantSccv, r.pourcHfAnnee),
+      ),
+      meta: { classeEntete: T_OR },
+    },
+    {
+      ...colEuroCalc<LigneResultat>('qpFiscaleHf', 'QP fiscale HF', (r) =>
+        produit(resultatFiscal(r), r.pourcHfAnnee),
+      ),
+      meta: { classeEntete: T_BLEU },
+    },
+  ]
+}
+const RESULTATS_MASQUEES = ['reintegrationFiscaleComm', 'deductionFiscaleComm']
+
+function colonnesIsNonIs(
+  pourcKpiActuel: number | null,
+): Array<ColumnDef<LigneResultat, any>> {
+  return [
+    colAnnee<LigneResultat>(),
+    groupe('Résultat fiscal SCCV', T_BLEU, [
+      colEuro('resultFiscaSccvIs', 'Résultat SCCV IS', 140),
+      colEuro('resultFiscaSccvNonIs', 'Résultat SCCV non IS', 150),
+      colEuroCalc(
+        'totalFiscalSccv',
+        'Total SCCV',
+        (r) => totalFiscalSccv(r),
+        130,
+      ),
+      {
+        id: 'rappelPourcKpi',
+        header: 'Rappel % KPI actuel',
+        size: 140,
+        accessorFn: () => pourcKpiActuel,
+        cell: () => (
+          <span className="block text-right tabular-nums">
+            {fmtPourc(pourcKpiActuel)}
+          </span>
+        ),
+      },
+    ]),
     {
       accessorKey: 'pourcHfAnnee',
       header: "% KPI de l'année",
@@ -1083,27 +1161,33 @@ function colonnesIsNonIs(
         </span>
       ),
     },
-    colEuroCalc('quotePartIs', 'Quote-part IS', (r) =>
-      quotePart(r.resultFiscaSccvIs, r.pourcHfAnnee),
-    ),
-    colEuroCalc(
-      'quotePartNonIs',
-      'Quote-part non IS',
-      (r) => quotePart(r.resultFiscaSccvNonIs, r.pourcHfAnnee),
-      140,
-    ),
-    colEuroCalc(
-      'quotePartTotal',
-      'Quote-part totale',
-      (r) => quotePart(totalFiscalSccv(r), r.pourcHfAnnee),
-      140,
-    ),
-    colEuro('ranSccvIs', 'RAN : IS', 120),
-    colEuro('ranSccvNonIs', 'RAN : non IS', 120),
-    colEuro('ranSccvTotal', 'RAN : total', 120),
-    colEuro('quotePartHfRanIs', 'QP KPI RAN : IS', 130),
-    colEuro('quotePartHfRanNonIs', 'QP KPI RAN : non IS', 150),
-    colEuro('quotePartHfRanTotal', 'QP KPI RAN : total', 140),
+    groupe('QP fiscal KPI', T_ROUGE, [
+      colEuroCalc('quotePartIs', 'Quote-part IS', (r) =>
+        quotePart(r.resultFiscaSccvIs, r.pourcHfAnnee),
+      ),
+      colEuroCalc(
+        'quotePartNonIs',
+        'Quote-part non IS',
+        (r) => quotePart(r.resultFiscaSccvNonIs, r.pourcHfAnnee),
+        140,
+      ),
+      colEuroCalc(
+        'quotePartTotal',
+        'Quote-part totale',
+        (r) => quotePart(totalFiscalSccv(r), r.pourcHfAnnee),
+        140,
+      ),
+    ]),
+    groupe('Ventilation du RAN', T_OR, [
+      colEuro('ranSccvIs', 'IS', 110),
+      colEuro('ranSccvNonIs', 'Non IS', 110),
+      colEuro('ranSccvTotal', 'Total', 110),
+    ]),
+    groupe('QP KPI du RAN', T_VERT, [
+      colEuro('quotePartHfRanIs', 'IS', 110),
+      colEuro('quotePartHfRanNonIs', 'Non IS', 110),
+      colEuro('quotePartHfRanTotal', 'Total', 110),
+    ]),
     colTexte('commentairePourcHf', 'Commentaire % KPI', 180),
   ]
 }
@@ -1196,6 +1280,10 @@ function BilanSccv({ sccvId }: { sccvId: number }) {
   })
 
   const d = bilan.data
+  const colsResultats = useMemo(
+    () => colonnesResultats(d?.pourcKpiActuel ?? null),
+    [d?.pourcKpiActuel],
+  )
   const colsIsNonIs = useMemo(
     () => colonnesIsNonIs(d?.pourcKpiActuel ?? null),
     [d?.pourcKpiActuel],
@@ -1324,7 +1412,7 @@ function BilanSccv({ sccvId }: { sccvId: number }) {
               <ErreurMutation erreur={supprimerResultat.error} />
               <DataTable
                 id="bilan-resultats"
-                columns={COLONNES_RESULTATS}
+                columns={colsResultats}
                 data={d.resultats}
                 unite="années"
                 getRowId={(r) => String(r.id)}
