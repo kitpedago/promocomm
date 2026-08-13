@@ -125,7 +125,7 @@ function PageCommercialisation() {
     queryKey: ['lots-comm', op, trancheActive],
     queryFn: () =>
       getLotsCommFn({ data: { operationId: op!, trancheId: trancheActive } }),
-    enabled: op != null && operation.isSuccess,
+    enabled: op != null && operation.data != null,
   })
 
   return (

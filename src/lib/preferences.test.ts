@@ -163,3 +163,26 @@ test('selectionAMemoriser : rien de mémorisé encore → écrite', () => {
     tranche: undefined,
   })
 })
+
+// R1 : tant que la requête d'opération n'a pas répondu, trancheActive vaut
+// undefined — ça ne doit pas écraser la tranche mémorisée (sinon perdue pour
+// de bon si la requête échoue avant d'aboutir).
+test('selectionAMemoriser : même opération, tranche pas encore connue → rien à écrire', () => {
+  expect(
+    selectionAMemoriser({ op: 68, tranche: 250 }, 68, undefined),
+  ).toBeUndefined()
+})
+
+test('selectionAMemoriser : opération changée, tranche pas encore connue → écrite, tranche effacée', () => {
+  expect(selectionAMemoriser({ op: 68, tranche: 250 }, 99, undefined)).toEqual({
+    op: 99,
+    tranche: undefined,
+  })
+})
+
+test('selectionAMemoriser : même opération, tranche différente connue → écrite', () => {
+  expect(selectionAMemoriser({ op: 68, tranche: 250 }, 68, 300)).toEqual({
+    op: 68,
+    tranche: 300,
+  })
+})

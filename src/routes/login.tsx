@@ -52,10 +52,11 @@ function LoginPage() {
       // rechargement de document, pas une navigation SPA (cf. header-user) :
       // repartir d'un QueryClient neuf, sinon les préférences du compte
       // précédent restent en cache et deviennent celles de ce compte-ci.
+      // pending reste vrai jusque-là : pas de double soumission pendant le
+      // rechargement, bien plus long qu'une navigation SPA.
       window.location.href = '/'
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Connexion impossible')
-    } finally {
       setPending(false)
     }
   }

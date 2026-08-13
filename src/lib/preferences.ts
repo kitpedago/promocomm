@@ -179,7 +179,14 @@ export function selectionAMemoriser(
   tranche: number | undefined,
 ): Selection | undefined {
   if (op == null) return undefined
-  if (memorisee.op === op && memorisee.tranche === tranche) return undefined
+  // même opération, tranche pas encore connue (requête en cours) : ne pas
+  // écraser la tranche mémorisée — sinon elle est effacée à chaque visite, et
+  // perdue pour de bon si la requête échoue avant d'aboutir.
+  if (
+    memorisee.op === op &&
+    (tranche === undefined || memorisee.tranche === tranche)
+  )
+    return undefined
   return { op, tranche }
 }
 
