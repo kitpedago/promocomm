@@ -10,10 +10,12 @@ import { Search } from 'lucide-react'
 import DataTable from '#/components/DataTable'
 import PanneauOperations from '#/components/PanneauOperations'
 import { getAcquereursFn } from '#/lib/acquereurs.ts'
+import { SELECTION_VIDE, usePref } from '#/lib/preferences.ts'
 import { getService } from '#/lib/services'
 import { sansAccents } from '#/lib/utils.ts'
 
 import type { LigneAcquereur } from '#/lib/acquereurs.ts'
+import type { Selection } from '#/lib/preferences.ts'
 import type { ColumnDef } from '@tanstack/react-table'
 
 export const Route = createFileRoute('/_authed/acquereurs')({
@@ -60,8 +62,16 @@ const COLONNES: Array<ColumnDef<LigneAcquereur, any>> = [
 ]
 
 function PageAcquereurs() {
-  // null = toutes les opérations ; re-clic sur l'opération sélectionnée = désélection
-  const [opId, setOpId] = useState<number | null>(null)
+  const [selection, setSelection] = usePref<Selection>(
+    'selection',
+    SELECTION_VIDE,
+  )
+  // filtre pré-positionné sur l'opération mémorisée (fil conducteur WinDev) ;
+  // null = toutes les opérations ; re-clic = désélection, filtre local
+  // seulement — la dernière opération reste mémorisée pour les autres pages
+  const [opId, setOpId] = useState<number | null>(() =>
+    Number.isInteger(selection.op) && selection.op! > 0 ? selection.op! : null,
+  )
   const [recherche, setRecherche] = useState('')
 
   const acquereurs = useQuery({
@@ -90,7 +100,13 @@ function PageAcquereurs() {
     <div className="flex min-h-[calc(100vh-61px)] items-stretch">
       <PanneauOperations
         selectedId={opId}
-        onSelect={(id) => setOpId((prev) => (prev === id ? null : id))}
+        onSelect={(id) => {
+          const deselection = opId === id
+          setOpId(deselection ? null : id)
+          // pas d'URL d'opération ici : on écrit directement (changement
+          // d'opération → la tranche mémorisée ne s'applique plus)
+          if (!deselection && selection.op !== id) setSelection({ op: id })
+        }}
       />
 
       <div className="min-w-0 flex-1 px-5 py-5 sm:px-7">

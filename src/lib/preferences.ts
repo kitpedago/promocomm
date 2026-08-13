@@ -209,3 +209,24 @@ export function useMemoriserSelection(
     if (aMemoriser) setSelection(aMemoriser)
   })
 }
+
+/**
+ * SCCV courante, partagée entre les pages SCCV et Bilan — même fil conducteur
+ * que `selection` pour l'opération, mêmes gardes (cf. selectionARejouer).
+ */
+export function sccvARejouer(
+  prefs: Prefs,
+  searchSccv: number | undefined,
+): number | undefined {
+  if (searchSccv != null) return undefined
+  const sccv = prefs.sccv
+  return estIdPositif(sccv) ? sccv : undefined
+}
+
+/** Aligne la SCCV mémorisée sur l'URL. Seul écrivain de la clé `sccv`. */
+export function useMemoriserSccv(sccv: number | undefined) {
+  const [memorisee, setSccv] = usePref<number | undefined>('sccv', undefined)
+  useEffect(() => {
+    if (sccv != null && sccv !== memorisee) setSccv(sccv)
+  })
+}

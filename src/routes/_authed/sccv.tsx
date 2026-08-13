@@ -32,7 +32,7 @@ import {
 } from '#/components/ui/select'
 import { Switch } from '#/components/ui/switch'
 import { Textarea } from '#/components/ui/textarea'
-import { usePref } from '#/lib/preferences.ts'
+import { sccvARejouer, useMemoriserSccv, usePref } from '#/lib/preferences.ts'
 import {
   deleteCompteBanqueFn,
   deleteParticipationFn,
@@ -57,9 +57,13 @@ export const Route = createFileRoute('/_authed/sccv')({
   validateSearch: (s: Record<string, unknown>): RechercheSccv => ({
     sccv: s.sccv ? Number(s.sccv) : undefined,
   }),
-  beforeLoad: ({ context }) => {
+  beforeLoad: ({ context, search }) => {
     const service = getService(context.session.user.service)
     if (!service?.modules.includes('sccv')) throw redirect({ to: '/' })
+    // rejeu de la dernière SCCV consultée (partagée avec /bilan), cf.
+    // sccvARejouer pour la garde contre la boucle de redirection.
+    const sccv = sccvARejouer(context.prefs, search.sccv)
+    if (sccv != null) throw redirect({ to: '/sccv', search: { sccv } })
     return { lectureSeule: context.session.user.service === 'consultation' }
   },
   component: PageSccv,
@@ -736,6 +740,8 @@ function ModaleFicheSccv({
 
 function PageSccv() {
   const { sccv } = Route.useSearch()
+  // l'URL fait foi : un lien partagé `?sccv=99` devient la SCCV mémorisée
+  useMemoriserSccv(sccv)
   const { lectureSeule } = Route.useRouteContext()
   const navigate = useNavigate({ from: Route.fullPath })
   const queryClient = useQueryClient()

@@ -8,17 +8,19 @@ export const MODULES = [
   'operations',
   'sav',
   'acquereurs',
+  // Bilan volontairement rapproché de SCCV (les deux pages partagent la SCCV
+  // courante), écart assumé avec l'ordre des tuiles WinDev
   'sccv',
+  'bilan',
   'parametres',
   'compta',
-  'bilan',
   'honoraires',
   'declarations',
 ] as const
 export type Module = (typeof MODULES)[number]
 
-// Libellés des tuiles du tableau de bord WinDev (FEN_Menu) — MODULES suit
-// l'ordre des tuiles, le menu latéral le réutilise tel quel
+// Libellés des tuiles du tableau de bord WinDev (FEN_Menu) — le menu latéral
+// suit l'ordre de MODULES (ordre des tuiles, à l'écart Bilan près)
 export const MODULE_LABELS: Record<Module, string> = {
   commercialisation: 'Commercialisation',
   operations: 'Opérations',

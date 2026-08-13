@@ -55,7 +55,7 @@ import {
 } from '#/lib/bilan.helpers.ts'
 import { getSccvListeFn, getSccvNomenclaturesFn } from '#/lib/sccv.ts'
 import { enFraction, enPourcent } from '#/lib/sccv.helpers.ts'
-import { usePref } from '#/lib/preferences.ts'
+import { sccvARejouer, useMemoriserSccv, usePref } from '#/lib/preferences.ts'
 import { getService } from '#/lib/services'
 import { fmtDate, fmtEuro } from '#/lib/utils.ts'
 
@@ -69,9 +69,13 @@ export const Route = createFileRoute('/_authed/bilan')({
   validateSearch: (s: Record<string, unknown>): RechercheBilan => ({
     sccv: s.sccv ? Number(s.sccv) : undefined,
   }),
-  beforeLoad: ({ context }) => {
+  beforeLoad: ({ context, search }) => {
     const service = getService(context.session.user.service)
     if (!service?.modules.includes('bilan')) throw redirect({ to: '/' })
+    // rejeu de la dernière SCCV consultée (partagée avec /sccv), cf.
+    // sccvARejouer pour la garde contre la boucle de redirection.
+    const sccv = sccvARejouer(context.prefs, search.sccv)
+    if (sccv != null) throw redirect({ to: '/bilan', search: { sccv } })
     return { lectureSeule: context.session.user.service === 'consultation' }
   },
   component: PageBilan,
@@ -1208,6 +1212,8 @@ type Accordeon = (typeof ACCORDEONS)[number]
 
 function PageBilan() {
   const { sccv } = Route.useSearch()
+  // l'URL fait foi : un lien partagé `?sccv=99` devient la SCCV mémorisée
+  useMemoriserSccv(sccv)
   const navigate = useNavigate({ from: Route.fullPath })
 
   return (

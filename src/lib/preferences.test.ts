@@ -4,6 +4,7 @@ import {
   LIMITE_CLE,
   LIMITE_VALEUR,
   resoudrePref,
+  sccvARejouer,
   selectionAMemoriser,
   selectionARejouer,
   verifierEntree,
@@ -103,6 +104,25 @@ test('selectionARejouer : valeur stockée non-objet → rien à rejouer', () => 
 
 test('selectionARejouer : search.op déjà renseigné → rien à rejouer', () => {
   expect(selectionARejouer({ selection: { op: 5 } }, 7)).toBeUndefined()
+})
+
+// sccvARejouer : mêmes gardes que selectionARejouer, pour la clé `sccv`
+test('sccvARejouer : rien en préférence → rien à rejouer', () => {
+  expect(sccvARejouer({}, undefined)).toBeUndefined()
+})
+
+test('sccvARejouer : sccv à 0 ou non-numérique → rien à rejouer (garde anti-boucle)', () => {
+  expect(sccvARejouer({ sccv: 0 }, undefined)).toBeUndefined()
+  expect(sccvARejouer({ sccv: 'douze' }, undefined)).toBeUndefined()
+  expect(sccvARejouer({ sccv: { id: 5 } }, undefined)).toBeUndefined()
+})
+
+test('sccvARejouer : id valide → rejoué', () => {
+  expect(sccvARejouer({ sccv: 42 }, undefined)).toBe(42)
+})
+
+test('sccvARejouer : search.sccv déjà renseigné → rien à rejouer', () => {
+  expect(sccvARejouer({ sccv: 42 }, 7)).toBeUndefined()
 })
 
 // resoudrePref sans le cast `as T` : la fusion doit rester typée et complète
