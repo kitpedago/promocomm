@@ -392,15 +392,20 @@ export default function DataTable<T>({
                     key={col.id}
                     className={`sticky bottom-0 z-10 border-t border-[var(--line)] bg-[var(--cream)] ${padCell} font-semibold text-[var(--ink)]`}
                   >
-                    {i === 0
-                      ? 'Total'
-                      : col.id in totaux
-                        ? // groupé fr-FR et arrondi : les sommes de flottants
-                          // (surfaces) sortaient sinon en 2154.6899999999996
-                          totaux[col.id].toLocaleString('fr-FR', {
-                            maximumFractionDigits: 2,
-                          })
-                        : ''}
+                    {i === 0 ? (
+                      'Total'
+                    ) : col.id in totaux ? (
+                      // groupé fr-FR et arrondi : les sommes de flottants
+                      // (surfaces) sortaient sinon en 2154.6899999999996
+                      // — aligné à droite comme les cellules numériques
+                      <span className="block text-right tabular-nums">
+                        {totaux[col.id].toLocaleString('fr-FR', {
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                    ) : (
+                      ''
+                    )}
                   </td>
                 ))}
               </tr>
