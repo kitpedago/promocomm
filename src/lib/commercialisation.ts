@@ -34,6 +34,7 @@ export const getOperationsCommFn = createServerFn({ method: 'GET' }).handler(
         sccv: structureJuridique.rs,
         masquerCommercial: operation.masquerCommercial,
         masquerComptable: operation.masquerComptable,
+        masquerPromo: operation.masquerPromo,
       })
       .from(operation)
       .leftJoin(
@@ -116,6 +117,8 @@ export const getLotsCommFn = createServerFn({ method: 'GET' })
         trancheId: lot.trancheId,
         commercialisationId: commCourante.id,
         numLot: lot.numLot,
+        numEtage: lot.numEtage,
+        designation: lot.designation,
         acquereur: sql<
           string | null
         >`COALESCE(${acquereur.nomComplet}, ${acquereur.rs})`,

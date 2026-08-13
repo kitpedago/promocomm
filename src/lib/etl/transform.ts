@@ -904,6 +904,38 @@ const copies: Array<Copy> = [
         s."DateSignatureDevis", s."MontantDevis", s."MontantVersement1", s."MontantVersement2", s."Commentaires"
       FROM legacy."tTMA" s`,
   },
+
+  // --- SAV Promotion (phase 5) ---
+  nomenclature('reserve_type', 'tReserveType', 'IDReserveType'),
+  nomenclature('reserve_piece', 'tReservePiece', 'IDReservePiece'),
+  {
+    target: 'reserve_entreprise',
+    cols: `(id, rs, adresse1, adresse2, cp, commune, telephone, fax, contact,
+            tel_contact, corps_etat, email)`,
+    select: `SELECT s."IDReserveEntreprise", COALESCE(s."RS", ''), s."Adresse1", s."Adresse2",
+        s."CP", s."Commune", s."Telephone", s."Fax", s."Contact", s."TelContact",
+        s."CorpsDEtat", s."EMail"
+      FROM legacy."tReserveEntreprise" s`,
+  },
+  {
+    // Ancien*/WindowsUser non repris (reprise d'un ancien logiciel, convention
+    // schéma cible) ; les 16 439 lignes sans IDLot ne vivent que par ces
+    // colonnes Ancien* et ne sont affichables nulle part (l'écran WinDev
+    // filtre par lot) → non copiées. IDPiece orphelin à 97 % (tReservePiece
+    // vidée dans le legacy) → fkSafe
+    target: 'reserve',
+    cols: `(id, lot_id, code, type_id, piece_id, entreprise_id, travaux_effectues,
+            reserve, date_reclamation, date_intervention, envoyer_mail,
+            envoyer_mail_date, est_verrouille, id_air_bat)`,
+    select: `SELECT s."IDReserve", s."IDLot", s."ReserveCode",
+        ${fk('IDTypeReserve')},
+        ${fkSafe('IDPiece', 'tReservePiece', 'IDReservePiece')},
+        ${fk('IDEntreprise')},
+        s."TravauxEffectues", s."Reserve", s."DateReclamation", s."DateDIntervention",
+        s."EnvoyerMail", s."EnvoyerMailDate", s."EstVerrouille", ${fk('IDAirBat')}
+      FROM legacy."tReserve" s
+      WHERE s."IDLot" IS NOT NULL AND s."IDLot" <> 0`,
+  },
 ]
 
 const targets = copies.map((c) => `"${c.target}"`)

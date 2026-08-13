@@ -5,6 +5,7 @@
 // scripts/transform-legacy.ts (identity BY DEFAULT → l'app génère les suivants).
 import {
   boolean,
+  index,
   integer,
   numeric,
   pgTable,
@@ -1512,3 +1513,62 @@ export const honoCommFacture = pgTable('hono_comm_facture', {
   montantActe: montant('montant_acte'),
   commentaires: text(),
 })
+
+// ---------------------------------------------------------------------------
+// SAV Promotion (phase 5) — FEN_SAV_Promotion
+// ---------------------------------------------------------------------------
+
+export const reserveType = pgTable('reserve_type', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+// tReservePiece — vide dans le .bak (29 535 réserves gardent une référence
+// orpheline, mise à NULL au transform) ; la nomenclature revit via l'écran
+export const reservePiece = pgTable('reserve_piece', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const reserveEntreprise = pgTable('reserve_entreprise', {
+  id: id(),
+  rs: text().notNull(),
+  adresse1: text(),
+  adresse2: text(),
+  cp: text(),
+  commune: text(),
+  telephone: text(),
+  fax: text(),
+  contact: text(),
+  telContact: text('tel_contact'),
+  corpsEtat: text('corps_etat'),
+  email: text(),
+})
+
+// tReserve (30 431 — la plus grosse table). Colonnes Ancien* (reprise d'un
+// ancien logiciel) et WindowsUser non reprises ; id_air_bat conservé pour
+// l'import Air-Bat (phase 9), est_verrouille = ligne verrouillée par cet import
+export const reserve = pgTable(
+  'reserve',
+  {
+    id: id(),
+    lotId: integer('lot_id')
+      .notNull()
+      .references(() => lot.id),
+    code: text(),
+    typeId: integer('type_id').references(() => reserveType.id),
+    pieceId: integer('piece_id').references(() => reservePiece.id),
+    entrepriseId: integer('entreprise_id').references(
+      () => reserveEntreprise.id,
+    ),
+    travauxEffectues: boolean('travaux_effectues'),
+    reserve: text(),
+    dateReclamation: timestamp('date_reclamation'),
+    dateIntervention: timestamp('date_intervention'),
+    envoyerMail: boolean('envoyer_mail'),
+    envoyerMailDate: timestamp('envoyer_mail_date'),
+    estVerrouille: boolean('est_verrouille'),
+    idAirBat: integer('id_air_bat'),
+  },
+  (t) => [index('reserve_lot_id_idx').on(t.lotId)],
+)

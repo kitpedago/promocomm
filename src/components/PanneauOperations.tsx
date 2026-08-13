@@ -11,6 +11,12 @@ import { getOperationsCommFn } from '#/lib/commercialisation.ts'
 import { usePref } from '#/lib/preferences.ts'
 import { sansAccents } from '#/lib/utils.ts'
 
+const LIBELLES_MASQUER = {
+  masquerCommercial: 'Masquer commercial',
+  masquerComptable: 'Masquer comptable',
+  masquerPromo: 'Masquer promo',
+} as const
+
 export default function PanneauOperations({
   selectedId,
   onSelect,
@@ -19,7 +25,7 @@ export default function PanneauOperations({
   selectedId: number | null
   onSelect: (id: number) => void
   // flag de masquage filtré par la case « Inclure les Masquer … » (par module)
-  masquerFlag?: 'masquerCommercial' | 'masquerComptable'
+  masquerFlag?: keyof typeof LIBELLES_MASQUER
 }) {
   const [volet, setVolet] = usePref('volet:operations', {
     replie: false,
@@ -108,11 +114,7 @@ export default function PanneauOperations({
             }
             className="scale-75"
           />
-          Inclure les «{' '}
-          {masquerFlag === 'masquerComptable'
-            ? 'Masquer comptable'
-            : 'Masquer commercial'}{' '}
-          »
+          Inclure les « {LIBELLES_MASQUER[masquerFlag]} »
         </label>
         <p className="text-[13px] font-bold text-[var(--ink)]">
           {operations.isLoading
