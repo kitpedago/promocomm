@@ -31,7 +31,8 @@ Alimentation : `npm run db:transform` (ou automatiquement en fin d'import .bak) 
     le 2026-08-12, cf. fiche Opérations).
   - `tOperation` : personnes internes (ChargeOpe, assistante), certifications/labels,
     TypeFoncier, ApporteurFoncier, PourcentageKPI.
-  - `tStructureJuridique` : volet comptable/fiscal (SIE, EDI, gestionnaire SCCV, dates bilan).
+  - `tStructureJuridique` : volet comptable/fiscal (SIE, EDI, gestionnaire SCCV, dates bilan)
+    → repris depuis le 2026-08-12, cf. section phase 4 ci-dessous.
   - `tAcquereur.IDConseillerTechnique` (référence non identifiée), `Identifiant`, `Etape`, `Enquete*`.
   - `tCommercialisation` : `PrestataireCommercialisation/Comm1/Comm2` (→ `tListePrestataire`,
     confirmé par REQ_InterfaceCommercialisation_Lot — à ajouter en tranche 2), `TMAMailing*`.
@@ -77,10 +78,13 @@ de mandat).
 - `participation.pourcentage` est stocké en fraction 0–1 (iso-legacy
   `Pourcentage`), converti en % côté UI (`enPourcent`/`enFraction` dans
   `sccv.helpers.ts`).
-- `participation.periodiciteVersement` reprend `IDPeriodicite_Versement`, à
-  100 % vide dans le legacy (aucune ligne dans `tListePeriodicite`) : remplacé
-  par un code texte (`ANNUEL`/`TRIM`) servant une combo statique côté UI,
-  pas une table de référence.
+- `participation.periodiciteVersement` : le legacy a bien une table
+  `Periodicite` (2 lignes, `ANNUEL`/`TRIM`) mais ses codes ne sont exposés que
+  par un texte, sans colonne ID exploitable comme FK ; et côté
+  `tParticipation`, `IDPeriodicite_Versement` est à 100 % vide (298 NULL +
+  1 zéro sur 299 lignes) — rien à reprendre par ETL. D'où le choix d'un champ
+  texte (pas une table de référence) servant une combo statique
+  `ANNUEL`/`TRIM` côté UI.
 - Caches non repris : `cur*` de `tStructureJuridique` et le texte dénormalisé
   `GestionnaireSCCV` (le nom du gestionnaire passe désormais par la jointure
   vers `gestionnaire_sccv`) — recalcul prévu en phase 7 si un besoin

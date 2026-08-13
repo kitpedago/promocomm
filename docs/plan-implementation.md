@@ -96,7 +96,7 @@ Comptes bancaires), volet comptable/fiscal de `tStructureJuridique` (gestionnair
 EDI, dates bilan) et les nomenclatures du module (stade, gestionnaire,
 partenariat, index de taux, motif de rémunération, type/utilisation de compte).
 Écrans : liste SCCV (88 lignes, filtres stade/comptable/gestionnaire/liquidée,
-20 colonnes) et fiche en 4 onglets (Associés, Opérations, Comptes bancaires,
+21 colonnes) et fiche en 4 onglets (Associés, Opérations, Comptes bancaires,
 Centre des impôts) ; CRUD complet sur la fiche, les participations et les comptes
 bancaires (pas de suppression de SCCV, iso-WinDev).
 
