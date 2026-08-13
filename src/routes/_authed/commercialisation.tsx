@@ -17,6 +17,7 @@ import {
   ChampNombre,
   ChampForm,
   ChampSelectId,
+  ChampSelectTexte,
   ChampTexte,
   ChampTexteLong,
   ErreurMutation,
@@ -38,6 +39,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '#/components/ui/dialog'
+import { getNomenclatureFn } from '#/lib/parametres.ts'
 import {
   annulerCommercialisationFn,
   appliquerAdresseLotFn,
@@ -1740,6 +1742,13 @@ function ModaleAnnulation({
   const [dateAnnulation, setDateAnnulation] = useState<string | null>(null)
   const [motif, setMotif] = useState('')
   const [commentaire, setCommentaire] = useState('')
+  // liste paramétrable (/parametres > Motif annulation) — stockée en libellé
+  // (colonne texte, iso legacy où elle n'a jamais été renseignée)
+  const motifs = useQuery({
+    queryKey: ['nomenclature', 'motifs-annulation'],
+    queryFn: () => getNomenclatureFn({ data: { slug: 'motifs-annulation' } }),
+    enabled: open,
+  })
   const annuler = useMutation({
     mutationFn: () =>
       annulerCommercialisationFn({
@@ -1784,10 +1793,11 @@ function ModaleAnnulation({
               value={dateAnnulation}
               onChange={setDateAnnulation}
             />
-            <ChampTexte
+            <ChampSelectTexte
               libelle="Motif d'annulation"
-              value={motif}
-              onChange={setMotif}
+              value={motif || null}
+              onChange={(v) => setMotif(v ?? '')}
+              options={(motifs.data ?? []).map((m) => String(m.libelle))}
             />
             <ChampTexteLong
               libelle="Commentaire"
