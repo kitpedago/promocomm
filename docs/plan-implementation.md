@@ -163,8 +163,15 @@ Réservé Comptabilité/Administrateur. Le plus gros morceau ETL :
   ~50 champs par sections), PSLA, déblocages PSLA, remboursements anticipés,
   GFA (+ réductions) — `lib/compta.ecriture.ts` (upsert commun) et modale
   générique `ModaleFiche` pilotée par descripteurs (réutilisable phase 9).
-  Reste côté client : arbitrage `tSubvention2` ; les champs « Premier/Solde »
-  du déblocage notés en 2026-08-12 n'existent pas dans le .bak importé.
+  **Arbitrage `tSubvention2` instruit (2026-08-13)** : la table est une
+  reprise morte — IDs en texte (max « 99 »), colonnes `Organisme_old` /
+  `IDOperation_old`, **aucune référence dans les fenêtres ni les requêtes du
+  projet WinDev**, les 291 déblocages pointent tous vers `tSubvention`
+  (IDs int, dates jusqu'en 2024 contre 2023). Recommandation : ne pas la
+  reprendre — à faire confirmer par le client. Les champs « Premier/Solde »
+  notés en 2026-08-12 sont `PremierDeblocage*`/`SoldeDeblocage*` de cette
+  table morte : ils disparaissent avec elle (récupérables en archive si le
+  client y tient).
 
 ## Phase 7 — Honoraires et facturation ✅ (2026-08-13)
 
@@ -213,9 +220,17 @@ Réservé Comptabilité/Administrateur. Le plus gros morceau ETL :
   descripteurs). Nomenclatures ajoutées à l'ETL : `commune` (583, code INSEE /
   département / zonage ABC), `type_foncier` (3), `equipe_personne` (4). Les
   suppressions de valeurs encore utilisées sont refusées par les FK Postgres.
-  Reste : gestion directe Opérations/Tranches/Lots + import de lots, et les
-  transverses (exports Excel, impression, mails SAV, import Air-Bat, alertes
-  stades, synchro dates) — intégrations à cadrer avec le client (SMTP, format
+- **Livré 2026-08-13 (suite)** : « Opérations, tranches et lots » — gestion
+  directe des trois niveaux (fiches complètes sur les champs du schéma cible,
+  suppressions protégées par les FK : une opération avec tranches, une tranche
+  avec lots, un lot commercialisé sont refusés) ; **export CSV générique**
+  sur toutes les tables (bouton Exporter : lignes filtrées/triées, colonnes
+  visibles, séparateur « ; » + BOM pour Excel — remplace l'export Excel
+  WinDev écran par écran). **Import Excel de lots reporté** : le mapping
+  colonnes → champs vit dans la table WinDev `ChampImportLot`, absente du
+  .bak importé — à reprendre avec un .bak qui la contient.
+  Reste : transverses (impression, mails SAV, import Air-Bat, alertes stades,
+  synchro dates) — intégrations à cadrer avec le client (SMTP, format
   Air-Bat, modèles d'impression).
 
 ## Bascule (fin de parcours)
@@ -242,7 +257,7 @@ Réservé Comptabilité/Administrateur. Le plus gros morceau ETL :
 | 6     | Compta & Finances                                 | ✅ 2026-08-13 — lecture (2026-08-12) puis écriture : CRUD des subventions + déblocages, frais financiers, financements (fiche complète 50 champs), PSLA, déblocages PSLA, remboursements anticipés, GFA + réductions — modale générique `ModaleFiche` pilotée par descripteurs, suppressions en cascade iso-WinDev, cycle création/suppression vérifié navigateur. Restent côté client : arbitrage `tSubvention2` (génération vivante) ; « Premier/Solde » du déblocage n'existe pas dans le .bak                                                                                                                        |
 | 7     | Honoraires                                        | ✅ 2026-08-13 — ETL `tMission`/`tGrilleFacturation`/`tHonoCommHFNatureAchat`/`tHonoCommHFFacture`/`tFacture` (855/1 259/312/645/1 653) + `type_mission`, `prestataire`, extension `liste_avancement` ; écran `/honoraires` (accordéons Suivant Convention — missions + grille par stade avec Importer — et Commercialisation — barème par nature d'achat + factures, sur-entêtes colorés, totaux iso-WinDev). L'écran des factures de missions (FEN_Promotion, sans capture) suivra en phase 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 8     | Déclarations et Bilan                             | ✅ 2026-08-13 — Bilan par SCCV : ETL `tBilan_Stock`/`tBilan_CAHT`/`tBilan_Resultat` (428/207/607), écran `/bilan` (volet SCCV filtrable, accordéons Stock et CA / Résultats / IS - Non IS, CRUD, colonnes calculées iso-WinDev dont quotes-parts × % KPI). Déclarations : ETL `tAssuranceDoMrH`/`AccordCadreAssurance`/`tSGA` (HTML assaini)/`tDeclaration940` (348/5/199/124), écran `/declarations` (volet Opérations, tranche, accordéons Assurance DO/MRH / SGA / 940 & LASM, CRUD). Champs de modale factorisés (`ChampsModale.tsx`) |
-| 9     | Paramètres + transverses                          | 🔶 2026-08-13 — `/parametres` : 31 nomenclatures de FEN_Param en CRUD générique (registre serveur à liste blanche + ModaleFiche) ; ETL commune/type_foncier/equipe_personne (migration 0020). Reste : gestion directe Opérations/Tranches/Lots, import de lots, transverses (Excel, impression, mails, Air-Bat, alertes) à cadrer client                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 9     | Paramètres + transverses                          | 🔶 2026-08-13 — `/parametres` : 31 nomenclatures de FEN_Param en CRUD générique + gestion directe Opérations/Tranches/Lots (fiches complètes, FK protectrices) ; export CSV générique sur toutes les tables ; ETL commune/type_foncier/equipe_personne (0020). Restent : import de lots (table ChampImportLot absente du .bak), impression, mails SAV, Air-Bat, alertes — à cadrer client                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | —     | Bascule                                           | à faire                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 ## Consignes de développement (composants UI)

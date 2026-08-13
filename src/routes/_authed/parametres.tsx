@@ -16,6 +16,18 @@ import {
   getNomenclatureFn,
   saveNomenclatureFn,
 } from '#/lib/parametres.ts'
+import {
+  deleteLotOtlFn,
+  deleteOperationOtlFn,
+  deleteTrancheOtlFn,
+  getLotsOtlFn,
+  getOperationsOtlFn,
+  getOtlOptionsFn,
+  getTranchesOtlFn,
+  saveLotOtlFn,
+  saveOperationOtlFn,
+  saveTrancheOtlFn,
+} from '#/lib/parametres.otl.ts'
 import { usePref } from '#/lib/preferences.ts'
 import { getService } from '#/lib/services'
 import { fmtDate } from '#/lib/utils.ts'
@@ -311,12 +323,17 @@ const LISTES: Array<ConfigListe> = [
   },
 ]
 
+const OTL = 'operations-tranches-lots'
+
 function PageParametres() {
-  const [slugStocke, setSlug] = usePref<SlugNomenclature>(
+  const [slugStocke, setSlug] = usePref<string>(
     'parametres:liste',
     LISTES[0].slug,
   )
-  const config = LISTES.find((l) => l.slug === slugStocke) ?? LISTES[0]
+  const config =
+    slugStocke === OTL
+      ? null
+      : (LISTES.find((l) => l.slug === slugStocke) ?? LISTES[0])
 
   return (
     <div className="flex h-[calc(100vh-61px)] items-stretch">
@@ -331,7 +348,7 @@ function PageParametres() {
               key={l.slug}
               onClick={() => setSlug(l.slug)}
               className={`block w-full cursor-pointer px-3 py-1.5 text-left text-[13px] transition-colors ${
-                l.slug === config.slug
+                l.slug === config?.slug
                   ? 'bg-[var(--gold-tint)] font-semibold text-[var(--ink)]'
                   : 'font-medium text-[var(--ink-soft)] hover:bg-[var(--cream-hover)]'
               }`}
@@ -339,14 +356,28 @@ function PageParametres() {
               {l.titre}
             </button>
           ))}
+          <button
+            onClick={() => setSlug(OTL)}
+            className={`block w-full cursor-pointer border-t border-[var(--line-soft)] px-3 py-1.5 text-left text-[13px] transition-colors ${
+              config == null
+                ? 'bg-[var(--gold-tint)] font-semibold text-[var(--ink)]'
+                : 'font-medium text-[var(--ink-soft)] hover:bg-[var(--cream-hover)]'
+            }`}
+          >
+            Opérations, tranches et lots
+          </button>
         </nav>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden px-5 py-5 sm:px-7">
         <h1 className="mb-4 text-xl leading-tight font-bold tracking-tight text-[var(--ink)]">
-          {config.titre}
+          {config?.titre ?? 'Opérations, Tranches et Lots'}
         </h1>
-        <ListeNomenclature key={config.slug} config={config} />
+        {config ? (
+          <ListeNomenclature key={config.slug} config={config} />
+        ) : (
+          <VueOtl />
+        )}
       </div>
     </div>
   )
@@ -518,6 +549,454 @@ function ListeNomenclature({ config }: { config: ConfigListe }) {
         enCours={enregistrer.isPending}
         large={champs.length > 10}
       />
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// « Opérations, tranches et lots » — gestion directe des trois niveaux
+// (l'import Excel de lots WinDev dépend de la table ChampImportLot, absente
+// du .bak importé — reporté)
+// ---------------------------------------------------------------------------
+
+function NiveauOtl({
+  titre,
+  lignes,
+  colonnes,
+  selection,
+  setSelection,
+  champs,
+  contexte,
+  saveFn,
+  deleteFn,
+  invalider,
+  confirmation,
+  unite,
+  tableId,
+}: {
+  titre: string
+  lignes: Array<Record<string, unknown> & { id: number }>
+  colonnes: Array<ColumnDef<Record<string, unknown>, any>>
+  selection: number | null
+  setSelection: (id: number | null) => void
+  champs: Array<DescChamp>
+  contexte: Record<string, unknown>
+  saveFn: (o: { data: any }) => Promise<unknown>
+  deleteFn: (o: { data: { id: number } }) => Promise<unknown>
+  invalider: () => void
+  confirmation: string
+  unite: string
+  tableId: string
+}) {
+  const [modale, setModale] = useState<'creation' | number | null>(null)
+  const ligne =
+    typeof modale === 'number'
+      ? (lignes.find((l) => l.id === modale) ?? null)
+      : null
+  const enregistrer = useMutation({
+    mutationFn: (v: ValeursFiche) =>
+      saveFn({
+        data: {
+          ...contexte,
+          ...v,
+          id: typeof modale === 'number' ? modale : undefined,
+        },
+      }),
+    onSuccess: () => {
+      invalider()
+      setModale(null)
+    },
+  })
+  const supprimer = useMutation({
+    mutationFn: (id: number) => deleteFn({ data: { id } }),
+    onSuccess: () => {
+      invalider()
+      setSelection(null)
+    },
+  })
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-[15px] font-bold text-[var(--ink)]">{titre}</p>
+      <BoutonsTable
+        selection={selection}
+        onNouveau={() => {
+          enregistrer.reset()
+          setModale('creation')
+        }}
+        onModifier={() => {
+          if (selection != null) {
+            enregistrer.reset()
+            setModale(selection)
+          }
+        }}
+        onSupprimer={() => {
+          if (selection != null) supprimer.mutate(selection)
+        }}
+        confirmation={confirmation}
+      />
+      <ErreurMutation erreur={supprimer.error} />
+      <DataTable
+        id={tableId}
+        columns={colonnes}
+        data={lignes}
+        unite={unite}
+        getRowId={(r) => String(r.id)}
+        selectedRowId={selection != null ? String(selection) : null}
+        onRowClick={(r) => setSelection(r.id as number)}
+        emptyText="Aucune ligne."
+      />
+      <ModaleFiche
+        titre={ligne ? `Modifier — ${titre}` : `Nouveau — ${titre}`}
+        champs={champs}
+        ligne={ligne}
+        open={modale != null}
+        onOpenChange={(o) => {
+          if (!o) setModale(null)
+        }}
+        onSubmit={(v) => enregistrer.mutate(v)}
+        erreur={enregistrer.error}
+        enCours={enregistrer.isPending}
+        large={champs.length > 10}
+      />
+    </div>
+  )
+}
+
+const colT = (
+  k: string,
+  l: string,
+  size = 160,
+): ColumnDef<Record<string, unknown>, any> => ({
+  accessorKey: k,
+  header: l,
+  size,
+  cell: (c) => (c.getValue() as string | null) ?? '—',
+})
+const colN = (
+  k: string,
+  l: string,
+  size = 100,
+): ColumnDef<Record<string, unknown>, any> => ({
+  accessorKey: k,
+  header: l,
+  size,
+  cell: (c) => (
+    <span className="block text-right tabular-nums">
+      {(c.getValue() as number | null) ?? '—'}
+    </span>
+  ),
+})
+
+function VueOtl() {
+  const queryClient = useQueryClient()
+  const [operationId, setOperationId] = useState<number | null>(null)
+  const [trancheId, setTrancheId] = useState<number | null>(null)
+  const [lotId, setLotId] = useState<number | null>(null)
+
+  const options = useQuery({
+    queryKey: ['otl-options'],
+    queryFn: () => getOtlOptionsFn(),
+    staleTime: 300_000,
+  }).data
+  const operations = useQuery({
+    queryKey: ['otl-operations'],
+    queryFn: () => getOperationsOtlFn(),
+  })
+  const tranches = useQuery({
+    queryKey: ['otl-tranches', operationId],
+    queryFn: () => getTranchesOtlFn({ data: { operationId: operationId! } }),
+    enabled: operationId != null,
+  })
+  const lots = useQuery({
+    queryKey: ['otl-lots', trancheId],
+    queryFn: () => getLotsOtlFn({ data: { trancheId: trancheId! } }),
+    enabled: trancheId != null,
+  })
+
+  const operationCourante = operations.data?.find((o) => o.id === operationId)
+  const trancheCourante = tranches.data?.find((t) => t.id === trancheId)
+
+  const CHAMPS_OPERATION: Array<DescChamp> = [
+    { k: 'libelle', l: 'Libellé', t: 'texte' },
+    {
+      k: 'structureJuridiqueId',
+      l: 'Structure juridique',
+      t: 'select',
+      options: options?.structures ?? [],
+    },
+    { k: 'adresse', l: 'Adresse', t: 'texte' },
+    { k: 'cp', l: 'CP', t: 'texte' },
+    { k: 'commune', l: 'Commune', t: 'texte' },
+    { k: 'nomZac', l: 'Nom ZAC', t: 'texte' },
+    {
+      k: 'secteurGeographiqueId',
+      l: 'Secteur géographique',
+      t: 'select',
+      options: options?.secteurs ?? [],
+    },
+    {
+      k: 'abreviationCodeReserve',
+      l: 'Abréviation (code réserve)',
+      t: 'texte',
+    },
+    { k: 'surRennesMetropole', l: 'Sur Rennes Métropole', t: 'bool' },
+    { k: 'anru', l: 'ANRU', t: 'bool' },
+    { k: 'anruCommentaire', l: 'Commentaire ANRU', t: 'texte' },
+    { t: 'titre', l: 'Notaires' },
+    {
+      k: 'notaireVenteId',
+      l: 'Notaire vente',
+      t: 'select',
+      options: options?.notaires ?? [],
+    },
+    {
+      k: 'clercVenteId',
+      l: 'Clerc vente',
+      t: 'select',
+      options: options?.notaires ?? [],
+    },
+    {
+      k: 'notaireFoncierId',
+      l: 'Notaire foncier',
+      t: 'select',
+      options: options?.notaires ?? [],
+    },
+    {
+      k: 'clercFoncierId',
+      l: 'Clerc foncier',
+      t: 'select',
+      options: options?.notaires ?? [],
+    },
+    { t: 'titre', l: 'Investisseur et cycle de vie' },
+    { k: 'possibiliteInvestisseur', l: 'Possibilité investisseur', t: 'bool' },
+    {
+      k: 'tauxInvestisseurAutorise',
+      l: 'Taux investisseur autorisé',
+      t: 'nombre',
+    },
+    { k: 'commentaireInvestisseur', l: 'Commentaire investisseur', t: 'texte' },
+    { k: 'dateValidationEngagement', l: 'Validation engagement', t: 'date' },
+    { k: 'dateAbandon', l: "Date d'abandon", t: 'date' },
+    { k: 'commentairesAbandon', l: 'Commentaires abandon', t: 'texte' },
+    { t: 'titre', l: 'Masquages' },
+    { k: 'masquerCommercial', l: 'Masquer commercial', t: 'bool' },
+    { k: 'masquerComptable', l: 'Masquer comptable', t: 'bool' },
+    { k: 'masquerPromo', l: 'Masquer promo', t: 'bool' },
+    { k: 'commentaire', l: 'Commentaire', t: 'long' },
+  ]
+
+  const CHAMPS_TRANCHE: Array<DescChamp> = [
+    { k: 'libelle', l: 'Nom de la tranche', t: 'texte' },
+    { k: 'adresse', l: 'Adresse', t: 'texte' },
+    { k: 'dateConvention', l: 'Date convention', t: 'date' },
+    {
+      k: 'dateLivraisonContractuelle',
+      l: 'Livraison contractuelle',
+      t: 'date',
+    },
+    { k: 'dureeChantierMois', l: 'Durée chantier (mois)', t: 'entier' },
+    { k: 'nbEtage', l: "Nb d'étages", t: 'entier' },
+    { t: 'titre', l: 'Logements' },
+    { k: 'nbLogtColl', l: 'Nb logts collectifs', t: 'entier' },
+    { k: 'dontLogtCollPsla', l: 'dont PSLA (coll.)', t: 'entier' },
+    { k: 'dontLogtCollBrs', l: 'dont BRS (coll.)', t: 'entier' },
+    { k: 'nbLogtIndiv', l: 'Nb logts individuels', t: 'entier' },
+    { k: 'dontLogtIndivPsla', l: 'dont PSLA (indiv.)', t: 'entier' },
+    { k: 'dontLogtIndivBrs', l: 'dont BRS (indiv.)', t: 'entier' },
+    { k: 'nbAutresLocaux', l: 'Nb autres locaux', t: 'entier' },
+    { k: 'nbTerrain', l: 'Nb terrains', t: 'entier' },
+    { k: 'nbLvoPrev', l: 'Nb LVO prévues', t: 'entier' },
+    { t: 'titre', l: "Maîtrise d'œuvre et qualité" },
+    {
+      k: 'architecteMandataireId',
+      l: 'Architecte mandataire',
+      t: 'select',
+      options: options?.architectes ?? [],
+    },
+    {
+      k: 'architecteCotraitantId',
+      l: 'Architecte cotraitant',
+      t: 'select',
+      options: options?.architectes ?? [],
+    },
+    { k: 'estMoeInterne', l: 'MOE interne', t: 'bool' },
+    {
+      k: 'missionMoeInterneId',
+      l: 'Mission MOE interne',
+      t: 'select',
+      options: options?.missionsMoe ?? [],
+    },
+    {
+      k: 'certificationId',
+      l: 'Certification',
+      t: 'select',
+      options: options?.certifications ?? [],
+    },
+    { k: 'labelId', l: 'Label', t: 'select', options: options?.labels ?? [] },
+    {
+      k: 'performanceEnergetiqueId',
+      l: 'Performance énergétique',
+      t: 'select',
+      options: options?.performances ?? [],
+    },
+    { t: 'titre', l: 'Terrain' },
+    { k: 'terrainMontantHt', l: 'Montant HT', t: 'nombre' },
+    { k: 'terrainMontantTtc', l: 'Montant TTC', t: 'nombre' },
+    { k: 'terrainPourcAcptePrevu', l: '% acompte prévu', t: 'nombre' },
+    { k: 'terrainAcompte', l: 'Acompte', t: 'nombre' },
+    {
+      k: 'terrainSignataireId',
+      l: 'Signataire compromis',
+      t: 'select',
+      options: options?.signataires ?? [],
+    },
+    { k: 'terrainCommentaire', l: 'Commentaire terrain', t: 'texte' },
+    { k: 'ofsNomId', l: 'OFS', t: 'select', options: options?.ofs ?? [] },
+    { k: 'terrainOfsMontantHt', l: 'OFS montant HT', t: 'nombre' },
+    {
+      k: 'terrainOfsSignataireId',
+      l: 'Signataire OFS',
+      t: 'select',
+      options: options?.signataires ?? [],
+    },
+    { k: 'commentaire', l: 'Commentaire', t: 'long' },
+  ]
+
+  const CHAMPS_LOT: Array<DescChamp> = [
+    { k: 'numLot', l: 'Numéro de lot', t: 'texte' },
+    {
+      k: 'destinationId',
+      l: 'Destination',
+      t: 'select',
+      options: options?.destinations ?? [],
+    },
+    { k: 'familleDeBien', l: 'Famille de bien', t: 'texte' },
+    { k: 'typeDeBien', l: 'Type de bien', t: 'texte' },
+    { k: 'designation', l: 'Désignation', t: 'texte' },
+    { k: 'lotAssocie', l: 'Lot associé', t: 'texte' },
+    { k: 'adresse', l: 'Adresse', t: 'texte' },
+    { k: 'numEtage', l: 'Num étage', t: 'texte' },
+    { k: 'exposition', l: 'Exposition', t: 'texte' },
+    { k: 'numParcelle', l: 'Num parcelle', t: 'texte' },
+    { k: 'numCopropriete', l: 'Num copropriété', t: 'texte' },
+    { k: 'tantiemes', l: 'Tantièmes', t: 'nombre' },
+    { k: 'estPartieCommune', l: 'Partie commune', t: 'bool' },
+    { t: 'titre', l: 'Surfaces (m²)' },
+    { k: 'surfHabitable', l: 'Habitable', t: 'nombre' },
+    { k: 'surfaceUtile', l: 'Utile', t: 'nombre' },
+    { k: 'surfTerrasse', l: 'Terrasse', t: 'nombre' },
+    { k: 'surfGarage', l: 'Garage', t: 'nombre' },
+    { k: 'surfCave', l: 'Cave', t: 'nombre' },
+    { k: 'surfBalcon', l: 'Balcon', t: 'nombre' },
+    { k: 'surfLoggias', l: 'Loggias', t: 'nombre' },
+    { k: 'surfRemise', l: 'Remise', t: 'nombre' },
+    { k: 'surfJardin', l: 'Jardin', t: 'nombre' },
+    { k: 'surfTerrain', l: 'Terrain', t: 'nombre' },
+    { t: 'titre', l: 'Prix' },
+    { k: 'prixOrigine', l: 'Prix origine', t: 'nombre' },
+    { k: 'prixVenteHt', l: 'Prix de vente HT', t: 'nombre' },
+    { k: 'prixVenteTtc', l: 'Prix de vente TTC', t: 'nombre' },
+    { k: 'tva', l: 'TVA', t: 'nombre' },
+    { k: 'prixM2', l: 'Prix au m²', t: 'nombre' },
+    { k: 'commentaire', l: 'Commentaire', t: 'long' },
+    { k: 'notes', l: 'Notes', t: 'long' },
+  ]
+
+  return (
+    <section className="island-shell flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
+      <div className="flex min-h-0 flex-1 flex-col gap-8 overflow-auto px-[18px] py-4">
+        <NiveauOtl
+          titre="Opérations"
+          lignes={
+            (operations.data ?? [])
+          }
+          colonnes={[
+            colT('sccv', 'Structure juridique', 220),
+            colT('libelle', 'Opération', 220),
+            colT('cp', 'CP', 80),
+            colT('commune', 'Commune', 150),
+          ]}
+          selection={operationId}
+          setSelection={(id) => {
+            setOperationId(id)
+            setTrancheId(null)
+            setLotId(null)
+          }}
+          champs={CHAMPS_OPERATION}
+          contexte={{}}
+          saveFn={saveOperationOtlFn}
+          deleteFn={deleteOperationOtlFn}
+          invalider={() =>
+            void queryClient.invalidateQueries({ queryKey: ['otl-operations'] })
+          }
+          confirmation="Supprimer cette opération ? (refusé si elle a des tranches)"
+          unite="opérations"
+          tableId="otl-operations"
+        />
+
+        {operationId != null && (
+          <NiveauOtl
+            titre={`Tranches de ${operationCourante?.libelle ?? ''}`}
+            lignes={
+              (tranches.data ?? [])
+            }
+            colonnes={[
+              colN('id', 'IDTranche', 90),
+              colT('libelle', 'Nom de la tranche', 200),
+              colN('nbLogtColl', 'Nb logt coll.', 100),
+              colN('nbLogtIndiv', 'Nb logt indiv.', 100),
+              colT('adresse', 'Adresse', 220),
+            ]}
+            selection={trancheId}
+            setSelection={(id) => {
+              setTrancheId(id)
+              setLotId(null)
+            }}
+            champs={CHAMPS_TRANCHE}
+            contexte={{ operationId }}
+            saveFn={saveTrancheOtlFn}
+            deleteFn={deleteTrancheOtlFn}
+            invalider={() =>
+              void queryClient.invalidateQueries({
+                queryKey: ['otl-tranches', operationId],
+              })
+            }
+            confirmation="Supprimer cette tranche ? (refusé si elle a des lots)"
+            unite="tranches"
+            tableId="otl-tranches"
+          />
+        )}
+
+        {trancheId != null && (
+          <NiveauOtl
+            titre={`Lots de ${trancheCourante?.libelle ?? ''}`}
+            lignes={
+              (lots.data ?? [])
+            }
+            colonnes={[
+              colT('numLot', 'Num lot', 140),
+              colT('familleDeBien', 'Famille de bien', 130),
+              colT('typeDeBien', 'Type', 90),
+              colN('surfHabitable', 'Surf. hab.', 90),
+              colN('prixVenteTtc', 'Prix TTC', 110),
+            ]}
+            selection={lotId}
+            setSelection={setLotId}
+            champs={CHAMPS_LOT}
+            contexte={{ trancheId }}
+            saveFn={saveLotOtlFn}
+            deleteFn={deleteLotOtlFn}
+            invalider={() =>
+              void queryClient.invalidateQueries({
+                queryKey: ['otl-lots', trancheId],
+              })
+            }
+            confirmation="Supprimer ce lot ? (refusé s'il est commercialisé ou a des réserves)"
+            unite="lots"
+            tableId="otl-lots"
+          />
+        )}
+      </div>
     </section>
   )
 }

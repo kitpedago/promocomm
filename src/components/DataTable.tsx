@@ -20,6 +20,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsUpDown,
+  Download,
   Search,
   SlidersHorizontal,
 } from 'lucide-react'
@@ -174,6 +175,41 @@ export default function DataTable<T>({
     return t
   }, [lignesFiltrees, totalFor])
 
+  // Export CSV des lignes filtrées/triées (colonnes visibles, séparateur
+  // « ; » et BOM UTF-8 pour Excel français) — remplace l'export Excel WinDev
+  const exporterCsv = () => {
+    const colonnes = table.getVisibleLeafColumns()
+    const champ = (v: unknown): string => {
+      if (v == null) return ''
+      const brut =
+        v instanceof Date
+          ? v.toLocaleDateString('fr-FR')
+          : typeof v === 'boolean'
+            ? v
+              ? 'Oui'
+              : 'Non'
+            : typeof v === 'number'
+              ? String(v).replace('.', ',')
+              : String(v)
+      return /[";\n]/.test(brut) ? `"${brut.replaceAll('"', '""')}"` : brut
+    }
+    const entetes = colonnes.map((c) =>
+      champ(typeof c.columnDef.header === 'string' ? c.columnDef.header : c.id),
+    )
+    const lignesCsv = lignesFiltrees.map((r) =>
+      colonnes.map((c) => champ(r.getValue(c.id))).join(';'),
+    )
+    const csv = '\ufeff' + [entetes.join(';'), ...lignesCsv].join('\r\n')
+    const url = URL.createObjectURL(
+      new Blob([csv], { type: 'text/csv;charset=utf-8' }),
+    )
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${id}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const deplacerColonne = (colId: string, delta: -1 | 1) => {
     const ordre = table.getAllLeafColumns().map((c) => c.id)
     const i = ordre.indexOf(colId)
@@ -222,8 +258,16 @@ export default function DataTable<T>({
           )}
         </label>
 
+        <button
+          onClick={exporterCsv}
+          className="ml-auto flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--input-border)] bg-[var(--card)] px-2.5 text-[13px] font-medium text-[var(--ink-soft)] transition-colors hover:border-[var(--ink)] hover:text-[var(--ink)]"
+          title="Exporter les lignes affichées en CSV (Excel)"
+        >
+          <Download className="h-3.5 w-3.5" aria-hidden />
+          Exporter
+        </button>
         <PopoverPrimitive.Root>
-          <PopoverPrimitive.Trigger className="ml-auto flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--input-border)] bg-[var(--card)] px-2.5 text-[13px] font-medium text-[var(--ink-soft)] transition-colors hover:border-[var(--ink)] hover:text-[var(--ink)]">
+          <PopoverPrimitive.Trigger className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--input-border)] bg-[var(--card)] px-2.5 text-[13px] font-medium text-[var(--ink-soft)] transition-colors hover:border-[var(--ink)] hover:text-[var(--ink)]">
             <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
             Affichage
             <ChevronDown className="h-3 w-3" aria-hidden />
@@ -316,9 +360,7 @@ export default function DataTable<T>({
                 {hg.headers.map((h) => {
                   // teinte de fond optionnelle (sur-entêtes de groupes,
                   // colonnes à en-tête coloré) via meta.classeEntete
-                  const classeEntete = (
-                    h.column.columnDef.meta
-                  )?.classeEntete
+                  const classeEntete = h.column.columnDef.meta?.classeEntete
                   // sur-entête de groupe (ou cellule vide au-dessus d'une
                   // colonne sans groupe) : libellé centré, pas de tri/resize
                   if (h.isPlaceholder || h.column.columns.length > 0) {
