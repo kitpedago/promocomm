@@ -239,6 +239,8 @@ export const getSubventionsFn = createServerFn({ method: 'GET' })
     return db
       .select({
         id: subvention.id,
+        categorieId: subvention.categorieId,
+        organismeId: subvention.organismeId,
         categorie: categorieSubvention.libelle,
         organisme: organismeSubvention.libelle,
         numConvention: subvention.numConvention,

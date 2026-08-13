@@ -4,11 +4,13 @@
 // Financements PSLA, Financements, GFA, Suivi Prêt 1 %).
 // Captures : migration_windev/captures_ecrans/ComptaFinances_*.png.
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 
 import Champ from '#/components/Champ'
+import { BoutonsTable, ErreurMutation } from '#/components/ChampsModale'
 import DataTable from '#/components/DataTable'
+import ModaleFiche from '#/components/ModaleFiche'
 import Onglets from '#/components/Onglets'
 import PanneauOperations from '#/components/PanneauOperations'
 import SelecteurTranche from '#/components/SelecteurTranche'
@@ -22,6 +24,27 @@ import {
   getReducsGfaFn,
   getSuiviTrancheFn,
 } from '#/lib/compta.ts'
+import {
+  deleteDeblocagePslaFn,
+  deleteDeblocageSubventionFn,
+  deleteFinancementFn,
+  deleteFraisFn,
+  deleteGfaFn,
+  deletePslaFn,
+  deleteReducGfaFn,
+  deleteRemboursementFn,
+  deleteSubventionFn,
+  getComptaNomenclaturesFn,
+  saveDeblocagePslaFn,
+  saveDeblocageSubventionFn,
+  saveFinancementFn,
+  saveFraisFn,
+  saveGfaFn,
+  savePslaFn,
+  saveReducGfaFn,
+  saveRemboursementFn,
+  saveSubventionFn,
+} from '#/lib/compta.ecriture.ts'
 import { getSubventionsFn } from '#/lib/operations.ts'
 import {
   selectionARejouer,
@@ -31,6 +54,7 @@ import {
 import { getService } from '#/lib/services'
 import { fmtDate, fmtEuro } from '#/lib/utils.ts'
 
+import type { DescChamp, ValeursFiche } from '#/components/ModaleFiche'
 import type { VueFinancement } from '#/lib/compta.ts'
 import type { ColumnDef } from '@tanstack/react-table'
 
@@ -54,6 +78,108 @@ export const Route = createFileRoute('/_authed/compta')({
   },
   component: PageCompta,
 })
+
+// -- CRUD générique du module (phase 6 écriture) -----------------------------
+// Boutons + modale pilotée par descripteurs ; le module n'est ouvert qu'aux
+// services Comptabilité et Administrateur, qui écrivent tous deux.
+
+function useComptaNomenclatures() {
+  return useQuery({
+    queryKey: ['compta-nomenclatures'],
+    queryFn: () => getComptaNomenclaturesFn(),
+    staleTime: 300_000,
+  }).data
+}
+
+function ZoneCrud({
+  lignes,
+  selectionId,
+  setSelectionId,
+  champs,
+  titreCreation,
+  titreModification,
+  confirmation,
+  contexte,
+  saveFn,
+  deleteFn,
+  invalider,
+}: {
+  lignes: Array<{ id: number }>
+  selectionId: number | null
+  setSelectionId: (id: number | null) => void
+  champs: Array<DescChamp>
+  titreCreation: string
+  titreModification: string
+  confirmation: string
+  /** valeurs fixes ajoutées au payload (trancheId, subventionId…) */
+  contexte: Record<string, unknown>
+  saveFn: (o: { data: any }) => Promise<unknown>
+  deleteFn: (o: { data: { id: number } }) => Promise<unknown>
+  invalider: () => void
+}) {
+  const [modale, setModale] = useState<'creation' | number | null>(null)
+  const ligne =
+    typeof modale === 'number'
+      ? ((lignes.find((l) => l.id === modale) as
+          Record<string, unknown> | undefined) ?? null)
+      : null
+  const enregistrer = useMutation({
+    mutationFn: (v: ValeursFiche) =>
+      saveFn({
+        data: {
+          ...contexte,
+          ...v,
+          id: typeof modale === 'number' ? modale : undefined,
+        },
+      }),
+    onSuccess: () => {
+      invalider()
+      setModale(null)
+    },
+  })
+  const supprimer = useMutation({
+    mutationFn: (id: number) => deleteFn({ data: { id } }),
+    onSuccess: () => {
+      invalider()
+      setSelectionId(null)
+    },
+  })
+  return (
+    <>
+      <BoutonsTable
+        selection={selectionId}
+        onNouveau={() => {
+          enregistrer.reset()
+          setModale('creation')
+        }}
+        onModifier={() => {
+          if (selectionId != null) {
+            enregistrer.reset()
+            setModale(selectionId)
+          }
+        }}
+        onSupprimer={() => {
+          if (selectionId != null) supprimer.mutate(selectionId)
+        }}
+        confirmation={confirmation}
+      />
+      <ErreurMutation erreur={supprimer.error} />
+      <ModaleFiche
+        titre={ligne ? titreModification : titreCreation}
+        champs={champs}
+        ligne={ligne}
+        open={modale != null}
+        onOpenChange={(o) => {
+          if (!o) setModale(null)
+        }}
+        onSubmit={(v) => enregistrer.mutate(v)}
+        erreur={enregistrer.error}
+        enCours={enregistrer.isPending}
+        large={champs.length > 14}
+      />
+    </>
+  )
+}
 
 // -- helpers colonnes (mêmes conventions que le module Opérations) ----------
 
@@ -187,7 +313,9 @@ function PageCompta() {
               <SelecteurTranche
                 tranches={d.tranches}
                 value={trancheActive}
-                onChange={(id) => void navigate({ search: { op, tranche: id } })}
+                onChange={(id) =>
+                  void navigate({ search: { op, tranche: id } })
+                }
               />
             </div>
 
@@ -272,7 +400,10 @@ const COLONNES_DEBLOCAGES_SUBVENTION: Array<
 ]
 
 function OngletSubventions({ trancheId }: { trancheId: number }) {
+  const queryClient = useQueryClient()
+  const nomenclatures = useComptaNomenclatures()
   const [subventionId, setSubventionId] = useState<number | null>(null)
+  const [deblocageId, setDeblocageId] = useState<number | null>(null)
 
   const subventions = useQuery({
     queryKey: ['subventions', trancheId],
@@ -286,8 +417,50 @@ function OngletSubventions({ trancheId }: { trancheId: number }) {
   })
   const selection = subventions.data?.find((s) => s.id === subventionId)
 
+  const CHAMPS_SUBVENTION: Array<DescChamp> = [
+    {
+      k: 'categorieId',
+      l: 'Catégorie',
+      t: 'select',
+      options: nomenclatures?.categoriesSubvention ?? [],
+    },
+    {
+      k: 'organismeId',
+      l: 'Organisme',
+      t: 'select',
+      options: nomenclatures?.organismesSubvention ?? [],
+    },
+    { k: 'numConvention', l: 'Numéro de convention', t: 'texte' },
+    { k: 'dateConvention', l: 'Date convention', t: 'date' },
+    { k: 'dateCaducite', l: 'Date caducité', t: 'date' },
+    { k: 'montantAgrement', l: 'Montant agrément', t: 'nombre' },
+    { k: 'montantProvisoire', l: 'Montant provisoire', t: 'nombre' },
+    { k: 'montantDefinitif', l: 'Montant définitif', t: 'nombre' },
+    { k: 'budgetPreviMontant', l: 'Budget prévi', t: 'nombre' },
+    { k: 'budgetPreviCommentaire', l: 'Commentaire budget prévi', t: 'texte' },
+    { k: 'finDeSuivi', l: 'Fin de suivi', t: 'bool' },
+    { k: 'commentaire', l: 'Commentaire', t: 'long' },
+  ]
+
   return (
     <div className="flex flex-col gap-6">
+      <ZoneCrud
+        lignes={subventions.data ?? []}
+        selectionId={subventionId}
+        setSelectionId={setSubventionId}
+        champs={CHAMPS_SUBVENTION}
+        titreCreation="Nouvelle subvention"
+        titreModification="Modifier la subvention"
+        confirmation="Supprimer cette subvention (et ses déblocages) ?"
+        contexte={{ trancheId }}
+        saveFn={saveSubventionFn}
+        deleteFn={deleteSubventionFn}
+        invalider={() =>
+          void queryClient.invalidateQueries({
+            queryKey: ['subventions', trancheId],
+          })
+        }
+      />
       <DataTable
         id="compta-subventions"
         columns={COLONNES_SUBVENTIONS}
@@ -316,12 +489,38 @@ function OngletSubventions({ trancheId }: { trancheId: number }) {
             selection.organisme ? `— ${selection.organisme}` : ''
           }`}
         >
+          <div className="mb-2">
+            <ZoneCrud
+              lignes={deblocages.data ?? []}
+              selectionId={deblocageId}
+              setSelectionId={setDeblocageId}
+              champs={[
+                { k: 'dateDemande', l: 'Date demande', t: 'date' },
+                { k: 'montant', l: 'Montant', t: 'nombre' },
+                { k: 'datePaiement', l: 'Date paiement', t: 'date' },
+                { k: 'commentaire', l: 'Commentaire', t: 'long' },
+              ]}
+              titreCreation="Nouveau déblocage"
+              titreModification="Modifier le déblocage"
+              confirmation="Supprimer ce déblocage ?"
+              contexte={{ subventionId: selection.id }}
+              saveFn={saveDeblocageSubventionFn}
+              deleteFn={deleteDeblocageSubventionFn}
+              invalider={() =>
+                void queryClient.invalidateQueries({
+                  queryKey: ['deblocages-subvention', subventionId],
+                })
+              }
+            />
+          </div>
           <DataTable
             id="compta-deblocages-subvention"
             columns={COLONNES_DEBLOCAGES_SUBVENTION}
             data={deblocages.data ?? []}
             unite="déblocages"
             getRowId={(x) => String(x.id)}
+            selectedRowId={deblocageId != null ? String(deblocageId) : null}
+            onRowClick={(x) => setDeblocageId(x.id)}
             totalFor={['montant']}
             emptyText={
               deblocages.isLoading
@@ -388,6 +587,9 @@ const somme = (...ns: Array<number | null | undefined>) =>
     : null
 
 function OngletSuivi({ trancheId }: { trancheId: number }) {
+  const queryClient = useQueryClient()
+  const nomenclatures = useComptaNomenclatures()
+  const [fraisId, setFraisId] = useState<number | null>(null)
   const suivi = useQuery({
     queryKey: ['compta-suivi', trancheId],
     queryFn: () => getSuiviTrancheFn({ data: { trancheId } }),
@@ -504,8 +706,12 @@ function OngletSuivi({ trancheId }: { trancheId: number }) {
                       s.honoCommAutre,
                     )}
                   />
-                  <C v={somme(s.coutPrevPsla, s.coutPrevVefa, s.coutPrevAutre)} />
-                  <C v={somme(s.coutReelPsla, s.coutReelVefa, s.coutReelAutre)} />
+                  <C
+                    v={somme(s.coutPrevPsla, s.coutPrevVefa, s.coutPrevAutre)}
+                  />
+                  <C
+                    v={somme(s.coutReelPsla, s.coutReelVefa, s.coutReelAutre)}
+                  />
                   <C
                     v={somme(
                       s.quotePartPsla,
@@ -578,6 +784,8 @@ function OngletSuivi({ trancheId }: { trancheId: number }) {
           data={s.frais}
           unite="catégories"
           getRowId={(f) => String(f.id)}
+          selectedRowId={fraisId != null ? String(fraisId) : null}
+          onRowClick={(f) => setFraisId(f.id)}
           totalFor={[
             'budgetMontant',
             'actuaMontant',
@@ -586,6 +794,37 @@ function OngletSuivi({ trancheId }: { trancheId: number }) {
           ]}
           emptyText="Aucun frais sur cette tranche."
         />
+        <div className="mt-2">
+          <ZoneCrud
+            lignes={s.frais}
+            selectionId={fraisId}
+            setSelectionId={setFraisId}
+            champs={[
+              {
+                k: 'categorieFraisId',
+                l: 'Catégorie de frais',
+                t: 'select',
+                options: nomenclatures?.categoriesFrais ?? [],
+              },
+              { k: 'budgetMontant', l: 'Budget', t: 'nombre' },
+              { k: 'actuaMontant', l: 'Actualisé', t: 'nombre' },
+              { k: 'consommeMontant', l: 'Consommé', t: 'nombre' },
+              { k: 'reelMontant', l: 'Réel', t: 'nombre' },
+              { k: 'ordre', l: 'Ordre', t: 'entier' },
+            ]}
+            titreCreation="Nouvelle ligne de frais"
+            titreModification="Modifier la ligne de frais"
+            confirmation="Supprimer cette ligne de frais ?"
+            contexte={{ trancheId }}
+            saveFn={saveFraisFn}
+            deleteFn={deleteFraisFn}
+            invalider={() =>
+              void queryClient.invalidateQueries({
+                queryKey: ['compta-suivi', trancheId],
+              })
+            }
+          />
+        </div>
       </Bloc>
     </div>
   )
@@ -705,22 +944,123 @@ const COLONNES_CONTRATS_PSLA: Array<ColumnDef<LignePsla, any>> = [
   { accessorKey: 'commentaires', header: 'Commentaires', size: 240 },
 ]
 
+const champsPsla = (
+  n: ReturnType<typeof useComptaNomenclatures>,
+): Array<DescChamp> => [
+  { t: 'titre', l: 'Agrément' },
+  { k: 'estimPsla', l: 'Estimation PSLA (nb)', t: 'entier' },
+  { k: 'montantPsla', l: 'Montant PSLA', t: 'nombre' },
+  { k: 'coutTotal', l: 'Coût total', t: 'nombre' },
+  { k: 'nbLogtAgrement', l: 'Nb logements agrément', t: 'entier' },
+  { k: 'numAgrement', l: "Numéro d'agrément", t: 'texte' },
+  { k: 'dateAgrementProvisoire', l: 'Agrément provisoire', t: 'date' },
+  { k: 'dureeAnneePsla', l: 'Durée PSLA (années)', t: 'entier' },
+  {
+    k: 'organismeAgrementId',
+    l: "Organisme d'agrément",
+    t: 'select',
+    options: n?.organismesAgrement ?? [],
+  },
+  { k: 'previAgrement', l: 'Prévi agrément', t: 'date' },
+  { k: 'dateDepotDossierAgrement', l: 'Dépôt dossier', t: 'date' },
+  { k: 'dateReceptionAgrement', l: 'Réception agrément', t: 'date' },
+  { k: 'dateDecisionAgrement', l: 'Décision agrément', t: 'date' },
+  {
+    k: 'dateConventionEngagementReciproque',
+    l: 'Convention engagement réciproque',
+    t: 'date',
+  },
+  { t: 'titre', l: 'Banques' },
+  { k: 'cffFiClient', l: 'CFF FI client', t: 'date' },
+  {
+    k: 'banqueOperateurId',
+    l: 'Banque opérateur',
+    t: 'select',
+    options: n?.banques ?? [],
+  },
+  { k: 'banqueOperateurDate', l: 'Date banque opérateur', t: 'date' },
+  {
+    k: 'banqueClientId',
+    l: 'Banque client',
+    t: 'select',
+    options: n?.banques ?? [],
+  },
+  { k: 'banqueClientDate', l: 'Date banque client', t: 'date' },
+  {
+    k: 'banqueActionTypeId',
+    l: 'Action banque',
+    t: 'select',
+    options: n?.actionsBanque ?? [],
+  },
+  { k: 'banqueActionDate', l: 'Date action banque', t: 'date' },
+  { t: 'titre', l: "Garantie d'emprunt" },
+  {
+    k: 'organismeGarantieEmpruntId',
+    l: 'Organisme de garantie',
+    t: 'select',
+    options: n?.organismesGarantie ?? [],
+  },
+  { k: 'dateDeliberationGarantie', l: 'Délibération garantie', t: 'date' },
+  { k: 'numBureauGarantie', l: 'Numéro bureau', t: 'texte' },
+  { k: 'numConventionGarantie', l: 'Numéro convention', t: 'texte' },
+  { k: 'dateSignatureGarant', l: 'Signature garant', t: 'date' },
+  {
+    k: 'garantieEmpruntActionTypeId',
+    l: 'Action garantie',
+    t: 'select',
+    options: n?.actionsGarantieEmprunt ?? [],
+  },
+  { k: 'garantieEmpruntActionDate', l: 'Date action garantie', t: 'date' },
+  { t: 'titre', l: 'Suivi' },
+  { k: 'dateInfoAnnuelle', l: 'Info annuelle', t: 'date' },
+  { k: 'dateInfoFin', l: 'Info de fin', t: 'date' },
+  { k: 'finSuivi', l: 'Fin de suivi', t: 'bool' },
+  { k: 'commentaire', l: 'Commentaire', t: 'long' },
+  { k: 'commentaires', l: 'Commentaires (bis, iso-legacy)', t: 'long' },
+]
+
 function OngletAdminPsla({ trancheId }: { trancheId: number }) {
+  const queryClient = useQueryClient()
+  const nomenclatures = useComptaNomenclatures()
+  const [pslaId, setPslaId] = useState<number | null>(null)
   const psla = useQuery({
     queryKey: ['compta-psla', trancheId],
     queryFn: () => getPslaFn({ data: { trancheId } }),
   })
   return (
-    <DataTable
-      id="compta-admin-psla"
-      columns={COLONNES_ADMIN_PSLA}
-      data={psla.data ?? []}
-      unite="dossiers"
-      getRowId={(p) => String(p.id)}
-      emptyText={
-        psla.isLoading ? 'Chargement…' : 'Aucun dossier PSLA sur cette tranche.'
-      }
-    />
+    <div className="flex flex-col gap-2">
+      <ZoneCrud
+        lignes={psla.data ?? []}
+        selectionId={pslaId}
+        setSelectionId={setPslaId}
+        champs={champsPsla(nomenclatures)}
+        titreCreation="Nouveau dossier PSLA"
+        titreModification="Modifier le dossier PSLA"
+        confirmation="Supprimer ce dossier PSLA (et ses déblocages) ?"
+        contexte={{ trancheId }}
+        saveFn={savePslaFn}
+        deleteFn={deletePslaFn}
+        invalider={() =>
+          void queryClient.invalidateQueries({
+            queryKey: ['compta-psla', trancheId],
+          })
+        }
+      />
+      <DataTable
+        id="compta-admin-psla"
+        columns={COLONNES_ADMIN_PSLA}
+        data={psla.data ?? []}
+        unite="dossiers"
+        getRowId={(p) => String(p.id)}
+        selectedRowId={pslaId != null ? String(pslaId) : null}
+        onRowClick={(p) => setPslaId(p.id)}
+        emptyText={
+          psla.isLoading
+            ? 'Chargement…'
+            : 'Aucun dossier PSLA sur cette tranche.'
+        }
+      />
+    </div>
   )
 }
 
@@ -763,7 +1103,11 @@ const COLONNES_FINANCEMENTS_BASE: Array<ColumnDef<LigneFinancement, any>> = [
   colPourc('commissionEngagementPourc', '% comm. engagement', 120),
   colOui('estPrlvFraisDossier', 'Prlv frais dossier', 110),
   colEuro('partSocialeMontant', 'Part sociale'),
-  { accessorKey: 'statutPartSociale', header: 'Statut part sociale', size: 130 },
+  {
+    accessorKey: 'statutPartSociale',
+    header: 'Statut part sociale',
+    size: 130,
+  },
   colDate('dateStatutPartSociale', 'Date statut PS'),
   colDate('dateButoir', 'Date butoir'),
   { accessorKey: 'actionAlerte', header: 'Action alerte', size: 130 },
@@ -800,9 +1144,17 @@ const COLONNES_PAR_VUE: Record<
     { accessorKey: 'statutApport', header: 'Statut apport', size: 120 },
     colEuro('blocageHonoOcMontant', 'Blocage hono OC'),
     colOui('estHfCautionOc', 'HF caution OC', 100),
-    { accessorKey: 'mandatHypothequer', header: 'Mandat hypothéquer', size: 140 },
+    {
+      accessorKey: 'mandatHypothequer',
+      header: 'Mandat hypothéquer',
+      size: 140,
+    },
     colEuro('mandatCoutMontant', 'Coût mandat'),
-    { accessorKey: 'statutCoutMandat', header: 'Statut coût mandat', size: 130 },
+    {
+      accessorKey: 'statutCoutMandat',
+      header: 'Statut coût mandat',
+      size: 130,
+    },
   ],
   pret1: [
     { accessorKey: 'banque', header: 'Banque', size: 160 },
@@ -914,12 +1266,127 @@ function OngletFinancements({
   trancheId: number
   vue: VueFinancement
 }) {
+  const queryClient = useQueryClient()
+  const nomenclatures = useComptaNomenclatures()
   const [financementId, setFinancementId] = useState<number | null>(null)
+  const [deblocageId, setDeblocageId] = useState<number | null>(null)
+  const [remboursementId, setRemboursementId] = useState<number | null>(null)
 
   const financements = useQuery({
     queryKey: ['compta-financements', trancheId, vue],
     queryFn: () => getFinancementsFn({ data: { trancheId, vue } }),
   })
+  const invaliderFinancements = () => {
+    void queryClient.invalidateQueries({
+      queryKey: ['compta-financements', trancheId, vue],
+    })
+    void queryClient.invalidateQueries({ queryKey: ['compta-mouvements'] })
+  }
+
+  const CHAMPS_FINANCEMENT: Array<DescChamp> = [
+    { t: 'titre', l: 'Contrat' },
+    {
+      k: 'typeFinancementId',
+      l: 'Type de financement',
+      t: 'select',
+      options: nomenclatures?.typesFinancement ?? [],
+    },
+    {
+      k: 'banqueId',
+      l: 'Banque',
+      t: 'select',
+      options: nomenclatures?.banques ?? [],
+    },
+    { k: 'surOpe', l: 'Sur opération ?', t: 'bool' },
+    { k: 'numContrat', l: 'Numéro de contrat', t: 'texte' },
+    { k: 'montantPrevi', l: 'Montant prévi', t: 'nombre' },
+    { k: 'montantFinancement', l: 'Montant financement', t: 'nombre' },
+    { k: 'infosPretPrevi', l: 'Infos prêt prévi', t: 'texte' },
+    { k: 'dateEnvoiDossier', l: 'Date envoi dossier', t: 'date' },
+    { k: 'dateSignature', l: 'Date signature', t: 'date' },
+    { k: 'dateButoir', l: 'Date butoir', t: 'date' },
+    {
+      k: 'actionAlerteId',
+      l: 'Action alerte',
+      t: 'select',
+      options: nomenclatures?.actionsAlerte ?? [],
+    },
+    { t: 'titre', l: 'Mobilisation et taux' },
+    { k: 'dateDebutMobilisation', l: 'Début mobilisation', t: 'date' },
+    { k: 'dateFinMobilisation', l: 'Fin mobilisation', t: 'date' },
+    { k: 'dureeMoisMobPsla', l: 'Durée mob. PSLA (mois)', t: 'entier' },
+    {
+      k: 'finPretId',
+      l: 'Fin de prêt',
+      t: 'select',
+      options: nomenclatures?.finsPret ?? [],
+    },
+    {
+      k: 'indexTauxId',
+      l: 'Index de taux',
+      t: 'select',
+      options: nomenclatures?.indexTauxListe ?? [],
+    },
+    { k: 'indexTauxFloore', l: 'Index flooré', t: 'bool' },
+    { k: 'margeBanque', l: 'Marge banque', t: 'nombre' },
+    { k: 'tauxPret', l: 'Taux du prêt', t: 'nombre' },
+    { k: 'periodicite', l: 'Périodicité', t: 'texte' },
+    {
+      k: 'commissionEngagementPourc',
+      l: "% commission d'engagement",
+      t: 'nombre',
+    },
+    { k: 'fraisDossier', l: 'Frais de dossier', t: 'nombre' },
+    { k: 'estPrlvFraisDossier', l: 'Frais de dossier prélevés', t: 'bool' },
+    { k: 'estPhaseAmortissement', l: 'Phase amortissement', t: 'bool' },
+    { k: 'estSolde', l: 'Soldé', t: 'bool' },
+    { t: 'titre', l: 'Parts sociales et apports' },
+    { k: 'partSocialeMontant', l: 'Montant part sociale', t: 'nombre' },
+    {
+      k: 'statutPartSocialeId',
+      l: 'Statut part sociale',
+      t: 'select',
+      options: nomenclatures?.statutsPartSociale ?? [],
+    },
+    { k: 'dateStatutPartSociale', l: 'Date statut part sociale', t: 'date' },
+    { k: 'apportPromoteur', l: 'Apport promoteur', t: 'nombre' },
+    {
+      k: 'statutApportId',
+      l: 'Statut apport',
+      t: 'select',
+      options: nomenclatures?.statutsApport ?? [],
+    },
+    { t: 'titre', l: 'Blocage honoraires OC et mandat' },
+    { k: 'blocageHonoOcMontant', l: 'Montant blocage hono OC', t: 'nombre' },
+    { k: 'blocageHonoOcFin', l: 'Fin blocage hono OC', t: 'date' },
+    { k: 'blocageHonoOcComment', l: 'Commentaire blocage', t: 'texte' },
+    { k: 'estHfCautionOc', l: 'HF caution OC', t: 'bool' },
+    {
+      k: 'mandatHypothequerId',
+      l: "Mandat d'hypothéquer",
+      t: 'select',
+      options: nomenclatures?.mandatsHypothequer ?? [],
+    },
+    { k: 'mandatCoutMontant', l: 'Coût du mandat', t: 'nombre' },
+    {
+      k: 'statutCoutMandatId',
+      l: 'Statut coût mandat',
+      t: 'select',
+      options: nomenclatures?.statutsCoutMandat ?? [],
+    },
+    { k: 'prevMtOc', l: 'Prév. montant OC', t: 'nombre' },
+    { t: 'titre', l: 'Contrat et échéances' },
+    { k: 'contratMontant', l: 'Montant contrat', t: 'nombre' },
+    { k: 'contratNbLogt', l: 'Nb logements contrat', t: 'entier' },
+    { k: 'dateDebutEcheance', l: 'Début échéances', t: 'date' },
+    { k: 'dateFinEcheance', l: 'Fin échéances', t: 'date' },
+    { k: 'montantEcheance', l: 'Montant échéance', t: 'nombre' },
+    { k: 'dateVerstPret', l: 'Date versement prêt', t: 'date' },
+    { k: 'estAmortDiffere', l: 'Amortissement différé', t: 'bool' },
+    { k: 'amortissementDiffereDuree', l: 'Durée différé (mois)', t: 'entier' },
+    { k: 'amortissementDiffereFinDate', l: 'Fin du différé', t: 'date' },
+    { k: 'commentaire', l: 'Commentaire', t: 'long' },
+  ]
   // les tables Déblocage / Remboursement anticipé n'existent que pour
   // Financements PSLA et Suivi Prêt 1 % (comme FEN_Compta)
   const avecMouvements = vue !== 'autres'
@@ -932,6 +1399,19 @@ function OngletFinancements({
 
   return (
     <div className="flex flex-col gap-6">
+      <ZoneCrud
+        lignes={financements.data ?? []}
+        selectionId={financementId}
+        setSelectionId={setFinancementId}
+        champs={CHAMPS_FINANCEMENT}
+        titreCreation="Nouveau financement"
+        titreModification="Modifier le financement"
+        confirmation="Supprimer ce financement (et ses déblocages / remboursements) ?"
+        contexte={{ trancheId }}
+        saveFn={saveFinancementFn}
+        deleteFn={deleteFinancementFn}
+        invalider={invaliderFinancements}
+      />
       <DataTable
         id={`compta-financements-${vue}`}
         columns={COLONNES_PAR_VUE[vue]}
@@ -939,10 +1419,8 @@ function OngletFinancements({
         unite="financements"
         getRowId={(f) => String(f.id)}
         selectedRowId={financementId != null ? String(financementId) : null}
-        onRowClick={
-          avecMouvements
-            ? (f) => setFinancementId(f.id === financementId ? null : f.id)
-            : undefined
+        onRowClick={(f) =>
+          setFinancementId(f.id === financementId ? null : f.id)
         }
         totalFor={['montantFinancement']}
         defaultHidden={CACHEES_PAR_VUE[vue]}
@@ -962,12 +1440,35 @@ function OngletFinancements({
         ) : (
           <div className="grid gap-6 xl:grid-cols-2">
             <Bloc titre="Déblocages du financement">
+              <div className="mb-2">
+                <ZoneCrud
+                  lignes={mouvements.data?.deblocages ?? []}
+                  selectionId={deblocageId}
+                  setSelectionId={setDeblocageId}
+                  champs={[
+                    { k: 'numero', l: 'Numéro', t: 'entier' },
+                    { k: 'montant', l: 'Montant', t: 'nombre' },
+                    { k: 'dateDemande', l: 'Date demande', t: 'date' },
+                    { k: 'dateVersement', l: 'Date versement', t: 'date' },
+                    { k: 'commentaire', l: 'Commentaire', t: 'long' },
+                  ]}
+                  titreCreation="Nouveau déblocage"
+                  titreModification="Modifier le déblocage"
+                  confirmation="Supprimer ce déblocage ?"
+                  contexte={{ financementId }}
+                  saveFn={saveDeblocagePslaFn}
+                  deleteFn={deleteDeblocagePslaFn}
+                  invalider={invaliderFinancements}
+                />
+              </div>
               <DataTable
                 id="compta-deblocages-fin"
                 columns={COLONNES_DEBLOCAGES_FIN}
                 data={mouvements.data?.deblocages ?? []}
                 unite="déblocages"
                 getRowId={(x) => String(x.id)}
+                selectedRowId={deblocageId != null ? String(deblocageId) : null}
+                onRowClick={(x) => setDeblocageId(x.id)}
                 totalFor={['montant']}
                 emptyText={
                   mouvements.isLoading ? 'Chargement…' : 'Aucun déblocage.'
@@ -975,12 +1476,37 @@ function OngletFinancements({
               />
             </Bloc>
             <Bloc titre="Remboursements anticipés">
+              <div className="mb-2">
+                <ZoneCrud
+                  lignes={mouvements.data?.remboursements ?? []}
+                  selectionId={remboursementId}
+                  setSelectionId={setRemboursementId}
+                  champs={[
+                    { k: 'numero', l: 'Numéro', t: 'entier' },
+                    { k: 'montant', l: 'Montant', t: 'nombre' },
+                    { k: 'date', l: 'Date', t: 'date' },
+                    { k: 'nbLogt', l: 'Nb logements', t: 'entier' },
+                    { k: 'commentaire', l: 'Commentaire', t: 'long' },
+                  ]}
+                  titreCreation="Nouveau remboursement anticipé"
+                  titreModification="Modifier le remboursement"
+                  confirmation="Supprimer ce remboursement ?"
+                  contexte={{ financementId }}
+                  saveFn={saveRemboursementFn}
+                  deleteFn={deleteRemboursementFn}
+                  invalider={invaliderFinancements}
+                />
+              </div>
               <DataTable
                 id="compta-remboursements"
                 columns={COLONNES_REMBOURSEMENTS}
                 data={mouvements.data?.remboursements ?? []}
                 unite="remboursements"
                 getRowId={(x) => String(x.id)}
+                selectedRowId={
+                  remboursementId != null ? String(remboursementId) : null
+                }
+                onRowClick={(x) => setRemboursementId(x.id)}
                 totalFor={['montant']}
                 emptyText={
                   mouvements.isLoading ? 'Chargement…' : 'Aucun remboursement.'
@@ -1059,7 +1585,10 @@ const COLONNES_REDUCTIONS: Array<ColumnDef<LigneReduc, any>> = [
 ]
 
 function OngletGfa({ trancheId }: { trancheId: number }) {
+  const queryClient = useQueryClient()
+  const nomenclatures = useComptaNomenclatures()
   const [gfaId, setGfaId] = useState<number | null>(null)
+  const [reducId, setReducId] = useState<number | null>(null)
 
   const gfa = useQuery({
     queryKey: ['compta-gfa', trancheId],
@@ -1071,8 +1600,94 @@ function OngletGfa({ trancheId }: { trancheId: number }) {
     enabled: gfaId != null,
   })
 
+  const CHAMPS_GFA: Array<DescChamp> = [
+    { t: 'titre', l: 'Administration' },
+    { k: 'surOpe', l: 'Sur opération ?', t: 'bool' },
+    {
+      k: 'banqueId',
+      l: 'Organisme (banque)',
+      t: 'select',
+      options: nomenclatures?.banques ?? [],
+    },
+    { k: 'estIntrinseque', l: 'GFA intrinsèque', t: 'bool' },
+    { k: 'dateValidation', l: 'Date validation', t: 'date' },
+    { k: 'dateDossier', l: 'Envoi dossier', t: 'date' },
+    { k: 'dateAccord', l: 'Accord', t: 'date' },
+    { k: 'dateAttestation', l: 'Attestation', t: 'date' },
+    { k: 'apportPromoteur', l: 'Apport promoteur', t: 'nombre' },
+    {
+      k: 'statutApportPromoteurGfaId',
+      l: 'Statut apport',
+      t: 'select',
+      options: nomenclatures?.statutsApportPromoteur ?? [],
+    },
+    { k: 'actionFinDate', l: 'Date fin GFA', t: 'date' },
+    {
+      k: 'actionFinTypeId',
+      l: 'Action fin GFA',
+      t: 'select',
+      options: nomenclatures?.actionsFinGfa ?? [],
+    },
+    { k: 'finGfa', l: 'Fin GFA', t: 'bool' },
+    { t: 'titre', l: 'Fonds de garantie et parts sociales' },
+    { k: 'fondsGarantieMontant', l: 'Fonds de garantie', t: 'nombre' },
+    {
+      k: 'fondsGarantieDateDemandeRemb',
+      l: 'Demande remb. fonds',
+      t: 'date',
+    },
+    { k: 'fondsGarantieDateRemb', l: 'Remb. fonds', t: 'date' },
+    { k: 'partSocialeMontant', l: 'Part sociale', t: 'nombre' },
+    {
+      k: 'partSocialeDateDemandeRemb',
+      l: 'Demande remb. part sociale',
+      t: 'date',
+    },
+    { k: 'partSocialeDateRemb', l: 'Remb. part sociale', t: 'date' },
+    { k: 'partSocialeCommentaire', l: 'Commentaire part sociale', t: 'texte' },
+    { t: 'titre', l: 'Conditions financières' },
+    { k: 'hfCaution', l: 'HF caution', t: 'bool' },
+    { k: 'taux', l: 'Taux', t: 'nombre' },
+    {
+      k: 'periodeTauxGfaId',
+      l: 'Période du taux',
+      t: 'select',
+      options: nomenclatures?.periodesTauxGfa ?? [],
+    },
+    { k: 'dureeMois', l: 'Durée (mois)', t: 'entier' },
+    { k: 'commentaireTaux', l: 'Commentaire taux', t: 'texte' },
+    { k: 'baseInitiale', l: 'Base initiale', t: 'nombre' },
+    { k: 'commissionCautionMontant', l: 'Commission caution', t: 'nombre' },
+    { k: 'datePremierPrlvt', l: 'Premier prélèvement', t: 'date' },
+    { k: 'fraisDossier', l: 'Frais de dossier', t: 'nombre' },
+    { k: 'precomPourc', l: '% précommercialisation', t: 'nombre' },
+    { k: 'caTtcMin', l: 'CA TTC minimum', t: 'nombre' },
+    { k: 'commentaireConditions', l: 'Commentaire conditions', t: 'long' },
+    { k: 'commentaires', l: 'Commentaires', t: 'long' },
+  ]
+
   return (
     <div className="flex flex-col gap-6">
+      <ZoneCrud
+        lignes={gfa.data ?? []}
+        selectionId={gfaId}
+        setSelectionId={setGfaId}
+        champs={CHAMPS_GFA}
+        titreCreation="Nouvelle GFA"
+        titreModification="Modifier la GFA"
+        confirmation="Supprimer cette GFA (et ses réductions) ?"
+        contexte={{ trancheId }}
+        saveFn={saveGfaFn}
+        deleteFn={deleteGfaFn}
+        invalider={() => {
+          void queryClient.invalidateQueries({
+            queryKey: ['compta-gfa', trancheId],
+          })
+          void queryClient.invalidateQueries({
+            queryKey: ['compta-reducs-gfa'],
+          })
+        }}
+      />
       <Bloc titre="Admin GFA">
         <DataTable
           id="compta-admin-gfa"
@@ -1116,17 +1731,42 @@ function OngletGfa({ trancheId }: { trancheId: number }) {
               Sélectionnez une GFA pour afficher ses réductions.
             </p>
           ) : (
-            <DataTable
-              id="compta-reducs-gfa"
-              columns={COLONNES_REDUCTIONS}
-              data={reducs.data ?? []}
-              unite="réductions"
-              getRowId={(r) => String(r.id)}
-              totalFor={['montant']}
-              emptyText={
-                reducs.isLoading ? 'Chargement…' : 'Aucune réduction.'
-              }
-            />
+            <div className="flex flex-col gap-2">
+              <ZoneCrud
+                lignes={reducs.data ?? []}
+                selectionId={reducId}
+                setSelectionId={setReducId}
+                champs={[
+                  { k: 'montant', l: 'Montant', t: 'nombre' },
+                  { k: 'dateReduc', l: 'Date de réduction', t: 'date' },
+                  { k: 'commentaire', l: 'Commentaire', t: 'long' },
+                ]}
+                titreCreation="Nouvelle réduction"
+                titreModification="Modifier la réduction"
+                confirmation="Supprimer cette réduction ?"
+                contexte={{ gfaId }}
+                saveFn={saveReducGfaFn}
+                deleteFn={deleteReducGfaFn}
+                invalider={() =>
+                  void queryClient.invalidateQueries({
+                    queryKey: ['compta-reducs-gfa', gfaId],
+                  })
+                }
+              />
+              <DataTable
+                id="compta-reducs-gfa"
+                columns={COLONNES_REDUCTIONS}
+                data={reducs.data ?? []}
+                unite="réductions"
+                getRowId={(r) => String(r.id)}
+                selectedRowId={reducId != null ? String(reducId) : null}
+                onRowClick={(r) => setReducId(r.id)}
+                totalFor={['montant']}
+                emptyText={
+                  reducs.isLoading ? 'Chargement…' : 'Aucune réduction.'
+                }
+              />
+            </div>
           )}
         </Bloc>
       </div>

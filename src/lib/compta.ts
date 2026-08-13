@@ -98,7 +98,10 @@ export const getSuiviTrancheFn = createServerFn({ method: 'GET' })
           modeRepartQuotePart,
           eq(tranche.modeRepartQuotePartId, modeRepartQuotePart.id),
         )
-        .leftJoin(listeBudget, eq(tranche.listeBudgetFraisStadeId, listeBudget.id))
+        .leftJoin(
+          listeBudget,
+          eq(tranche.listeBudgetFraisStadeId, listeBudget.id),
+        )
         .leftJoin(
           typeMissionBudgetArchitecte,
           eq(
@@ -112,6 +115,7 @@ export const getSuiviTrancheFn = createServerFn({ method: 'GET' })
     const frais = await db
       .select({
         id: fraisFinancier.id,
+        categorieFraisId: fraisFinancier.categorieFraisId,
         categorie: categorieFrais.libelle,
         budgetMontant: fraisFinancier.budgetMontant,
         actuaMontant: fraisFinancier.actuaMontant,
@@ -149,7 +153,10 @@ export const getDeblocagesSubventionFn = createServerFn({ method: 'GET' })
       })
       .from(deblocageSubvention)
       .where(eq(deblocageSubvention.subventionId, data.subventionId))
-      .orderBy(asc(deblocageSubvention.dateDemande), asc(deblocageSubvention.id))
+      .orderBy(
+        asc(deblocageSubvention.dateDemande),
+        asc(deblocageSubvention.id),
+      )
   })
 
 const banqueOperateur = alias(banque, 'banque_operateur')
@@ -163,6 +170,12 @@ export const getPslaFn = createServerFn({ method: 'GET' })
     return db
       .select({
         id: psla.id,
+        organismeAgrementId: psla.organismeAgrementId,
+        banqueOperateurId: psla.banqueOperateurId,
+        banqueClientId: psla.banqueClientId,
+        organismeGarantieEmpruntId: psla.organismeGarantieEmpruntId,
+        garantieEmpruntActionTypeId: psla.garantieEmpruntActionTypeId,
+        banqueActionTypeId: psla.banqueActionTypeId,
         estimPsla: psla.estimPsla,
         montantPsla: psla.montantPsla,
         coutTotal: psla.coutTotal,
@@ -237,6 +250,15 @@ export const getFinancementsFn = createServerFn({ method: 'GET' })
     return db
       .select({
         id: financement.id,
+        typeFinancementId: financement.typeFinancementId,
+        banqueId: financement.banqueId,
+        actionAlerteId: financement.actionAlerteId,
+        finPretId: financement.finPretId,
+        indexTauxId: financement.indexTauxId,
+        statutPartSocialeId: financement.statutPartSocialeId,
+        statutApportId: financement.statutApportId,
+        mandatHypothequerId: financement.mandatHypothequerId,
+        statutCoutMandatId: financement.statutCoutMandatId,
         typeFinancement: typeFinancement.libelle,
         banque: banque.libelle,
         surOpe: financement.surOpe,
@@ -345,7 +367,10 @@ export const getMouvementsFinancementFn = createServerFn({ method: 'GET' })
         })
         .from(remboursementAnticipe)
         .where(eq(remboursementAnticipe.financementId, data.financementId))
-        .orderBy(asc(remboursementAnticipe.numero), asc(remboursementAnticipe.id)),
+        .orderBy(
+          asc(remboursementAnticipe.numero),
+          asc(remboursementAnticipe.id),
+        ),
     ])
     return { deblocages, remboursements }
   })
@@ -358,6 +383,10 @@ export const getGfaFn = createServerFn({ method: 'GET' })
     return db
       .select({
         id: gfa.id,
+        banqueId: gfa.banqueId,
+        statutApportPromoteurGfaId: gfa.statutApportPromoteurGfaId,
+        actionFinTypeId: gfa.actionFinTypeId,
+        periodeTauxGfaId: gfa.periodeTauxGfaId,
         surOpe: gfa.surOpe,
         banque: banque.libelle,
         estIntrinseque: gfa.estIntrinseque,
