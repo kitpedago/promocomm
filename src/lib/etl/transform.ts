@@ -131,10 +131,18 @@ const copies: Array<Copy> = [
     // DomaineStadeAvancement n'est qu'une liste de deux codes texte
     // (Chantier / Commercialisation) : le domaine reste une colonne texte
     target: 'liste_avancement',
-    cols: '(id, domaine, code, libelle, ordre)',
-    select: `SELECT s."IDListeAvancement", s."Domaine", s."Code", COALESCE(s."Libelle", ''), s."Ordre"
+    cols: '(id, domaine, code, libelle, ordre, avec_hono_gestion, pourcentage_standard)',
+    select: `SELECT s."IDListeAvancement", s."Domaine", s."Code", COALESCE(s."Libelle", ''), s."Ordre",
+        s."AvecHonoGestion", s."PourcentageStandard"
       FROM legacy."tListeAvancement" s`,
   },
+  nomenclature('type_mission', 'tListeTypeMission', 'IDTypeMission'),
+  nomenclature(
+    'prestataire',
+    'tListePrestataire',
+    'IDPrestataire',
+    'afficher_mission:s."AfficherMission"',
+  ),
 
   // --- interlocuteurs externes (notaires, architectes) ---
   nomenclature(
@@ -700,6 +708,50 @@ const copies: Array<Copy> = [
     select: `SELECT s."IDDeclaration940", s."IDTranche", s."Dat", s."StockLogtDAT",
         s."DateTvaLASM", s."SurOpe", s."FinSuivi", s."Commentaires"
       FROM legacy."tDeclaration940" s`,
+  },
+
+  // --- honoraires (phase 7) ---
+  {
+    // GrilleSpecifique/PourCoPromotion/PourPromotion/DateFactCommKPI non
+    // repris (cf. commentaire du schéma cible)
+    target: 'mission',
+    cols: `(id, tranche_id, date_convention, base_hono_unitaire_ht, base_hono_ht,
+            type_mission_id, prestataire_id, fin_facturation, commentaire, ordre,
+            nb_mois, nb_logement)`,
+    select: `SELECT s."IDMission", s."IDTranche", s."DateConvention",
+        s."BaseHonoUnitaireHT", s."BaseHonoHT",
+        ${fk('IDTypeMission')}, ${fk('IDPrestataire')},
+        s."FinFacturation", s."Commentaire", s."Ordre", s."NbMois", s."NbLogement"
+      FROM legacy."tMission" s`,
+  },
+  {
+    // IDStadeAvancement référence tListeAvancement (piège docs/modele-legacy.md)
+    target: 'grille_facturation',
+    cols: '(id, mission_id, liste_avancement_id, pourcentage, montant)',
+    select: `SELECT s."IDGrilleFacturation", s."IDMission",
+        ${fkSafe('IDStadeAvancement', 'tListeAvancement', 'IDListeAvancement')},
+        s."Pourcentage", s."Montant"
+      FROM legacy."tGrilleFacturation" s`,
+  },
+  {
+    target: 'hono_comm_nature_achat',
+    cols: `(id, tranche_id, nature_achat_id, montant_cla, montant_levee_option,
+            montant_resa, montant_acte, pourcentage_resa, pourcentage_acte, commentaires)`,
+    select: `SELECT s."IDHonoCommHFNatureAchat", s."IDTranche", ${fk('IDNatureAchat')},
+        s."MontantCLA", s."MontantLeveeOption", s."MontantResa", s."MontantActe",
+        s."PourcentageResa", s."PourcentageActe", s."Commentaires"
+      FROM legacy."tHonoCommHFNatureAchat" s`,
+  },
+  {
+    // colonnes *_old exclues ; IDPrestataire/IDBaremeHonoComm absents du .bak
+    target: 'hono_comm_facture',
+    cols: `(id, tranche_id, num_facture, date_facture, nb_cla, montant_cla,
+            nb_levee_option, montant_levee_option, nb_resa, montant_resa,
+            nb_acte, montant_acte, commentaires)`,
+    select: `SELECT s."IDHonoCommHFFacture", s."IDTranche", s."NumFacture", s."DateFacture",
+        s."NbCLA", s."MontantCLA", s."NbLeveeOption", s."MontantLeveeOption",
+        s."NbResa", s."MontantResa", s."NbActe", s."MontantActe", s."Commentaires"
+      FROM legacy."tHonoCommHFFacture" s`,
   },
 
   {

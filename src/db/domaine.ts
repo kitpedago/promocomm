@@ -282,6 +282,10 @@ export const listeAvancement = pgTable('liste_avancement', {
   code: text(),
   libelle: text().notNull(),
   ordre: integer(),
+  // phase 7 : import de la grille de facturation standard (stades « Avec hono
+  // Gestion » et leur % standard, bouton Importer de FEN_TABLE_Honoraire)
+  avecHonoGestion: boolean('avec_hono_gestion'),
+  pourcentageStandard: real('pourcentage_standard'),
 })
 
 // ---------------------------------------------------------------------------
@@ -1399,5 +1403,95 @@ export const declaration940 = pgTable('declaration_940', {
   dateTvaLasm: timestamp('date_tva_lasm'),
   surOpe: boolean('sur_ope'),
   finSuivi: boolean('fin_suivi'),
+  commentaires: text(),
+})
+
+// ---------------------------------------------------------------------------
+// Honoraires (phase 7) — FEN_TABLE_Honoraire
+// ---------------------------------------------------------------------------
+
+export const typeMission = pgTable('type_mission', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+// tListePrestataire — afficher_mission filtre la combo des fiches mission
+// (REQ_PrestataireMission : Prestataire.AfficherMission = 1)
+export const prestataire = pgTable('prestataire', {
+  id: id(),
+  libelle: text().notNull(),
+  afficherMission: boolean('afficher_mission'),
+})
+
+// tMission — missions facturables par tranche. GrilleSpecifique /
+// PourCoPromotion / PourPromotion non repris : absents de la fiche WinDev
+// (1 ligne à vrai sur 855) ; DateFactCommKPI_Ext_ContratOFS absent du .bak.
+export const mission = pgTable('mission', {
+  id: id(),
+  trancheId: integer('tranche_id')
+    .notNull()
+    .references(() => tranche.id),
+  dateConvention: timestamp('date_convention'),
+  baseHonoUnitaireHt: montant('base_hono_unitaire_ht'),
+  baseHonoHt: montant('base_hono_ht'),
+  typeMissionId: integer('type_mission_id').references(() => typeMission.id),
+  prestataireId: integer('prestataire_id').references(() => prestataire.id),
+  finFacturation: boolean('fin_facturation'),
+  commentaire: text(),
+  ordre: integer(),
+  nbMois: integer('nb_mois'),
+  nbLogement: integer('nb_logement'),
+})
+
+// tGrilleFacturation — grille de facturation par stade d'une mission. Le
+// IDStadeAvancement legacy référence en réalité tListeAvancement (piège
+// documenté dans docs/modele-legacy.md), d'où liste_avancement_id.
+export const grilleFacturation = pgTable('grille_facturation', {
+  id: id(),
+  missionId: integer('mission_id')
+    .notNull()
+    .references(() => mission.id, { onDelete: 'cascade' }),
+  listeAvancementId: integer('liste_avancement_id').references(
+    () => listeAvancement.id,
+  ),
+  pourcentage: real(), // fraction 0–1 (iso-legacy), affichée en %
+  montant: montant('montant'),
+})
+
+// tHonoCommHFNatureAchat — barème des honoraires de commercialisation
+// par nature d'achat
+export const honoCommNatureAchat = pgTable('hono_comm_nature_achat', {
+  id: id(),
+  trancheId: integer('tranche_id')
+    .notNull()
+    .references(() => tranche.id),
+  natureAchatId: integer('nature_achat_id').references(() => natureAchat.id),
+  montantCla: montant('montant_cla'),
+  montantLeveeOption: montant('montant_levee_option'),
+  montantResa: montant('montant_resa'),
+  montantActe: montant('montant_acte'),
+  pourcentageResa: real('pourcentage_resa'), // fractions 0–1, affichées en %
+  pourcentageActe: real('pourcentage_acte'),
+  commentaires: text(),
+})
+
+// tHonoCommHFFacture — factures d'honoraires de commercialisation par
+// tranche (colonnes *_old exclues ; IDPrestataire et IDBaremeHonoComm de
+// l'analyse WinDev actuelle absents du .bak importé)
+export const honoCommFacture = pgTable('hono_comm_facture', {
+  id: id(),
+  trancheId: integer('tranche_id')
+    .notNull()
+    .references(() => tranche.id),
+  numFacture: integer('num_facture'),
+  dateFacture: timestamp('date_facture'),
+  nbCla: integer('nb_cla'),
+  montantCla: montant('montant_cla'),
+  nbLeveeOption: integer('nb_levee_option'),
+  montantLeveeOption: montant('montant_levee_option'),
+  nbResa: integer('nb_resa'),
+  montantResa: montant('montant_resa'),
+  nbActe: integer('nb_acte'),
+  montantActe: montant('montant_acte'),
   commentaires: text(),
 })

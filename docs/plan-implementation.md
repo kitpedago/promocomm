@@ -124,7 +124,7 @@ Réservé Comptabilité/Administrateur. Le plus gros morceau ETL :
 - **Écrans** : accordéons Subventions / Suivi dépenses & budget / Finances par tranche
   (Admin PSLA, Contrats, Financements, GFA, Suivi prêt 1 %).
 
-## Phase 7 — Honoraires et facturation
+## Phase 7 — Honoraires et facturation 🔶 (2026-08-13)
 
 - **ETL** : `tMission` (855), `tListeTypeMission`, `tGrilleFacturation` (1 259 —
   ⚠ son `IDStadeAvancement` référence `tListeAvancement`, pas `tStadeAvancement`),
@@ -132,6 +132,17 @@ Réservé Comptabilité/Administrateur. Le plus gros morceau ETL :
   `tHonoCommHFFacture` (645), `tListePrestataire` si pas fait en phase 1.
 - **Écrans** : missions suivant convention + grille de facturation par stade
   (ESQ 12,5 %, DPC 25 %…), barème de commercialisation par nature d'achat, factures.
+- **Livré 2026-08-13** (FEN_TABLE_Honoraire, migration 0015) : ETL `tMission`/
+  `tGrilleFacturation`/`tHonoCommHFNatureAchat`/`tHonoCommHFFacture` +
+  nomenclatures `type_mission`, `prestataire`, extension `liste_avancement`
+  (`avec_hono_gestion`, `pourcentage_standard`) ; écran `/honoraires`
+  (2 accordéons, CRUD par modales, bouton Importer de la grille standard,
+  sur-entêtes colorés Loc. accession / VEFA / Honoraires au %). Non repris :
+  `tMission.GrilleSpecifique`/`PourCoPromotion`/`PourPromotion` (absents de la
+  fiche WinDev, 1 ligne sur 855) ; `IDPrestataire`/`IDBaremeHonoComm` de
+  `tHonoCommHFFacture` (colonnes de l'analyse WinDev absentes du .bak importé —
+  filtre Prestataire des factures sans objet tant qu'un .bak plus récent ne les
+  apporte pas). Reste : `tFacture` (écran Facturation distinct).
 
 ## Phase 8 — Déclarations et Bilan ✅ (2026-08-13)
 
@@ -174,7 +185,7 @@ Réservé Comptabilité/Administrateur. Le plus gros morceau ETL :
 | 4     | SCCV et associés                                  | ✅ 2026-08-12 — ETL (13 tables/extensions), liste (88) + fiche 4 onglets, CRUD complet ; validations réactivées à signaler au client (RS obligatoire, SIRET, total % ≠ 100)                                                                                                                                                                                                                                                                                                                                                               |
 | 5     | SAV Promotion                                     | à faire                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 6     | Compta & Finances                                 | 🔶 2026-08-12 — lecture livrée : ETL complet (financement, PSLA + déblocages, remboursements anticipés, GFA + réductions, frais financiers, budgets, déblocages subventions, blocs financiers de `tranche`, 21 nomenclatures) ; écran `/compta` (Subventions + déblocages, Suivi résultat + frais, Finances 6 sous-onglets). Reste : écriture, arbitrage `tSubvention2`, champs Premier/Solde déblocage subvention                                                                                                                        |
-| 7     | Honoraires                                        | à faire                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 7     | Honoraires                                        | 🔶 2026-08-13 — ETL `tMission`/`tGrilleFacturation`/`tHonoCommHFNatureAchat`/`tHonoCommHFFacture` (855/1 259/312/645) + `type_mission`, `prestataire`, extension `liste_avancement` ; écran `/honoraires` (accordéons Suivant Convention — missions + grille par stade avec Importer — et Commercialisation — barème par nature d'achat + factures, sur-entêtes colorés, totaux iso-WinDev). Reste : `tFacture` (écran Facturation)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 8     | Déclarations et Bilan                             | ✅ 2026-08-13 — Bilan par SCCV : ETL `tBilan_Stock`/`tBilan_CAHT`/`tBilan_Resultat` (428/207/607), écran `/bilan` (volet SCCV filtrable, accordéons Stock et CA / Résultats / IS - Non IS, CRUD, colonnes calculées iso-WinDev dont quotes-parts × % KPI). Déclarations : ETL `tAssuranceDoMrH`/`AccordCadreAssurance`/`tSGA` (HTML assaini)/`tDeclaration940` (348/5/199/124), écran `/declarations` (volet Opérations, tranche, accordéons Assurance DO/MRH / SGA / 940 & LASM, CRUD). Champs de modale factorisés (`ChampsModale.tsx`) |
 | 9     | Paramètres + transverses                          | à faire                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | —     | Bascule                                           | à faire                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
