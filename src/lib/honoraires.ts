@@ -130,7 +130,7 @@ export const getHonorairesNomenclaturesFn = createServerFn({
     db
       .select({ id: natureAchat.id, libelle: natureAchat.libelle })
       .from(natureAchat)
-      .orderBy(asc(natureAchat.ordreComm)),
+      .orderBy(asc(natureAchat.libelle)),
   ])
   return { typesMission, prestataires, stades, naturesAchat }
 })
