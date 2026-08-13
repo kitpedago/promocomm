@@ -18,7 +18,11 @@ import {
   getStadesFn,
   getSubventionsFn,
 } from '#/lib/operations.ts'
-import { SELECTION_VIDE, usePref } from '#/lib/preferences.ts'
+import {
+  SELECTION_VIDE,
+  selectionARejouer,
+  usePref,
+} from '#/lib/preferences.ts'
 import { getService } from '#/lib/services'
 import { fmtDate, fmtEuro } from '#/lib/utils.ts'
 
@@ -39,12 +43,9 @@ export const Route = createFileRoute('/_authed/operations')({
     const service = getService(context.session.user.service)
     if (!service?.modules.includes('operations')) throw redirect({ to: '/' })
     // arrivée sans paramètre → on rejoue la dernière sélection dans l'URL, au
-    // SSR : pas de clignotement, et l'URL reste partageable. Pas de boucle,
-    // la redirection renseigne justement search.op.
-    const selection = context.prefs.selection as Selection | undefined
-    if (search.op == null && selection?.op != null) {
-      throw redirect({ to: '/operations', search: selection })
-    }
+    // SSR : pas de clignotement, et l'URL reste partageable.
+    const selection = selectionARejouer(context.prefs, search.op)
+    if (selection) throw redirect({ to: '/operations', search: selection })
   },
   component: PageOperations,
 })

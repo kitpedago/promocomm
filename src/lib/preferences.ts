@@ -132,3 +132,29 @@ export interface Selection {
 }
 
 export const SELECTION_VIDE: Selection = {}
+
+// identifiants de la base : entiers positifs, jamais 0 (clé auto-incrémentée)
+const estIdPositif = (v: unknown): v is number =>
+  typeof v === 'number' && Number.isInteger(v) && v > 0
+
+/**
+ * Sélection à rejouer dans l'URL au chargement d'une page (Opérations,
+ * Commercialisation), ou `undefined` si rien à faire.
+ *
+ * `op` doit être un entier positif : `{ op: 0 }` est atteignable (verifierEntree
+ * ne contrôle pas la forme de `valeur`) et, sans ce garde-fou, produirait une
+ * redirection vers `?op=0` que validateSearch (qui teste la véracité de
+ * `s.op`) réduit aussitôt à `undefined` — rejouant la même redirection à
+ * l'infini. Ne pas simplifier cette condition en `selection?.op != null`.
+ */
+export function selectionARejouer(
+  prefs: Prefs,
+  searchOp: number | undefined,
+): Selection | undefined {
+  if (searchOp != null) return undefined
+  const selection = prefs.selection
+  if (!estObjetSimple(selection)) return undefined
+  const { op, tranche } = selection
+  if (!estIdPositif(op)) return undefined
+  return { op, tranche: typeof tranche === 'number' ? tranche : undefined }
+}

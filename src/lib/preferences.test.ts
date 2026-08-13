@@ -4,6 +4,7 @@ import {
   LIMITE_CLE,
   LIMITE_VALEUR,
   resoudrePref,
+  selectionARejouer,
   verifierEntree,
 } from './preferences.ts'
 
@@ -61,4 +62,44 @@ test('valeur non sérialisable rejetée', () => {
   expect(() => verifierEntree('table:x', cyclique)).toThrow(
     'Préférence trop volumineuse',
   )
+})
+
+test('selectionARejouer : rien en préférence → rien à rejouer', () => {
+  expect(selectionARejouer({}, undefined)).toBeUndefined()
+})
+
+test('selectionARejouer : tranche sans opération → rien à rejouer', () => {
+  expect(
+    selectionARejouer({ selection: { tranche: 5 } }, undefined),
+  ).toBeUndefined()
+})
+
+test('selectionARejouer : op à 0 → rien à rejouer (sinon boucle avec validateSearch, qui traite 0 comme absent)', () => {
+  expect(selectionARejouer({ selection: { op: 0 } }, undefined)).toBeUndefined()
+})
+
+test('selectionARejouer : opération valide (même introuvable en base) → rejouée', () => {
+  expect(selectionARejouer({ selection: { op: 999999 } }, undefined)).toEqual({
+    op: 999999,
+    tranche: undefined,
+  })
+})
+
+test('selectionARejouer : opération et tranche valides → les deux rejouées', () => {
+  expect(
+    selectionARejouer({ selection: { op: 5, tranche: 12 } }, undefined),
+  ).toEqual({ op: 5, tranche: 12 })
+})
+
+test('selectionARejouer : valeur stockée non-objet → rien à rejouer', () => {
+  expect(
+    selectionARejouer({ selection: 'operations' }, undefined),
+  ).toBeUndefined()
+  expect(selectionARejouer({ selection: 42 }, undefined)).toBeUndefined()
+  expect(selectionARejouer({ selection: ['op'] }, undefined)).toBeUndefined()
+  expect(selectionARejouer({ selection: null }, undefined)).toBeUndefined()
+})
+
+test('selectionARejouer : search.op déjà renseigné → rien à rejouer', () => {
+  expect(selectionARejouer({ selection: { op: 5 } }, 7)).toBeUndefined()
 })

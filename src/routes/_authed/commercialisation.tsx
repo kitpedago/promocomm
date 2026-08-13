@@ -14,7 +14,11 @@ import {
   getLotsCommFn,
   getOperationCommFn,
 } from '#/lib/commercialisation.ts'
-import { SELECTION_VIDE, usePref } from '#/lib/preferences.ts'
+import {
+  SELECTION_VIDE,
+  selectionARejouer,
+  usePref,
+} from '#/lib/preferences.ts'
 import { getService } from '#/lib/services'
 import { fmtDate, fmtEuro } from '#/lib/utils.ts'
 
@@ -38,10 +42,10 @@ export const Route = createFileRoute('/_authed/commercialisation')({
     if (!service?.modules.includes('commercialisation')) {
       throw redirect({ to: '/' })
     }
-    // même fil conducteur que /operations : pas de boucle, la redirection
-    // renseigne justement search.op.
-    const selection = context.prefs.selection as Selection | undefined
-    if (search.op == null && selection?.op != null) {
+    // même fil conducteur que /operations, cf. le commentaire de
+    // selectionARejouer pour la garde contre la boucle de redirection.
+    const selection = selectionARejouer(context.prefs, search.op)
+    if (selection) {
       throw redirect({ to: '/commercialisation', search: selection })
     }
   },
