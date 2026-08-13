@@ -19,6 +19,7 @@ import DataTable from '#/components/DataTable'
 import Onglets from '#/components/Onglets'
 import Scindeur from '#/components/Scindeur'
 import { Button } from '#/components/ui/button'
+import { useConfirmation } from '#/components/ui/confirmation'
 import {
   Dialog,
   DialogClose,
@@ -1568,6 +1569,7 @@ function DetailSccv({
   const [participationSelectionnee, setParticipationSelectionnee] = useState<
     number | null
   >(null)
+  const { confirmer, modale } = useConfirmation()
   const [participationModale, setParticipationModale] = useState<
     'creation' | LigneParticipation | null
   >(null)
@@ -1625,6 +1627,7 @@ function DetailSccv({
 
   return (
     <section className="island-shell flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
+      {modale}
       <header className="flex shrink-0 flex-wrap items-center gap-2 border-b border-[var(--line-soft)] px-[18px] py-[14px]">
         <h2 className="text-[15.5px] font-bold text-[var(--ink)]">{f.rs}</h2>
         {f.dateLiquidation && (
@@ -1675,11 +1678,15 @@ function DetailSccv({
                   variant="destructive"
                   disabled={participationSelectionnee == null}
                   onClick={() => {
-                    if (
-                      participationSelectionnee != null &&
-                      confirm('Supprimer cette participation ?')
-                    ) {
-                      supprimerParticipation.mutate(participationSelectionnee)
+                    if (participationSelectionnee != null) {
+                      confirmer({
+                        message: 'Supprimer cette participation ?',
+                        destructif: true,
+                        action: () =>
+                          supprimerParticipation.mutate(
+                            participationSelectionnee,
+                          ),
+                      })
                     }
                   }}
                 >
@@ -1742,11 +1749,12 @@ function DetailSccv({
                   variant="destructive"
                   disabled={compteSelectionne == null}
                   onClick={() => {
-                    if (
-                      compteSelectionne != null &&
-                      confirm('Supprimer ce compte bancaire ?')
-                    ) {
-                      supprimerCompte.mutate(compteSelectionne)
+                    if (compteSelectionne != null) {
+                      confirmer({
+                        message: 'Supprimer ce compte bancaire ?',
+                        destructif: true,
+                        action: () => supprimerCompte.mutate(compteSelectionne),
+                      })
                     }
                   }}
                 >

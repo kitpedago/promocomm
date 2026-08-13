@@ -3,6 +3,7 @@
 // Extraits du pattern sccv.tsx/bilan.tsx à la 3ᵉ duplication (Déclarations).
 import { useState } from 'react'
 import { Button } from '#/components/ui/button'
+import { useConfirmation } from '#/components/ui/confirmation'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import {
@@ -267,8 +268,10 @@ export function BoutonsTable({
   onSupprimer: () => void
   confirmation: string
 }) {
+  const { confirmer, modale } = useConfirmation()
   return (
     <div className="flex shrink-0 gap-2">
+      {modale}
       <Button size="sm" onClick={onNouveau}>
         Nouveau
       </Button>
@@ -284,9 +287,13 @@ export function BoutonsTable({
         size="sm"
         variant="destructive"
         disabled={selection == null}
-        onClick={() => {
-          if (confirm(confirmation)) onSupprimer()
-        }}
+        onClick={() =>
+          confirmer({
+            message: confirmation,
+            destructif: true,
+            action: onSupprimer,
+          })
+        }
       >
         Supprimer
       </Button>

@@ -30,6 +30,7 @@ import PanneauOperations from '#/components/PanneauOperations'
 import Scindeur from '#/components/Scindeur'
 import SelecteurTranche from '#/components/SelecteurTranche'
 import { Button } from '#/components/ui/button'
+import { useConfirmation } from '#/components/ui/confirmation'
 import { Input } from '#/components/ui/input'
 import {
   Dialog,
@@ -476,6 +477,7 @@ function DetailLot({ lotId }: { lotId: number }) {
   // ligne sélectionnée dans les tables d'onglet (défaut : commercialisation
   // courante) — pilote les versements et l'onglet Livraison
   const [commId, setCommId] = useState<number | null>(null)
+  const { confirmer, modale } = useConfirmation()
   const detail = useQuery({
     queryKey: ['lot-detail', lotId],
     queryFn: () => getLotDetailFn({ data: { lotId } }),
@@ -544,6 +546,7 @@ function DetailLot({ lotId }: { lotId: number }) {
     // remplit le volet bas du Scindeur : hauteur constante quel que soit
     // l'onglet actif, c'est le contenu de l'onglet qui défile
     <section className="island-shell flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
+      {modale}
       <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[var(--line-soft)] px-[18px] py-[14px]">
         <div>
           <h2 className="text-[15.5px] font-bold text-[var(--ink)]">
@@ -565,9 +568,10 @@ function DetailLot({ lotId }: { lotId: number }) {
               onClick={() => {
                 // iso-WinDev : blocage avant ouverture de la fiche
                 if (lignes.some((c) => !c.dateAnnulation)) {
-                  alert(
-                    "Ce lot est déjà réservé. Vous devez d'abord annuler la réservation.",
-                  )
+                  confirmer({
+                    message:
+                      "Ce lot est déjà réservé. Vous devez d'abord annuler la réservation.",
+                  })
                   return
                 }
                 setCommModale('creation')
@@ -725,6 +729,7 @@ function OngletLivraison({
     versInputDate(selection.dateLivraison),
   )
   const [message, setMessage] = useState<string | null>(null)
+  const { confirmer, modale } = useConfirmation()
   useEffect(() => {
     setDate(versInputDate(selection.dateLivraison))
     setMessage(null)
@@ -749,6 +754,7 @@ function OngletLivraison({
   })
   return (
     <div className="flex max-w-2xl flex-col gap-4">
+      {modale}
       <div className="flex items-end gap-2">
         <fieldset disabled={!peutModifier} className="w-52">
           <ChampDate libelle="Date livraison" value={date} onChange={setDate} />
@@ -780,12 +786,10 @@ function OngletLivraison({
             }
             onClick={() => {
               // confirmation iso-WinDev (BTN_Appliquer_l_adresse)
-              if (
-                confirm(
-                  `Voulez-vous remplacer l'adresse actuelle de l'acquéreur :\n\n${selection.adresseActuelle ?? ''}\n\npar\n\n${adresseLot ?? ''} ?`,
-                )
-              )
-                appliquer.mutate()
+              confirmer({
+                message: `Voulez-vous remplacer l'adresse actuelle de l'acquéreur :\n\n${selection.adresseActuelle ?? ''}\n\npar l'adresse du lot :\n\n${adresseLot ?? ''} ?`,
+                action: () => appliquer.mutate(),
+              })
             }}
           >
             Appliquer l'adresse du lot
