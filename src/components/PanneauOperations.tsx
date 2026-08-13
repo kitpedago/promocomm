@@ -2,12 +2,13 @@
 // « Contient » ≥ 3 caractères sans accent, case « Inclure les Masquer … »,
 // compteur, repliable). Le flag de masquage filtré dépend du module
 // (commercial par défaut, comptable pour Compta & Finances).
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronsLeft, ChevronsRight } from 'lucide-react'
 
 import { Switch } from '#/components/ui/switch'
 import { getOperationsCommFn } from '#/lib/commercialisation.ts'
+import { usePref } from '#/lib/preferences.ts'
 import { sansAccents } from '#/lib/utils.ts'
 
 export default function PanneauOperations({
@@ -20,9 +21,12 @@ export default function PanneauOperations({
   // flag de masquage filtré par la case « Inclure les Masquer … » (par module)
   masquerFlag?: 'masquerCommercial' | 'masquerComptable'
 }) {
-  const [replie, setReplie] = useState(false)
-  const [recherche, setRecherche] = useState('')
-  const [inclureMasques, setInclureMasques] = useState(false)
+  const [volet, setVolet] = usePref('volet:operations', {
+    replie: false,
+    recherche: '',
+    inclureMasques: false,
+  })
+  const { replie, recherche, inclureMasques } = volet
 
   const operations = useQuery({
     queryKey: ['operations-comm'],
@@ -48,7 +52,7 @@ export default function PanneauOperations({
     return (
       <aside className="sticky top-[61px] flex h-[calc(100vh-61px)] w-9 flex-shrink-0 flex-col items-center border-r border-[var(--line)] bg-[var(--cream)] py-3">
         <button
-          onClick={() => setReplie(false)}
+          onClick={() => setVolet((v) => ({ ...v, replie: false }))}
           className="cursor-pointer rounded-lg p-1.5 text-[var(--ink-faded)] hover:bg-[var(--cream-hover)] hover:text-[var(--ink)]"
           aria-label="Déplier la liste des opérations"
         >
@@ -66,7 +70,7 @@ export default function PanneauOperations({
       <div className="flex items-center justify-between px-3 pt-3 pb-2">
         <h2 className="text-[15px] font-bold text-[var(--ink)]">Opérations</h2>
         <button
-          onClick={() => setReplie(true)}
+          onClick={() => setVolet((v) => ({ ...v, replie: true }))}
           className="cursor-pointer rounded-lg p-1.5 text-[var(--ink-faded)] hover:bg-[var(--cream-hover)] hover:text-[var(--ink)]"
           aria-label="Replier la liste des opérations"
         >
@@ -81,7 +85,9 @@ export default function PanneauOperations({
           </span>
           <input
             value={recherche}
-            onChange={(e) => setRecherche(e.target.value)}
+            onChange={(e) =>
+              setVolet((v) => ({ ...v, recherche: e.target.value }))
+            }
             placeholder="Au moins 3 caract., sans accent"
             className="h-8 rounded-lg border border-[var(--input-border)] bg-[var(--card)] px-2.5 text-[13px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--ink)]"
           />
@@ -89,7 +95,9 @@ export default function PanneauOperations({
         <label className="flex items-center gap-2 text-[12px] text-[var(--ink-soft)]">
           <Switch
             checked={inclureMasques}
-            onCheckedChange={setInclureMasques}
+            onCheckedChange={(c) =>
+              setVolet((v) => ({ ...v, inclureMasques: c }))
+            }
             className="scale-75"
           />
           Inclure les «{' '}
