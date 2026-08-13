@@ -1,6 +1,7 @@
 // Champs de formulaire des modales CRUD (libellé au-dessus, consigne
 // « un composant unique par type de contrôle » de docs/plan-implementation.md).
 // Extraits du pattern sccv.tsx/bilan.tsx à la 3ᵉ duplication (Déclarations).
+import { useState } from 'react'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
@@ -157,9 +158,21 @@ export function ChampSelectId({
   options: Array<{ id: number; libelle: string | null }>
   videLibelle?: string
 }) {
+  // grandes listes montées seulement à l'ouverture du menu : chaque SelectItem
+  // monté coûte cher (des milliers d'entrées figeaient la modale) — fermé,
+  // seule l'option sélectionnée est rendue (nécessaire à SelectValue). Les
+  // petites listes restent montées : préserve le typeahead du menu fermé.
+  const [ouvert, setOuvert] = useState(false)
+  const paresseux = options.length > 100
+  const selectionnee =
+    value != null ? options.find((o) => o.id === value) : undefined
+  const visibles =
+    !paresseux || ouvert ? options : selectionnee ? [selectionnee] : []
   return (
     <ChampForm libelle={libelle}>
       <Select
+        open={ouvert}
+        onOpenChange={setOuvert}
         value={value != null ? String(value) : VIDE}
         onValueChange={(v) => onChange(v === VIDE ? null : Number(v))}
       >
@@ -168,7 +181,7 @@ export function ChampSelectId({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={VIDE}>{videLibelle}</SelectItem>
-          {options.map((o) => (
+          {visibles.map((o) => (
             <SelectItem key={o.id} value={String(o.id)}>
               {o.libelle}
             </SelectItem>

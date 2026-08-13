@@ -34,14 +34,24 @@ import {
   SelectValue,
 } from '#/components/ui/select'
 import { Switch } from '#/components/ui/switch'
+import { construireCsv, telechargerCsv } from '#/lib/csv.ts'
 import { usePref } from '#/lib/preferences.ts'
 
 import type {
   ColumnDef,
   ColumnSizingState,
+  RowData,
   SortingState,
   VisibilityState,
 } from '@tanstack/react-table'
+
+declare module '@tanstack/react-table' {
+  // signature imposée par la déclaration d'origine
+  interface ColumnMeta<TData extends RowData, TValue> {
+    /** classes de fond/texte de l'en-tête (groupes, colonnes ex-jaunes WinDev) */
+    classeEntete?: string
+  }
+}
 
 interface TableParams {
   sorting: SortingState
@@ -179,35 +189,14 @@ export default function DataTable<T>({
   // « ; » et BOM UTF-8 pour Excel français) — remplace l'export Excel WinDev
   const exporterCsv = () => {
     const colonnes = table.getVisibleLeafColumns()
-    const champ = (v: unknown): string => {
-      if (v == null) return ''
-      const brut =
-        v instanceof Date
-          ? v.toLocaleDateString('fr-FR')
-          : typeof v === 'boolean'
-            ? v
-              ? 'Oui'
-              : 'Non'
-            : typeof v === 'number'
-              ? String(v).replace('.', ',')
-              : String(v)
-      return /[";\n]/.test(brut) ? `"${brut.replaceAll('"', '""')}"` : brut
-    }
     const entetes = colonnes.map((c) =>
-      champ(typeof c.columnDef.header === 'string' ? c.columnDef.header : c.id),
+      typeof c.columnDef.header === 'string' ? c.columnDef.header : c.id,
     )
-    const lignesCsv = lignesFiltrees.map((r) =>
-      colonnes.map((c) => champ(r.getValue(c.id))).join(';'),
-    )
-    const csv = '\ufeff' + [entetes.join(';'), ...lignesCsv].join('\r\n')
-    const url = URL.createObjectURL(
-      new Blob([csv], { type: 'text/csv;charset=utf-8' }),
-    )
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${id}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
+    const csv = construireCsv([
+      entetes,
+      ...lignesFiltrees.map((r) => colonnes.map((c) => r.getValue(c.id))),
+    ])
+    telechargerCsv(`${id}.csv`, csv)
   }
 
   const deplacerColonne = (colId: string, delta: -1 | 1) => {

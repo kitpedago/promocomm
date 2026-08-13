@@ -7,6 +7,7 @@ import {
   acquereur,
   banqueCourtage,
   personne,
+  commercial,
   commercialisation,
   destination,
   droit,
@@ -25,6 +26,7 @@ import {
 import { alias } from 'drizzle-orm/pg-core'
 
 import { db } from '#/db/index.ts'
+import { construireCsv } from '#/lib/csv.ts'
 import { requireDroit, requireSession } from '#/lib/session.server.ts'
 
 // Liste maître : toutes les opérations (le filtre « Contient » et la case
@@ -170,9 +172,18 @@ export const getLotDetailFn = createServerFn({ method: 'GET' })
     await requireSession()
     const ligne = (
       await db
-        .select({ fiche: lot, destination: destination.libelle })
+        .select({
+          fiche: lot,
+          destination: destination.libelle,
+          // l'adresse complète du lot concatène le CP/commune de l'opération
+          // (REQ_AcquereurAdresses, onglet Livraison)
+          adresseCompleteLot: sql<string | null>`NULLIF(TRIM(CONCAT_WS(' ',
+            ${lot.adresse}, ${operation.cp}, ${operation.commune})), '')`,
+        })
         .from(lot)
         .leftJoin(destination, eq(lot.destinationId, destination.id))
+        .leftJoin(tranche, eq(lot.trancheId, tranche.id))
+        .leftJoin(operation, eq(tranche.operationId, operation.id))
         .where(eq(lot.id, data.lotId))
     ).at(0)
     if (!ligne) return null
@@ -210,6 +221,7 @@ export const getLotDetailFn = createServerFn({ method: 'GET' })
         estJustifFiscal: commercialisation.estJustifFiscal,
         estFiscalite: commercialisation.estFiscalite,
         commFisca: commercialisation.commFisca,
+        fiscaliteAcquereurId: commercialisation.fiscaliteAcquereurId,
         loyer: commercialisation.loyer,
         epargne: commercialisation.epargne,
         dateSignatureComm: commercialisation.dateSignatureComm,
@@ -292,6 +304,7 @@ export const getLotDetailFn = createServerFn({ method: 'GET' })
     return {
       fiche,
       destination: destinationLot,
+      adresseCompleteLot: ligne.adresseCompleteLot,
       commercialisations,
       versements,
     }
@@ -337,6 +350,7 @@ export const getCommNomenclaturesFn = createServerFn({
     banquesCourtage,
     motifsClause,
     prestataires,
+    fiscalitesAcquereur,
   ] = await Promise.all([
     db
       .select({
@@ -356,6 +370,13 @@ export const getCommNomenclaturesFn = createServerFn({
       .select({ id: prestataire.id, libelle: prestataire.libelle })
       .from(prestataire)
       .orderBy(asc(prestataire.libelle)),
+    db
+      .select({
+        id: fiscaliteAcquereur.id,
+        libelle: fiscaliteAcquereur.libelle,
+      })
+      .from(fiscaliteAcquereur)
+      .orderBy(asc(fiscaliteAcquereur.libelle)),
   ])
   return {
     acquereurs,
@@ -364,6 +385,7 @@ export const getCommNomenclaturesFn = createServerFn({
     banquesCourtage,
     motifsClause,
     prestataires,
+    fiscalitesAcquereur,
   }
 })
 
@@ -401,6 +423,23 @@ interface FicheCommercialisation {
   avecClauseParticuliere?: boolean | null
   motifClauseParticuliereId?: number | null
   commentaireClauseParticuliere?: string | null
+  // zones jaunes WinDev (saisie en ligne) des onglets Fiscalité / Contrat
+  // Loc. Accession / Prév. signature actes / Actes
+  estJustifFiscal?: boolean | null
+  estFiscalite?: boolean | null
+  commFisca?: string | null
+  fiscaliteAcquereurId?: number | null
+  dateSignatureContratLoc?: string | null
+  loyer?: number | null
+  epargne?: number | null
+  datePrevueSignatureActe?: string | null
+  dateSignatureComm?: string | null
+  dateSignatureActeVefa?: string | null
+  dateLeveeOption?: string | null
+  pasAideRm?: boolean | null
+  montantSubv?: number | null
+  montantSubvAcpte?: number | null
+  soldeDemande?: boolean | null
 }
 
 export const saveCommercialisationFn = createServerFn({ method: 'POST' })
@@ -447,6 +486,21 @@ export const saveCommercialisationFn = createServerFn({ method: 'POST' })
             : 0,
       motifClauseParticuliereId: data.motifClauseParticuliereId ?? null,
       commentaireClauseParticuliere: data.commentaireClauseParticuliere || null,
+      estJustifFiscal: data.estJustifFiscal ?? null,
+      estFiscalite: data.estFiscalite ?? null,
+      commFisca: data.commFisca || null,
+      fiscaliteAcquereurId: data.fiscaliteAcquereurId ?? null,
+      dateSignatureContratLoc: versDate(data.dateSignatureContratLoc),
+      loyer: data.loyer ?? null,
+      epargne: data.epargne ?? null,
+      datePrevueSignatureActe: versDate(data.datePrevueSignatureActe),
+      dateSignatureComm: data.dateSignatureComm || null,
+      dateSignatureActeVefa: versDate(data.dateSignatureActeVefa),
+      dateLeveeOption: versDate(data.dateLeveeOption),
+      pasAideRm: data.pasAideRm ?? null,
+      montantSubv: data.montantSubv ?? null,
+      montantSubvAcpte: data.montantSubvAcpte ?? null,
+      soldeDemande: data.soldeDemande ?? null,
     }
     if (data.id) {
       const touchees = await db
@@ -457,6 +511,21 @@ export const saveCommercialisationFn = createServerFn({ method: 'POST' })
       if (touchees.length === 0) throw new Error('Ligne introuvable')
       return { id: data.id }
     }
+    // iso-WinDev (btn Réserver) : une seule réservation active par lot
+    const deja = await db
+      .select({ id: commercialisation.id })
+      .from(commercialisation)
+      .where(
+        and(
+          eq(commercialisation.lotId, data.lotId),
+          isNull(commercialisation.dateAnnulation),
+        ),
+      )
+      .limit(1)
+    if (deja.length > 0)
+      throw new Error(
+        "Ce lot est déjà réservé. Vous devez d'abord annuler la réservation.",
+      )
     const [cree] = await db
       .insert(commercialisation)
       .values(valeurs)
@@ -487,6 +556,63 @@ export const annulerCommercialisationFn = createServerFn({ method: 'POST' })
       .where(eq(commercialisation.id, data.id))
       .returning({ id: commercialisation.id })
     if (touchees.length === 0) throw new Error('Ligne introuvable')
+  })
+
+// --- Onglet Livraison (contrôles SAI_Date_livraison / BTN_Appliquer_l_adresse) ---
+
+// BTN_Enregistrer : date de livraison de la réservation sélectionnée
+export const updateDateLivraisonFn = createServerFn({ method: 'POST' })
+  .validator((d: { id: number; dateLivraison: string | null }) => d)
+  .handler(async ({ data }) => {
+    await requireDroit(FEN_COMM, 'TABLE_REQ_Livraison')
+    const touchees = await db
+      .update(commercialisation)
+      .set({ dateLivraison: versDate(data.dateLivraison) })
+      .where(eq(commercialisation.id, data.id))
+      .returning({ id: commercialisation.id })
+    if (touchees.length === 0) throw new Error('Ligne introuvable')
+  })
+
+// BTN_Appliquer_l_adresse : recopie l'adresse du lot (+ CP/commune de
+// l'opération) comme adresse actuelle de l'acquéreur, gardes iso-WinDev
+export const appliquerAdresseLotFn = createServerFn({ method: 'POST' })
+  .validator((d: { commercialisationId: number }) => d)
+  .handler(async ({ data }) => {
+    await requireDroit(FEN_COMM, 'TABLE_REQ_Livraison')
+    const ligne = (
+      await db
+        .select({
+          acquereurId: acquereur.id,
+          adresseLot: lot.adresse,
+          cp: operation.cp,
+          commune: operation.commune,
+          adresseActuelle: acquereur.adresseActuelle,
+          cpActuel: acquereur.cpActuel,
+          communeActuelle: acquereur.communeActuelle,
+        })
+        .from(commercialisation)
+        .innerJoin(lot, eq(commercialisation.lotId, lot.id))
+        .leftJoin(tranche, eq(lot.trancheId, tranche.id))
+        .leftJoin(operation, eq(tranche.operationId, operation.id))
+        .innerJoin(acquereur, eq(commercialisation.acquereurId, acquereur.id))
+        .where(eq(commercialisation.id, data.commercialisationId))
+    ).at(0)
+    if (!ligne) throw new Error('Ligne introuvable')
+    if (!ligne.adresseLot) throw new Error("Le lot n'a pas d'adresse !")
+    if (
+      ligne.adresseActuelle === ligne.adresseLot &&
+      ligne.cpActuel === ligne.cp &&
+      ligne.communeActuelle === ligne.commune
+    )
+      throw new Error('Les adresses sont les mêmes')
+    await db
+      .update(acquereur)
+      .set({
+        adresseActuelle: ligne.adresseLot,
+        cpActuel: ligne.cp,
+        communeActuelle: ligne.commune,
+      })
+      .where(eq(acquereur.id, ligne.acquereurId))
   })
 
 // --- Versements de dépôt de garantie ---
@@ -602,4 +728,183 @@ export const propagerDateLivraisonFn = createServerFn({ method: 'POST' })
       )
       .returning({ id: commercialisation.id })
     return { modifies: touchees.length }
+  })
+
+// --- Adresse de la tranche (BTN_Modifier_adresse_tranche / FEN_Fiche_Tranche_Adresse) ---
+
+export const updateTrancheAdresseFn = createServerFn({ method: 'POST' })
+  .validator((d: { trancheId: number; adresse: string }) => d)
+  .handler(async ({ data }) => {
+    await requireDroit(FEN_COMM, 'BTN_Modifier_adresse_tranche')
+    await db
+      .update(tranche)
+      .set({ adresse: data.adresse.trim() || null })
+      .where(eq(tranche.id, data.trancheId))
+  })
+
+// --- Export CSV de l'opération (BTN_Exporter / REQ_InterfaceCommercialisation_Lot) ---
+// Iso-WinDev : toutes les tranches de l'opération, familles de bien hors
+// « AUTRES », colonnes et intitulés du fichier d'interface conservés. Les
+// champs cur* du lot legacy (cache de la commercialisation courante, non
+// repris) sont recalculés par la même jointure que getLotsCommFn.
+
+const prestataireComm1 = alias(prestataire, 'prestataire_comm1')
+const prestataireComm2 = alias(prestataire, 'prestataire_comm2')
+
+export const getExportCommFn = createServerFn({ method: 'GET' })
+  .validator((data: { operationId: number }) => data)
+  .handler(async ({ data }) => {
+    await requireSession()
+    const op = (
+      await db
+        .select({ libelle: operation.libelle })
+        .from(operation)
+        .where(eq(operation.id, data.operationId))
+    ).at(0)
+    if (!op) throw new Error('Opération introuvable')
+
+    const comm = db
+      .selectDistinctOn([commercialisation.lotId], {
+        id: commercialisation.id,
+        lotId: commercialisation.lotId,
+        acquereurId: commercialisation.acquereurId,
+        natureAchatId: commercialisation.natureAchatId,
+        fiscaliteAcquereurId: commercialisation.fiscaliteAcquereurId,
+        banqueCourtageId: commercialisation.banqueCourtageId,
+        prestataireComm1Id: commercialisation.prestataireComm1Id,
+        prestataireComm2Id: commercialisation.prestataireComm2Id,
+        dateResa: commercialisation.dateResa,
+        dateSignatureActeVefa: commercialisation.dateSignatureActeVefa,
+        dateSignatureContratLoc: commercialisation.dateSignatureContratLoc,
+        dateLeveeOption: commercialisation.dateLeveeOption,
+        dateLivraison: commercialisation.dateLivraison,
+        estJustifFiscal: commercialisation.estJustifFiscal,
+        estFiscalite: commercialisation.estFiscalite,
+        commFisca: commercialisation.commFisca,
+        pasAideRm: commercialisation.pasAideRm,
+        loyer: commercialisation.loyer,
+        epargne: commercialisation.epargne,
+        prixVenteReelHt: commercialisation.prixVenteReelHt,
+        prixVenteReelTtc: commercialisation.prixVenteReelTtc,
+        tauxTvaReel: commercialisation.tauxTvaReel,
+        remiseClientTtc: commercialisation.remiseClientTtc,
+        avecHonoraireCourtage: commercialisation.avecHonoraireCourtage,
+        montantHonoCourtageBanque: commercialisation.montantHonoCourtageBanque,
+        montantHonoCourtageClient: commercialisation.montantHonoCourtageClient,
+        avecTma: commercialisation.avecTma,
+      })
+      .from(commercialisation)
+      .where(isNull(commercialisation.dateAnnulation))
+      .orderBy(
+        asc(commercialisation.lotId),
+        sql`${commercialisation.dateResa} DESC NULLS LAST`,
+        desc(commercialisation.id),
+      )
+      .as('comm_courante')
+
+    // clés = intitulés de colonnes du fichier exporté (aliases WinDev)
+    const colonnes = {
+      IDOperation: operation.id,
+      Operation: operation.libelle,
+      IDTranche: lot.trancheId,
+      Tranche: tranche.libelle,
+      IDlot: lot.id,
+      Numlot: lot.numLot,
+      NomComplet: sql<
+        string | null
+      >`COALESCE(${acquereur.nomComplet}, ${acquereur.rs})`,
+      curPrixDeVenteReelHT: comm.prixVenteReelHt,
+      Destination: destination.libelle,
+      LotAssocie: lot.lotAssocie,
+      FamilleDeBien: lot.familleDeBien,
+      TypeDeBien: lot.typeDeBien,
+      PrixDeVenteHT: lot.prixVenteHt,
+      TVA: lot.tva,
+      PrixDeVenteTTC: lot.prixVenteTtc,
+      curDateLivraison: comm.dateLivraison,
+      Commentaire: lot.commentaire,
+      NumEtage: lot.numEtage,
+      Exposition: lot.exposition,
+      NumParcelle: lot.numParcelle,
+      Tantiemes: lot.tantiemes,
+      PrixM2: lot.prixM2,
+      Adresse: lot.adresse,
+      CommVendeurAVerserResa: lot.commVendeurAVerserResa,
+      CommVendeurAVerserActe: lot.commVendeurAVerserActe,
+      TauxCommActe: lot.tauxCommActe,
+      TauxCommResa: lot.tauxCommResa,
+      curIDAcquereur: comm.acquereurId,
+      curDateResa: comm.dateResa,
+      curIDNatureAchat: comm.natureAchatId,
+      curIDCommercialisation: comm.id,
+      IDCommercialisation: comm.id,
+      DateSignatureActeVEFA: comm.dateSignatureActeVefa,
+      DateSignatureContratLoc: comm.dateSignatureContratLoc,
+      DateLeveeOption: comm.dateLeveeOption,
+      LibellePrestataireComm1: prestataireComm1.libelle,
+      LibellePrestataireComm2: prestataireComm2.libelle,
+      EstJustifFiscal: comm.estJustifFiscal,
+      EstFiscalite: comm.estFiscalite,
+      MotifFisca: comm.commFisca,
+      PasAideRM: comm.pasAideRm,
+      Loyer: comm.loyer,
+      Epargne: comm.epargne,
+      ConseillerCommercial: sql<
+        string | null
+      >`NULLIF(TRIM(CONCAT_WS(' ', ${commercial.prenom}, ${commercial.denomination})), '')`,
+      LivraisonAdresse: lot.adresse,
+      LivraisonCP: operation.cp,
+      LivraisonCommune: operation.commune,
+      IDFiscaliteAcquereur: comm.fiscaliteAcquereurId,
+      curTauxTVAReel: comm.tauxTvaReel,
+      curPrixDeVenteReelTTC: comm.prixVenteReelTtc,
+      curRemiseClientTTC: comm.remiseClientTtc,
+      DateLivraison: comm.dateLivraison,
+      AvecHonoraireCourtage: comm.avecHonoraireCourtage,
+      MontantHonoraireCourtageBanque: comm.montantHonoCourtageBanque,
+      MontantHonoraireCourtageClient: comm.montantHonoCourtageClient,
+      IDBanqueCourtage: comm.banqueCourtageId,
+      AvecTMA: comm.avecTma,
+      AdresseActuelle: acquereur.adresseActuelle,
+      CPActuel: acquereur.cpActuel,
+      Communeactuelle: acquereur.communeActuelle,
+      CP: operation.cp,
+      Commune: operation.commune,
+    }
+    const lignes = await db
+      .select(colonnes)
+      .from(lot)
+      .innerJoin(tranche, eq(lot.trancheId, tranche.id))
+      .innerJoin(operation, eq(tranche.operationId, operation.id))
+      .leftJoin(comm, eq(comm.lotId, lot.id))
+      .leftJoin(acquereur, eq(comm.acquereurId, acquereur.id))
+      .leftJoin(commercial, eq(acquereur.conseillerCommercialId, commercial.id))
+      .leftJoin(destination, eq(lot.destinationId, destination.id))
+      .leftJoin(
+        prestataireComm1,
+        eq(comm.prestataireComm1Id, prestataireComm1.id),
+      )
+      .leftJoin(
+        prestataireComm2,
+        eq(comm.prestataireComm2Id, prestataireComm2.id),
+      )
+      .where(
+        and(
+          eq(operation.id, data.operationId),
+          // HFSQL sans NULL : un lot à famille vide passe le <> 'AUTRES'
+          sql`COALESCE(${lot.familleDeBien}, '') <> 'AUTRES'`,
+        ),
+      )
+      .orderBy(asc(tranche.libelle), asc(lot.numLot))
+
+    const entetes = Object.keys(colonnes) as Array<keyof typeof colonnes>
+    return {
+      nomFichier: `${op.libelle}_Commercialisation_${new Date()
+        .toLocaleDateString('fr-FR')
+        .replaceAll('/', '-')}.csv`.replaceAll(/[\\/]/g, '-'),
+      csv: construireCsv([
+        entetes,
+        ...lignes.map((l) => entetes.map((e) => l[e])),
+      ]),
+    }
   })

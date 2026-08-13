@@ -7,7 +7,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import Champ from '#/components/Champ'
 import {
@@ -15,6 +15,7 @@ import {
   ChampBascule,
   ChampDate,
   ChampNombre,
+  ChampForm,
   ChampSelectId,
   ChampTexte,
   ChampTexteLong,
@@ -28,6 +29,7 @@ import PanneauOperations from '#/components/PanneauOperations'
 import Scindeur from '#/components/Scindeur'
 import SelecteurTranche from '#/components/SelecteurTranche'
 import { Button } from '#/components/ui/button'
+import { Input } from '#/components/ui/input'
 import {
   Dialog,
   DialogClose,
@@ -38,9 +40,11 @@ import {
 } from '#/components/ui/dialog'
 import {
   annulerCommercialisationFn,
+  appliquerAdresseLotFn,
   deleteVersementFn,
   getCommNomenclaturesFn,
   getDroitsFn,
+  getExportCommFn,
   getLotDetailFn,
   getLotsCommFn,
   getOperationCommFn,
@@ -48,7 +52,10 @@ import {
   propagerDateLivraisonFn,
   saveCommercialisationFn,
   saveVersementFn,
+  updateDateLivraisonFn,
+  updateTrancheAdresseFn,
 } from '#/lib/commercialisation.ts'
+import { telechargerCsv } from '#/lib/csv.ts'
 import { enFraction, enPourcent } from '#/lib/sccv.helpers.ts'
 import {
   selectionARejouer,
@@ -235,6 +242,7 @@ function PageCommercialisation() {
                   HLM
                 </span>
               )}
+              <BoutonExporter operationId={op} />
             </div>
 
             <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -250,7 +258,12 @@ function PageCommercialisation() {
                   tranche={operation.data.tranches.find(
                     (t) => t.id === trancheActive,
                   )}
-                  onDone={() => void lots.refetch()}
+                  // adresse de tranche modifiée → l'en-tête (operation.tranches)
+                  // doit suivre pour préremplir les prochaines modales
+                  onDone={() => {
+                    void lots.refetch()
+                    void operation.refetch()
+                  }}
                 />
               )}
             </div>
@@ -326,6 +339,13 @@ const colBool = (id: string, header: string, size = 110): ColComm => ({
   cell: (c) => (c.getValue() ? 'Oui' : '—'),
 })
 
+// en-tête vert pâle pour les colonnes qui étaient jaunes (saisie en ligne)
+// dans WinDev — distinct du doré (sections de modale, groupes du Bilan)
+const enJaune = (c: ColComm): ColComm => ({
+  ...c,
+  meta: { classeEntete: 'bg-[var(--ok-tint)] text-[var(--ink)]' },
+})
+
 const COL_BASE: Array<ColComm> = [
   colTexte('acquereur', 'Acquéreur', 200),
   colTexte('destination', 'Destination', 110),
@@ -383,18 +403,18 @@ const COLONNES: Record<
     colonnes: [
       ...COL_BASE,
       colDate('dateResa', 'Date de résa'),
-      colBool('estJustifFiscal', 'Justif fiscal ?'),
-      colBool('estFiscalite', 'Fiscalité ?'),
-      colTexte('commFisca', 'Comm Fisca', 240),
-      colTexte('fiscalite', 'Fiscalité acquéreur', 150),
+      enJaune(colBool('estJustifFiscal', 'Justif fiscal ?')),
+      enJaune(colBool('estFiscalite', 'Fiscalité ?')),
+      enJaune(colTexte('commFisca', 'Comm Fisca', 240)),
+      enJaune(colTexte('fiscalite', 'Fiscalité acquéreur', 150)),
     ],
   },
   'Contrat Loc. Accession': {
     colonnes: [
       ...COL_BASE,
-      colDate('dateSignatureContratLoc', 'Date signature contrat loc'),
-      colEuro('loyer', 'Loyer', 110),
-      colEuro('epargne', 'Epargne', 110),
+      enJaune(colDate('dateSignatureContratLoc', 'Date signature contrat loc')),
+      enJaune(colEuro('loyer', 'Loyer', 110)),
+      enJaune(colEuro('epargne', 'Epargne', 110)),
       colDate('dateResiliationContratLoc', 'Résiliation du contrat', 150),
     ],
     masquees: ['dateResiliationContratLoc'],
@@ -403,8 +423,10 @@ const COLONNES: Record<
     colonnes: [
       ...COL_BASE,
       colDate('dateResa', 'Date de résa'),
-      colDate('datePrevueSignatureActe', 'Date prévue signature acte', 160),
-      colTexte('dateSignatureComm', 'Commentaire', 240),
+      enJaune(
+        colDate('datePrevueSignatureActe', 'Date prévue signature acte', 160),
+      ),
+      enJaune(colTexte('dateSignatureComm', 'Commentaire', 240)),
       colDate('datePreviActabilite', "Prévision d'actabilité", 150),
     ],
     masquees: ['datePreviActabilite'],
@@ -413,11 +435,13 @@ const COLONNES: Record<
     colonnes: [
       ...COL_BASE,
       colDate('dateResa', 'Date de résa'),
-      colDate('dateSignatureActeVefa', 'Date signature Acte VEFA', 160),
-      colDate('dateLeveeOption', 'Date levée option', 140),
-      colBool('pasAideRm', "Pas d'aide RM"),
-      colEuro('montantSubv', 'Montant subv', 130),
-      colEuro('montantSubvAcpte', 'Montant subv acompte', 160),
+      enJaune(
+        colDate('dateSignatureActeVefa', 'Date signature Acte VEFA', 160),
+      ),
+      enJaune(colDate('dateLeveeOption', 'Date levée option', 140)),
+      enJaune(colBool('pasAideRm', "Pas d'aide RM")),
+      enJaune(colEuro('montantSubv', 'Montant subv', 130)),
+      enJaune(colEuro('montantSubvAcpte', 'Montant subv acompte', 160)),
       {
         id: 'soldeSubvention',
         header: 'Solde subvention',
@@ -433,7 +457,7 @@ const COLONNES: Record<
           </span>
         ),
       },
-      colBool('soldeDemande', 'Solde demandé'),
+      enJaune(colBool('soldeDemande', 'Solde demandé')),
     ],
   },
 }
@@ -534,7 +558,19 @@ function DetailLot({ lotId }: { lotId: number }) {
         </div>
         {!lectureSeule && !restreint('SC_Reservation') && (
           <div className="flex shrink-0 gap-2">
-            <Button size="sm" onClick={() => setCommModale('creation')}>
+            <Button
+              size="sm"
+              onClick={() => {
+                // iso-WinDev : blocage avant ouverture de la fiche
+                if (lignes.some((c) => !c.dateAnnulation)) {
+                  alert(
+                    "Ce lot est déjà réservé. Vous devez d'abord annuler la réservation.",
+                  )
+                  return
+                }
+                setCommModale('creation')
+              }}
+            >
               Réserver
             </Button>
             <Button
@@ -569,19 +605,12 @@ function DetailLot({ lotId }: { lotId: number }) {
             Lot jamais commercialisé.
           </p>
         ) : onglet === 'Livraison' ? (
-          <div className="flex flex-col gap-4">
-            <Champ libelle="Date livraison">
-              {fmtDate(selection.dateLivraison)}
-            </Champ>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
-              <Champ libelle="Destination">{selection.destination}</Champ>
-              <Champ libelle="Nature d'achat">{selection.natureAchat}</Champ>
-              <Champ libelle="Adresse du lot">{d.fiche.adresse}</Champ>
-              <Champ libelle="Adresse actuelle">
-                {selection.adresseActuelle}
-              </Champ>
-            </div>
-          </div>
+          <OngletLivraison
+            selection={selection}
+            adresseLot={d.adresseCompleteLot}
+            peutModifier={!lectureSeule && !restreint('TABLE_REQ_Livraison')}
+            onDone={invalider}
+          />
         ) : (
           <div className="flex flex-col gap-5">
             <DataTable
@@ -648,6 +677,7 @@ function DetailLot({ lotId }: { lotId: number }) {
           if (!o) setCommModale(null)
         }}
         nomenclatures={nomenclatures.data}
+        ongletActif={onglet}
         onDone={invalider}
       />
       <ModaleAnnulation
@@ -670,6 +700,99 @@ function DetailLot({ lotId }: { lotId: number }) {
         />
       )}
     </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Onglet Livraison (iso-WinDev : SAI_Date_livraison + BTN_Enregistrer,
+// section Adresses avec rappels et BTN_Appliquer_l_adresse)
+// ---------------------------------------------------------------------------
+
+function OngletLivraison({
+  selection,
+  adresseLot,
+  peutModifier,
+  onDone,
+}: {
+  selection: LigneComm
+  adresseLot: string | null
+  peutModifier: boolean
+  onDone: () => void
+}) {
+  const [date, setDate] = useState<string | null>(() =>
+    versInputDate(selection.dateLivraison),
+  )
+  const [message, setMessage] = useState<string | null>(null)
+  useEffect(() => {
+    setDate(versInputDate(selection.dateLivraison))
+    setMessage(null)
+  }, [selection.id])
+  const enregistrer = useMutation({
+    mutationFn: () =>
+      updateDateLivraisonFn({
+        data: { id: selection.id, dateLivraison: date },
+      }),
+    onSuccess: () => {
+      setMessage('Date enregistrée.')
+      onDone()
+    },
+  })
+  const appliquer = useMutation({
+    mutationFn: () =>
+      appliquerAdresseLotFn({ data: { commercialisationId: selection.id } }),
+    onSuccess: () => {
+      setMessage("Adresse actuelle de l'acquéreur remplacée.")
+      onDone()
+    },
+  })
+  return (
+    <div className="flex max-w-2xl flex-col gap-4">
+      <div className="flex items-end gap-2">
+        <fieldset disabled={!peutModifier} className="w-52">
+          <ChampDate libelle="Date livraison" value={date} onChange={setDate} />
+        </fieldset>
+        {peutModifier && (
+          <Button
+            size="sm"
+            onClick={() => enregistrer.mutate()}
+            disabled={enregistrer.isPending}
+          >
+            Enregistrer
+          </Button>
+        )}
+      </div>
+      <SousTitre>Adresses</SousTitre>
+      <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+        <Champ libelle="Destination">{selection.destination}</Champ>
+        <Champ libelle="Nature d'achat">{selection.natureAchat}</Champ>
+      </div>
+      <Champ libelle="Adresse du lot">{adresseLot}</Champ>
+      <Champ libelle="Adresse actuelle">{selection.adresseActuelle}</Champ>
+      {peutModifier && (
+        <div>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={
+              !adresseLot || !selection.adresseActuelle || appliquer.isPending
+            }
+            onClick={() => {
+              // confirmation iso-WinDev (BTN_Appliquer_l_adresse)
+              if (
+                confirm(
+                  `Voulez-vous remplacer l'adresse actuelle de l'acquéreur :\n\n${selection.adresseActuelle ?? ''}\n\npar\n\n${adresseLot ?? ''} ?`,
+                )
+              )
+                appliquer.mutate()
+            }}
+          >
+            Appliquer l'adresse du lot
+          </Button>
+        </div>
+      )}
+      {message && <p className="text-[12px] text-[var(--muted)]">{message}</p>}
+      <ErreurMutation erreur={enregistrer.error ?? appliquer.error} />
+    </div>
   )
 }
 
@@ -708,6 +831,38 @@ const COLONNES_VERSEMENTS: Array<ColumnDef<LigneVersement, any>> = [
 ]
 
 // ---------------------------------------------------------------------------
+// Export CSV de l'opération (BTN_Exporter — fichier d'interface
+// REQ_InterfaceCommercialisation_Lot, toutes tranches confondues)
+// ---------------------------------------------------------------------------
+
+function BoutonExporter({ operationId }: { operationId: number }) {
+  const restreint = useDroitsComm()
+  const exporter = useMutation({
+    mutationFn: () => getExportCommFn({ data: { operationId } }),
+    onSuccess: (r) => telechargerCsv(r.nomFichier, r.csv),
+  })
+  if (restreint('BTN_Exporter')) return null
+  return (
+    <span className="ml-auto flex items-center gap-2">
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => exporter.mutate()}
+        disabled={exporter.isPending}
+        title="Exporter la commercialisation de l'opération (toutes tranches) en CSV"
+      >
+        {exporter.isPending ? 'Export en cours…' : 'Exporter'}
+      </Button>
+      {exporter.isError && (
+        <span className="text-[12px] text-[var(--danger)]">
+          Export impossible.
+        </span>
+      )}
+    </span>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Propagation tranche → lots (adresse, date de livraison) — BTN_Propager_*
 // ---------------------------------------------------------------------------
 
@@ -724,7 +879,9 @@ function Propagation({
 }) {
   const { lectureSeule } = Route.useRouteContext()
   const restreint = useDroitsComm()
-  const [modale, setModale] = useState<'adresse' | 'date' | null>(null)
+  const [modale, setModale] = useState<
+    'adresse' | 'date' | 'adresseTranche' | null
+  >(null)
   const [adresse, setAdresse] = useState('')
   const [remplacerNonVides, setRemplacerNonVides] = useState(false)
   const [date, setDate] = useState<string | null>(null)
@@ -752,34 +909,64 @@ function Propagation({
       onDone()
     },
   })
+  const modifierAdresse = useMutation({
+    mutationFn: () =>
+      updateTrancheAdresseFn({
+        data: { trancheId: tranche!.id, adresse },
+      }),
+    onSuccess: () => {
+      setResultat('Adresse de la tranche enregistrée.')
+      setModale(null)
+      onDone()
+    },
+  })
 
-  if (lectureSeule || restreint('BTN_Propager_aux_lots') || !tranche)
+  const peutPropager = !restreint('BTN_Propager_aux_lots')
+  const peutModifierAdresse = !restreint('BTN_Modifier_adresse_tranche')
+  if (lectureSeule || !tranche || (!peutPropager && !peutModifierAdresse))
     return null
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => {
-          setAdresse(tranche.adresse ?? '')
-          setRemplacerNonVides(false)
-          propagerAdresse.reset()
-          setModale('adresse')
-        }}
-      >
-        Propager l'adresse aux lots
-      </Button>
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => {
-          setDate(versInputDate(tranche.dateLivraisonContractuelle))
-          propagerDate.reset()
-          setModale('date')
-        }}
-      >
-        Propager la date de livraison
-      </Button>
+      {peutPropager && (
+        <>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setAdresse(tranche.adresse ?? '')
+              setRemplacerNonVides(false)
+              propagerAdresse.reset()
+              setModale('adresse')
+            }}
+          >
+            Propager l'adresse aux lots
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setDate(versInputDate(tranche.dateLivraisonContractuelle))
+              propagerDate.reset()
+              setModale('date')
+            }}
+          >
+            Propager la date de livraison
+          </Button>
+        </>
+      )}
+      {peutModifierAdresse && (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            setAdresse(tranche.adresse ?? '')
+            modifierAdresse.reset()
+            setModale('adresseTranche')
+          }}
+        >
+          Modifier l'adresse de la tranche
+        </Button>
+      )}
       {resultat && (
         <span className="text-[12px] text-[var(--muted)]">{resultat}</span>
       )}
@@ -880,6 +1067,49 @@ function Propagation({
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* FEN_Fiche_Tranche_Adresse : un seul champ, l'adresse de la tranche */}
+      <Dialog
+        open={modale === 'adresseTranche'}
+        onOpenChange={(o) => {
+          if (!o) setModale(null)
+        }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Modifier l'adresse de la tranche</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              modifierAdresse.mutate()
+            }}
+          >
+            <div className="grid gap-3">
+              <ChampTexte
+                libelle="Adresse"
+                value={adresse}
+                onChange={setAdresse}
+              />
+            </div>
+            <ErreurMutation erreur={modifierAdresse.error} />
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" size="sm" variant="outline">
+                  Annuler
+                </Button>
+              </DialogClose>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={modifierAdresse.isPending}
+              >
+                Enregistrer
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -920,6 +1150,120 @@ interface EntreeComm {
   avecClauseParticuliere: boolean | null
   motifClauseParticuliereId: number | null
   commentaireClauseParticuliere: string | null
+  estJustifFiscal: boolean | null
+  estFiscalite: boolean | null
+  commFisca: string | null
+  fiscaliteAcquereurId: number | null
+  dateSignatureContratLoc: string | null
+  loyer: number | null
+  epargne: number | null
+  datePrevueSignatureActe: string | null
+  dateSignatureComm: string | null
+  dateSignatureActeVefa: string | null
+  dateLeveeOption: string | null
+  pasAideRm: boolean | null
+  montantSubv: number | null
+  montantSubvAcpte: number | null
+  soldeDemande: boolean | null
+}
+
+// Table de sélection d'un acquéreur (équivalent FEN_RechercheAcquereur) :
+// le combo classique gèle avec ~3 000 entrées, ici recherche + liste bornée
+function ModaleChoixAcquereur({
+  open,
+  onOpenChange,
+  options,
+  onChoisir,
+}: {
+  open: boolean
+  onOpenChange: (o: boolean) => void
+  options: Array<{ id: number; libelle: string | null }>
+  onChoisir: (id: number) => void
+}) {
+  const [filtre, setFiltre] = useState('')
+  useEffect(() => {
+    if (open) setFiltre('')
+  }, [open])
+  const cherche = filtre.trim().toLowerCase()
+  const trouves = cherche
+    ? options.filter((o) => (o.libelle ?? '').toLowerCase().includes(cherche))
+    : options
+  const visibles = trouves.slice(0, 100)
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Choisir un acquéreur</DialogTitle>
+        </DialogHeader>
+        <Input
+          autoFocus
+          placeholder="Rechercher un acquéreur…"
+          value={filtre}
+          onChange={(e) => setFiltre(e.target.value)}
+          className="h-9 text-[13px]"
+        />
+        <div className="max-h-[50vh] overflow-y-auto rounded-md border border-[var(--line-soft)]">
+          {visibles.map((o) => (
+            <button
+              type="button"
+              key={o.id}
+              className="block w-full border-b border-[var(--line-soft)] px-3 py-1.5 text-left text-[13px] last:border-b-0 hover:bg-[var(--gold-tint)]"
+              onClick={() => {
+                onChoisir(o.id)
+                onOpenChange(false)
+              }}
+            >
+              {o.libelle || '—'}
+            </button>
+          ))}
+          {visibles.length === 0 && (
+            <p className="px-3 py-2 text-[13px] text-[var(--muted)]">
+              Aucun acquéreur trouvé.
+            </p>
+          )}
+        </div>
+        <p className="text-[12px] text-[var(--muted)]">
+          {trouves.length} acquéreur(s)
+          {trouves.length > visibles.length
+            ? ` — ${visibles.length} affichés, affinez la recherche`
+            : ''}
+        </p>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Section de la modale portant le nom d'un onglet du détail : mise en
+// évidence (fond doré + défilement) quand la modale s'ouvre depuis « Modifier »
+// avec cet onglet actif
+function SectionOnglet({
+  titre,
+  actif,
+  children,
+}: {
+  titre: string
+  actif: boolean
+  children: React.ReactNode
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    // après le montage du contenu Radix, sinon le scroll est perdu
+    if (actif)
+      setTimeout(() => ref.current?.scrollIntoView({ block: 'center' }), 0)
+  }, [actif])
+  return (
+    <div
+      ref={ref}
+      className={`grid gap-3 sm:col-span-2 sm:grid-cols-2 ${
+        actif
+          ? 'rounded-lg bg-[var(--gold-tint)] p-3 ring-1 ring-[var(--gold)]'
+          : ''
+      }`}
+    >
+      <SousTitre>{titre}</SousTitre>
+      {children}
+    </div>
+  )
 }
 
 function ModaleCommercialisation({
@@ -928,6 +1272,7 @@ function ModaleCommercialisation({
   open,
   onOpenChange,
   nomenclatures,
+  ongletActif,
   onDone,
 }: {
   lotId: number
@@ -936,6 +1281,8 @@ function ModaleCommercialisation({
   open: boolean
   onOpenChange: (o: boolean) => void
   nomenclatures: Nomenclatures | undefined
+  /** onglet du détail actif à l'ouverture — met en évidence la section homonyme */
+  ongletActif?: Onglet
   onDone: () => void
 }) {
   const vide: EntreeComm = {
@@ -968,6 +1315,21 @@ function ModaleCommercialisation({
     avecClauseParticuliere: null,
     motifClauseParticuliereId: null,
     commentaireClauseParticuliere: null,
+    estJustifFiscal: null,
+    estFiscalite: null,
+    commFisca: null,
+    fiscaliteAcquereurId: null,
+    dateSignatureContratLoc: null,
+    loyer: null,
+    epargne: null,
+    datePrevueSignatureActe: null,
+    dateSignatureComm: null,
+    dateSignatureActeVefa: null,
+    dateLeveeOption: null,
+    pasAideRm: null,
+    montantSubv: null,
+    montantSubvAcpte: null,
+    soldeDemande: null,
   }
   const depuisLigne = (l: LigneComm): EntreeComm => ({
     lotId,
@@ -1000,10 +1362,26 @@ function ModaleCommercialisation({
       l.avecClauseParticuliere == null ? null : !!l.avecClauseParticuliere,
     motifClauseParticuliereId: l.motifClauseParticuliereId,
     commentaireClauseParticuliere: l.commentaireClauseParticuliere,
+    estJustifFiscal: l.estJustifFiscal,
+    estFiscalite: l.estFiscalite,
+    commFisca: l.commFisca,
+    fiscaliteAcquereurId: l.fiscaliteAcquereurId,
+    dateSignatureContratLoc: versInputDate(l.dateSignatureContratLoc),
+    loyer: l.loyer,
+    epargne: l.epargne,
+    datePrevueSignatureActe: versInputDate(l.datePrevueSignatureActe),
+    dateSignatureComm: l.dateSignatureComm,
+    dateSignatureActeVefa: versInputDate(l.dateSignatureActeVefa),
+    dateLeveeOption: versInputDate(l.dateLeveeOption),
+    pasAideRm: l.pasAideRm,
+    montantSubv: l.montantSubv,
+    montantSubvAcpte: l.montantSubvAcpte,
+    soldeDemande: l.soldeDemande,
   })
   const [valeurs, setValeurs] = useState<EntreeComm>(() =>
     ligne ? depuisLigne(ligne) : vide,
   )
+  const [choixAcquereur, setChoixAcquereur] = useState(false)
   const enregistrer = useMutation({
     mutationFn: (v: EntreeComm) =>
       saveCommercialisationFn({
@@ -1042,12 +1420,36 @@ function ModaleCommercialisation({
         >
           <div className="grid gap-3 sm:grid-cols-2">
             <SousTitre>Réservation</SousTitre>
-            <ChampSelectId
-              libelle="Acquéreur"
-              value={valeurs.acquereurId}
-              onChange={set('acquereurId')}
-              options={nomenclatures?.acquereurs ?? []}
-            />
+            {ligne ? (
+              // acquéreur non modifiable sur une réservation existante :
+              // libellé seul (changement d'acquéreur = annulation + nouvelle
+              // résa, comme dans WinDev)
+              <ChampForm libelle="Acquéreur">
+                <p className="flex h-9 items-center text-[13px] text-[var(--ink)]">
+                  {ligne.acquereur ?? '—'}
+                </p>
+              </ChampForm>
+            ) : (
+              // pas de combo (~3 000 entrées) : libellé + table de recherche,
+              // comme FEN_RechercheAcquereur dans WinDev
+              <ChampForm libelle="Acquéreur">
+                <div className="flex h-9 items-center gap-2">
+                  <span className="min-w-0 flex-1 truncate text-[13px] text-[var(--ink)]">
+                    {nomenclatures?.acquereurs.find(
+                      (o) => o.id === valeurs.acquereurId,
+                    )?.libelle ?? '—'}
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setChoixAcquereur(true)}
+                  >
+                    Choisir…
+                  </Button>
+                </div>
+              </ChampForm>
+            )}
             <ChampSelectId
               libelle="Nature achat"
               value={valeurs.natureAchatId}
@@ -1198,6 +1600,104 @@ function ModaleCommercialisation({
                 }
               />
             </div>
+            {/* zones jaunes WinDev : saisies en ligne dans la table, ici en
+                sections homonymes des onglets */}
+            <SectionOnglet
+              titre="Fiscalité"
+              actif={ligne != null && ongletActif === 'Fiscalité'}
+            >
+              <ChampBascule
+                libelle="Justif fiscal ?"
+                checked={!!valeurs.estJustifFiscal}
+                onChange={set('estJustifFiscal')}
+              />
+              <ChampBascule
+                libelle="Fiscalité ?"
+                checked={!!valeurs.estFiscalite}
+                onChange={set('estFiscalite')}
+              />
+              <ChampTexte
+                libelle="Comm Fisca"
+                value={valeurs.commFisca ?? ''}
+                onChange={(v) => set('commFisca')(v || null)}
+              />
+              <ChampSelectId
+                libelle="Fiscalité acquéreur"
+                value={valeurs.fiscaliteAcquereurId}
+                onChange={set('fiscaliteAcquereurId')}
+                options={nomenclatures?.fiscalitesAcquereur ?? []}
+              />
+            </SectionOnglet>
+            <SectionOnglet
+              titre="Contrat Loc. Accession"
+              actif={ligne != null && ongletActif === 'Contrat Loc. Accession'}
+            >
+              <ChampDate
+                libelle="Date signature contrat loc"
+                value={valeurs.dateSignatureContratLoc}
+                onChange={set('dateSignatureContratLoc')}
+              />
+              <ChampNombre
+                libelle="Loyer"
+                value={valeurs.loyer}
+                onChange={set('loyer')}
+              />
+              <ChampNombre
+                libelle="Epargne"
+                value={valeurs.epargne}
+                onChange={set('epargne')}
+              />
+            </SectionOnglet>
+            <SectionOnglet
+              titre="Prév. signature actes"
+              actif={ligne != null && ongletActif === 'Prév. signature actes'}
+            >
+              <ChampDate
+                libelle="Date prévue signature acte"
+                value={valeurs.datePrevueSignatureActe}
+                onChange={set('datePrevueSignatureActe')}
+              />
+              <ChampTexte
+                libelle="Commentaire"
+                value={valeurs.dateSignatureComm ?? ''}
+                onChange={(v) => set('dateSignatureComm')(v || null)}
+              />
+            </SectionOnglet>
+            <SectionOnglet
+              titre="Actes"
+              actif={ligne != null && ongletActif === 'Actes'}
+            >
+              <ChampDate
+                libelle="Date signature Acte VEFA"
+                value={valeurs.dateSignatureActeVefa}
+                onChange={set('dateSignatureActeVefa')}
+              />
+              <ChampDate
+                libelle="Date levée option"
+                value={valeurs.dateLeveeOption}
+                onChange={set('dateLeveeOption')}
+              />
+              <ChampBascule
+                libelle="Pas d'aide RM"
+                checked={!!valeurs.pasAideRm}
+                onChange={set('pasAideRm')}
+              />
+              <ChampBascule
+                libelle="Solde demandé"
+                checked={!!valeurs.soldeDemande}
+                onChange={set('soldeDemande')}
+              />
+              <ChampNombre
+                libelle="Montant subv"
+                value={valeurs.montantSubv}
+                onChange={set('montantSubv')}
+              />
+              <ChampNombre
+                libelle="Montant subv acompte"
+                value={valeurs.montantSubvAcpte}
+                onChange={set('montantSubvAcpte')}
+              />
+            </SectionOnglet>
           </div>
           <ErreurMutation erreur={enregistrer.error} />
           <DialogFooter>
@@ -1211,6 +1711,12 @@ function ModaleCommercialisation({
             </Button>
           </DialogFooter>
         </form>
+        <ModaleChoixAcquereur
+          open={choixAcquereur}
+          onOpenChange={setChoixAcquereur}
+          options={nomenclatures?.acquereurs ?? []}
+          onChoisir={set('acquereurId')}
+        />
       </DialogContent>
     </Dialog>
   )
