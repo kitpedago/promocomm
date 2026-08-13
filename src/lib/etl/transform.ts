@@ -280,11 +280,12 @@ const copies: Array<Copy> = [
     select: `SELECT s."IDSIE", COALESCE(s."Libelle", ''), s."Adresse", s."CP", s."Commune"
       FROM legacy."tSIE" s`,
   },
+  nomenclature('fonction', 'tFonction', 'IDFonction'),
   {
     target: 'personne',
     cols: '(id, patronyme, prenom, est_present, fonction_id, equipe_personne_id, email)',
     select: `SELECT s."IDPersonne", s."Patronyme", s."Prenom", s."EstPresent",
-        s."IDFonction", ${fk('IDEquipePersonne')}, s."EMail"
+        ${fk('IDFonction')}, ${fk('IDEquipePersonne')}, s."EMail"
       FROM legacy."tPersonne" s`,
   },
   {
@@ -476,6 +477,14 @@ const copies: Array<Copy> = [
         s."MontantAgrement", s."MontantProvisoire", s."MontantDefinitif",
         s."BudgetPreviMontant", s."BudgetPreviCommentaire", s."FinDeSuivi", s."Commentaire"
       FROM legacy."tSubvention" s`,
+  },
+  {
+    target: 'contentieux',
+    cols: '(id, operation_id, objet, date_debut, date_fin, avocats, commentaires)',
+    select: `SELECT s."IDContentieux",
+        ${fkSafe('IDOperation', 'tOperation', 'IDOperation')},
+        s."Objet", s."DateDebut", s."DateFin", s."Avocats", s."Commentaires"
+      FROM legacy."Contentieux" s`,
   },
   // --- dimension financière : tables métier ---
   {
@@ -803,7 +812,8 @@ const copies: Array<Copy> = [
             revenus_foyer_fiscal, annee_declaration, revenus_net_imposable_nm1, revenu_net_foyer_mensuel,
             pension_autres_revenus, loyer_actuel, prix_achat, taux_tva, apport_reel_hors_subvention, subvention,
             est_ptz, multi_accedant, mensualite_financement, taux_effort, duree_financement_mois,
-            conseiller_commercial_id, info_pour_entreprise, commentaire, date_creation, date_modification)`,
+            conseiller_commercial_id, primo_accedant, etape, enquete_a, enquete_b, enquete_c,
+            info_pour_entreprise, commentaire, date_creation, date_modification)`,
     select: `SELECT s."IDAcquereur", s."Code", ${fk('IDCivilite')}, s."Patronyme", s."Prenom",
         ${fk('IDCivilite2')}, s."Patronyme2", s."Prenom2", ${fk('IDCivilite3')}, s."Patronyme3", s."Prenom3",
         s."NomComplet", s."RS", ${fk('NatureJuridique')},
@@ -819,7 +829,8 @@ const copies: Array<Copy> = [
         s."RevenusFoyerFiscal", s."AnneeDeDeclaration", s."RevenusNetImposableNMoins1", s."RevenuNetFoyerMensuel",
         s."PensionEtAutresRevenus", s."LoyerActuel", s."PrixDAchat", s."TauxTVA", s."ApportReelADateHorsSubvention", s."Subvention",
         s."EstPTZ", s."MultiAccedant", s."MensualiteDuFinancementClient", s."TauxEffort", s."DureeFinancementEnMois",
-        ${fk('IDConseillerCommercial')}, s."InfoPourEntreprise", s."Commentaire", s."DateCreation", s."DateModification"
+        ${fk('IDConseillerCommercial')}, s."PrimoAccedant", s."Etape", s."EnqueteA", s."EnqueteB", s."EnqueteC",
+        s."InfoPourEntreprise", s."Commentaire", s."DateCreation", s."DateModification"
       FROM legacy."tAcquereur" s`,
   },
   {

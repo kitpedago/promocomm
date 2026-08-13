@@ -215,15 +215,20 @@ export const sie = pgTable('sie', {
   commune: text(),
 })
 
-// Collaborateurs internes (legacy tPersonne) — seuls les comptables
-// (fonction_id = 1) sont utilisés par le module SCCV ; fonction_id et
-// equipe_personne_id repris bruts, sans table de référence (pas d'écran)
+// Fonctions des collaborateurs (legacy tFonction — 4 valeurs figées)
+export const fonction = pgTable('fonction', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+// Collaborateurs internes (legacy tPersonne) — le module SCCV filtre les
+// comptables (fonction_id = 1)
 export const personne = pgTable('personne', {
   id: id(),
   patronyme: text(),
   prenom: text(),
   estPresent: boolean('est_present'),
-  fonctionId: integer('fonction_id'),
+  fonctionId: integer('fonction_id').references(() => fonction.id),
   equipePersonneId: integer('equipe_personne_id'),
   email: text(),
 })
@@ -592,9 +597,9 @@ export const tranche = pgTable('tranche', {
   listeAvancementActuelId: integer('liste_avancement_actuel_id').references(
     () => listeAvancement.id,
   ),
-  listeAvancementProchainId: integer(
-    'liste_avancement_prochain_id',
-  ).references(() => listeAvancement.id),
+  listeAvancementProchainId: integer('liste_avancement_prochain_id').references(
+    () => listeAvancement.id,
+  ),
   listeAvancementSuiviActuelId: integer(
     'liste_avancement_suivi_actuel_id',
   ).references(() => listeAvancement.id),
@@ -636,6 +641,18 @@ export const subvention = pgTable('subvention', {
   budgetPreviCommentaire: text('budget_previ_commentaire'),
   finDeSuivi: boolean('fin_de_suivi'),
   commentaire: text(),
+})
+
+// Contentieux de l'opération (FEN_Table_Contentieux) — table legacy vide à ce
+// jour : l'écran sert surtout à démarrer la saisie côté app
+export const contentieux = pgTable('contentieux', {
+  id: id(),
+  operationId: integer('operation_id').references(() => operation.id),
+  objet: text(),
+  dateDebut: timestamp('date_debut'),
+  dateFin: timestamp('date_fin'),
+  avocats: text(),
+  commentaires: text(),
 })
 
 export const commercial = pgTable('commercial', {
@@ -723,7 +740,7 @@ export const acquereur = pgTable('acquereur', {
   prixAchat: montant('prix_achat'),
   tauxTva: real('taux_tva'),
   apportReelHorsSubvention: montant('apport_reel_hors_subvention'),
-  subvention: montant(),
+  subvention: montant('subvention'),
   estPtz: boolean('est_ptz'),
   multiAccedant: boolean('multi_accedant'),
   mensualiteFinancement: montant('mensualite_financement'),
@@ -732,6 +749,13 @@ export const acquereur = pgTable('acquereur', {
   conseillerCommercialId: integer('conseiller_commercial_id').references(
     () => commercial.id,
   ),
+  // texte libre legacy : « oui »/« non »/« -1 » mélangés — nettoyage post-bascule
+  primoAccedant: text('primo_accedant'),
+  // suivi enquêtes « À votre écoute » : dates et mentions libres mélangées
+  etape: text(),
+  enqueteA: text('enquete_a'),
+  enqueteB: text('enquete_b'),
+  enqueteC: text('enquete_c'),
   infoPourEntreprise: text('info_pour_entreprise'),
   commentaire: text(),
   dateCreation: timestamp('date_creation'),
@@ -851,8 +875,8 @@ export const commercialisation = pgTable('commercialisation', {
   estFiscalite: boolean('est_fiscalite'),
   commFisca: text('comm_fisca'),
   estJustifFiscal: boolean('est_justif_fiscal'),
-  loyer: montant(),
-  epargne: montant(),
+  loyer: montant('loyer'),
+  epargne: montant('epargne'),
   pasAideRm: boolean('pas_aide_rm'),
   montantSubv: montant('montant_subv'),
   montantSubvAcpte: montant('montant_subv_acpte'),
