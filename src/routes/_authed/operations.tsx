@@ -3,21 +3,45 @@
 // de la tranche (Stade d'avancement, Terrain, Subventions, Informations diverses).
 // Références : migration_windev/captures_ecrans/Opérations.png,
 // Opération_OngletTerrain.png, Opération_OngletInfoDiverses.png.
-import { useQuery } from '@tanstack/react-query'
-import { ChevronDown } from 'lucide-react'
+import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ChevronDown, Pencil } from 'lucide-react'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 
 import Champ from '#/components/Champ'
+import {
+  BoutonsTable,
+  ChampDate,
+  ChampSelectId,
+  ChampTexte,
+  ChampTexteLong,
+  ErreurMutation,
+  versInputDate,
+} from '#/components/ChampsModale'
 import DataTable from '#/components/DataTable'
 import Onglets from '#/components/Onglets'
 import PanneauOperations from '#/components/PanneauOperations'
 import SelecteurTranche, { libelleTranche } from '#/components/SelecteurTranche'
+import { Button } from '#/components/ui/button'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '#/components/ui/dialog'
 import { Switch } from '#/components/ui/switch'
 import {
+  deleteContentieuxFn,
+  getContentieuxFn,
   getOperationFicheFn,
   getStadesFn,
   getSubventionsFn,
+  saveContentieuxFn,
+  saveOperationContactsFn,
 } from '#/lib/operations.ts'
+import { getOtlOptionsFn } from '#/lib/parametres.otl.ts'
 import {
   selectionARejouer,
   useMemoriserSelection,
@@ -45,6 +69,7 @@ export const Route = createFileRoute('/_authed/operations')({
     // SSR : pas de clignotement, et l'URL reste partageable.
     const selection = selectionARejouer(context.prefs, search.op)
     if (selection) throw redirect({ to: '/operations', search: selection })
+    return { lectureSeule: context.session.user.service === 'consultation' }
   },
   component: PageOperations,
 })
@@ -83,7 +108,9 @@ function Case({ libelle, actif }: { libelle: string; actif?: boolean | null }) {
 
 function PageOperations() {
   const { op, tranche } = Route.useSearch()
+  const { lectureSeule } = Route.useRouteContext()
   const navigate = useNavigate({ from: Route.fullPath })
+  const [modaleContacts, setModaleContacts] = useState(false)
 
   const fiche = useQuery({
     queryKey: ['operation-fiche', op],
@@ -152,6 +179,21 @@ function PageOperations() {
                 <h2 className="text-[15.5px] font-bold text-[var(--ink)]">
                   Détails opération
                 </h2>
+                {!lectureSeule && t && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="ml-auto"
+                    onClick={(e) => {
+                      // ne pas replier/déplier le bloc <details>
+                      e.preventDefault()
+                      setModaleContacts(true)
+                    }}
+                  >
+                    <Pencil className="h-3.5 w-3.5" aria-hidden />
+                    Modifier
+                  </Button>
+                )}
               </summary>
               <div className="grid gap-x-8 gap-y-4 px-[18px] py-4 md:grid-cols-2 xl:grid-cols-3">
                 <div className="flex flex-col gap-3">
@@ -217,11 +259,153 @@ function PageOperations() {
               />
             </div>
 
-            {t && <OngletsTranche tranche={t} />}
+            {t && (
+              <OngletsTranche
+                tranche={t}
+                operationId={d.id}
+                lectureSeule={lectureSeule}
+              />
+            )}
+
+            {t && (
+              <ModaleContacts
+                fiche={d}
+                tranche={t}
+                open={modaleContacts}
+                onOpenChange={setModaleContacts}
+              />
+            )}
           </>
         )}
       </div>
     </div>
+  )
+}
+
+// Modale du bouton « Modifier » : notaires de l'opération et architectes de
+// la tranche (boutons Modifier/Notaires/Architectes de la capture WinDev —
+// la gestion des listes elles-mêmes est dans Paramètres > OTL)
+function ModaleContacts({
+  fiche,
+  tranche: t,
+  open,
+  onOpenChange,
+}: {
+  fiche: Fiche
+  tranche: LigneTranche
+  open: boolean
+  onOpenChange: (o: boolean) => void
+}) {
+  const queryClient = useQueryClient()
+  const options = useQuery({
+    queryKey: ['otl-options'],
+    queryFn: () => getOtlOptionsFn(),
+    staleTime: 300_000,
+    enabled: open,
+  }).data
+
+  const [valeurs, setValeurs] = useState({
+    notaireVenteId: fiche.notaireVenteId,
+    clercVenteId: fiche.clercVenteId,
+    notaireFoncierId: fiche.notaireFoncierId,
+    clercFoncierId: fiche.clercFoncierId,
+    architecteMandataireId: t.architecteMandataireId,
+    architecteCotraitantId: t.architecteCotraitantId,
+  })
+  // resynchronise la fiche affichée à chaque ouverture (autre op/tranche)
+  const [cleOuverture, setCleOuverture] = useState<string | null>(null)
+  const cle = `${fiche.id}:${t.id}:${open}`
+  if (open && cle !== cleOuverture) {
+    setCleOuverture(cle)
+    setValeurs({
+      notaireVenteId: fiche.notaireVenteId,
+      clercVenteId: fiche.clercVenteId,
+      notaireFoncierId: fiche.notaireFoncierId,
+      clercFoncierId: fiche.clercFoncierId,
+      architecteMandataireId: t.architecteMandataireId,
+      architecteCotraitantId: t.architecteCotraitantId,
+    })
+  }
+  const set = (k: keyof typeof valeurs) => (v: number | null) =>
+    setValeurs((s) => ({ ...s, [k]: v }))
+
+  const enregistrer = useMutation({
+    mutationFn: () =>
+      saveOperationContactsFn({
+        data: { operationId: fiche.id, trancheId: t.id, ...valeurs },
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['operation-fiche', fiche.id],
+      })
+      onOpenChange(false)
+    },
+  })
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Modifier — notaires et architectes</DialogTitle>
+        </DialogHeader>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            enregistrer.mutate()
+          }}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <ChampSelectId
+              libelle="Notaire Vente"
+              value={valeurs.notaireVenteId}
+              onChange={set('notaireVenteId')}
+              options={options?.notaires ?? []}
+            />
+            <ChampSelectId
+              libelle="Clerc Vente"
+              value={valeurs.clercVenteId}
+              onChange={set('clercVenteId')}
+              options={options?.notaires ?? []}
+            />
+            <ChampSelectId
+              libelle="Notaire Foncier"
+              value={valeurs.notaireFoncierId}
+              onChange={set('notaireFoncierId')}
+              options={options?.notaires ?? []}
+            />
+            <ChampSelectId
+              libelle="Clerc Foncier"
+              value={valeurs.clercFoncierId}
+              onChange={set('clercFoncierId')}
+              options={options?.notaires ?? []}
+            />
+            <ChampSelectId
+              libelle={`Architecte mandataire (tranche ${libelleTranche(t)})`}
+              value={valeurs.architecteMandataireId}
+              onChange={set('architecteMandataireId')}
+              options={options?.architectes ?? []}
+            />
+            <ChampSelectId
+              libelle={`Architecte cotraitant (tranche ${libelleTranche(t)})`}
+              value={valeurs.architecteCotraitantId}
+              onChange={set('architecteCotraitantId')}
+              options={options?.architectes ?? []}
+            />
+          </div>
+          <ErreurMutation erreur={enregistrer.error} />
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" size="sm" variant="outline">
+                Annuler
+              </Button>
+            </DialogClose>
+            <Button type="submit" size="sm" disabled={enregistrer.isPending}>
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -236,12 +420,14 @@ const ONGLETS = [
   'Terrain',
   'Subventions',
   'Informations diverses',
+  'Contentieux',
 ] as const
 type Onglet = (typeof ONGLETS)[number]
 
 type LigneTranche = Fiche['tranches'][number]
 type LigneStade = Awaited<ReturnType<typeof getStadesFn>>[number]
 type LigneSubvention = Awaited<ReturnType<typeof getSubventionsFn>>[number]
+type LigneContentieux = Awaited<ReturnType<typeof getContentieuxFn>>[number]
 
 const colDate = <T,>(
   id: string,
@@ -347,6 +533,24 @@ const COLONNES_SUBVENTIONS: Array<ColumnDef<LigneSubvention, any>> = [
   { accessorKey: 'commentaire', header: 'Commentaire', size: 240 },
 ]
 
+// Onglet Contentieux — colonnes de FEN_Table_Contentieux (par opération)
+const COLONNES_CONTENTIEUX: Array<ColumnDef<LigneContentieux, any>> = [
+  {
+    accessorKey: 'objet',
+    header: 'Objet',
+    size: 280,
+    cell: (c) => (
+      <span className="font-medium text-[var(--ink)]">
+        {c.getValue() ?? '—'}
+      </span>
+    ),
+  },
+  colDate('dateDebut', 'Date début'),
+  colDate('dateFin', 'Date fin'),
+  { accessorKey: 'avocats', header: 'Avocats', size: 220 },
+  { accessorKey: 'commentaires', header: 'Commentaires', size: 320 },
+]
+
 // libellé de bloc bleu des captures WinDev
 function Bloc({
   titre,
@@ -368,7 +572,15 @@ function Bloc({
 const pourcent = (n: number | null | undefined) =>
   n != null ? `${(n * 100).toFixed(2).replace('.', ',')} %` : null
 
-function OngletsTranche({ tranche: t }: { tranche: LigneTranche }) {
+function OngletsTranche({
+  tranche: t,
+  operationId,
+  lectureSeule,
+}: {
+  tranche: LigneTranche
+  operationId: number
+  lectureSeule: boolean
+}) {
   const [ongletStocke, setOnglet] = usePref<Onglet>(
     'onglet:operations',
     ONGLETS[0],
@@ -385,6 +597,11 @@ function OngletsTranche({ tranche: t }: { tranche: LigneTranche }) {
     queryKey: ['subventions', t.id],
     queryFn: () => getSubventionsFn({ data: { trancheId: t.id } }),
     enabled: onglet === 'Subventions',
+  })
+  const litiges = useQuery({
+    queryKey: ['contentieux', operationId],
+    queryFn: () => getContentieuxFn({ data: { operationId } }),
+    enabled: onglet === 'Contentieux',
   })
 
   return (
@@ -512,6 +729,15 @@ function OngletsTranche({ tranche: t }: { tranche: LigneTranche }) {
           </div>
         )}
 
+        {onglet === 'Contentieux' && (
+          <OngletContentieux
+            operationId={operationId}
+            lignes={litiges.data ?? []}
+            chargement={litiges.isLoading}
+            lectureSeule={lectureSeule}
+          />
+        )}
+
         {onglet === 'Informations diverses' && (
           <div className="grid gap-x-8 gap-y-6 md:grid-cols-2">
             <Bloc titre="Certification & Label">
@@ -538,5 +764,194 @@ function OngletsTranche({ tranche: t }: { tranche: LigneTranche }) {
         )}
       </div>
     </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Onglet Contentieux : table CRUD par opération (FEN_Table_Contentieux)
+// ---------------------------------------------------------------------------
+
+function OngletContentieux({
+  operationId,
+  lignes,
+  chargement,
+  lectureSeule,
+}: {
+  operationId: number
+  lignes: Array<LigneContentieux>
+  chargement: boolean
+  lectureSeule: boolean
+}) {
+  const queryClient = useQueryClient()
+  const [selection, setSelection] = useState<number | null>(null)
+  const [modale, setModale] = useState<LigneContentieux | 'creation' | null>(
+    null,
+  )
+
+  const invalider = () =>
+    void queryClient.invalidateQueries({
+      queryKey: ['contentieux', operationId],
+    })
+  const supprimer = useMutation({
+    mutationFn: (id: number) => deleteContentieuxFn({ data: { id } }),
+    onSuccess: () => {
+      invalider()
+      setSelection(null)
+    },
+  })
+
+  return (
+    <div className="flex h-full min-h-0 flex-col gap-2">
+      {!lectureSeule && (
+        <BoutonsTable
+          selection={selection}
+          onNouveau={() => setModale('creation')}
+          onModifier={() => {
+            const l = lignes.find((x) => x.id === selection)
+            if (l) setModale(l)
+          }}
+          onSupprimer={() => {
+            if (selection != null) supprimer.mutate(selection)
+          }}
+          confirmation="Voulez-vous vraiment supprimer la ligne ?"
+        />
+      )}
+      <ErreurMutation erreur={supprimer.error} />
+      <DataTable
+        id="operations-contentieux"
+        columns={COLONNES_CONTENTIEUX}
+        data={lignes}
+        unite="contentieux"
+        getRowId={(r) => String(r.id)}
+        selectedRowId={selection != null ? String(selection) : null}
+        onRowClick={(r) => setSelection(r.id)}
+        emptyText={
+          chargement ? 'Chargement…' : 'Aucun contentieux sur cette opération.'
+        }
+      />
+      <ModaleContentieux
+        operationId={operationId}
+        ligne={modale === 'creation' ? null : modale}
+        open={modale != null}
+        onOpenChange={(o) => {
+          if (!o) setModale(null)
+        }}
+        onSuccess={invalider}
+      />
+    </div>
+  )
+}
+
+function ModaleContentieux({
+  operationId,
+  ligne,
+  open,
+  onOpenChange,
+  onSuccess,
+}: {
+  operationId: number
+  ligne: LigneContentieux | null
+  open: boolean
+  onOpenChange: (o: boolean) => void
+  onSuccess: () => void
+}) {
+  const vierge = {
+    objet: '',
+    dateDebut: null as string | null,
+    dateFin: null as string | null,
+    avocats: '',
+    commentaires: '',
+  }
+  const [valeurs, setValeurs] = useState(vierge)
+  // recharge la ligne à l'ouverture (création ↔ modification)
+  const [cleOuverture, setCleOuverture] = useState<string | null>(null)
+  const cle = `${ligne?.id ?? 'creation'}:${open}`
+  if (open && cle !== cleOuverture) {
+    setCleOuverture(cle)
+    setValeurs(
+      ligne
+        ? {
+            objet: ligne.objet ?? '',
+            dateDebut: versInputDate(ligne.dateDebut),
+            dateFin: versInputDate(ligne.dateFin),
+            avocats: ligne.avocats ?? '',
+            commentaires: ligne.commentaires ?? '',
+          }
+        : vierge,
+    )
+  }
+
+  const enregistrer = useMutation({
+    mutationFn: () =>
+      saveContentieuxFn({
+        data: { ...valeurs, operationId, id: ligne?.id },
+      }),
+    onSuccess: () => {
+      onSuccess()
+      onOpenChange(false)
+    },
+  })
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>
+            {ligne ? 'Modifier le contentieux' : 'Nouveau contentieux'}
+          </DialogTitle>
+        </DialogHeader>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            enregistrer.mutate()
+          }}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <ChampTexte
+                libelle="Objet"
+                value={valeurs.objet}
+                onChange={(v) => setValeurs((s) => ({ ...s, objet: v }))}
+              />
+            </div>
+            <ChampDate
+              libelle="Date début"
+              value={valeurs.dateDebut}
+              onChange={(v) => setValeurs((s) => ({ ...s, dateDebut: v }))}
+            />
+            <ChampDate
+              libelle="Date fin"
+              value={valeurs.dateFin}
+              onChange={(v) => setValeurs((s) => ({ ...s, dateFin: v }))}
+            />
+            <div className="sm:col-span-2">
+              <ChampTexte
+                libelle="Avocats"
+                value={valeurs.avocats}
+                onChange={(v) => setValeurs((s) => ({ ...s, avocats: v }))}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <ChampTexteLong
+                libelle="Commentaires"
+                value={valeurs.commentaires}
+                onChange={(v) => setValeurs((s) => ({ ...s, commentaires: v }))}
+              />
+            </div>
+          </div>
+          <ErreurMutation erreur={enregistrer.error} />
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" size="sm" variant="outline">
+                Annuler
+              </Button>
+            </DialogClose>
+            <Button type="submit" size="sm" disabled={enregistrer.isPending}>
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }

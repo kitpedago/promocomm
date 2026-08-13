@@ -11,6 +11,7 @@ import {
   personne,
   categorieSubvention,
   certification,
+  contentieux,
   etudeNotaire,
   interlocuteurNotaire,
   label,
@@ -27,7 +28,7 @@ import {
   missionMoeInterne,
 } from '#/db/domaine.ts'
 import { db } from '#/db/index.ts'
-import { requireSession } from '#/lib/session.server.ts'
+import { requireEcriture, requireSession } from '#/lib/session.server.ts'
 
 const archiMandataire = alias(architecte, 'archi_mandataire')
 const chargeOpe1 = alias(personne, 'charge_ope1')
@@ -116,6 +117,8 @@ export const getOperationFicheFn = createServerFn({ method: 'GET' })
         nbLogtIndiv: tranche.nbLogtIndiv,
         dontLogtIndivPsla: tranche.dontLogtIndivPsla,
         dontLogtIndivBrs: tranche.dontLogtIndivBrs,
+        architecteMandataireId: tranche.architecteMandataireId,
+        architecteCotraitantId: tranche.architecteCotraitantId,
         architecteMandataire: archiMandataire.rs,
         architecteCotraitant: archiCotraitant.rs,
         // onglet Terrain
@@ -265,4 +268,104 @@ export const getSubventionsFn = createServerFn({ method: 'GET' })
       )
       .where(eq(subvention.trancheId, data.trancheId))
       .orderBy(asc(subvention.dateConvention))
+  })
+
+// ---------------------------------------------------------------------------
+// Onglet « Contentieux » — table par opération (FEN_Table_Contentieux)
+// ---------------------------------------------------------------------------
+
+const versDate = (s: string | null | undefined) => (s ? new Date(s) : null)
+
+export const getContentieuxFn = createServerFn({ method: 'GET' })
+  .validator((data: { operationId: number }) => data)
+  .handler(async ({ data }) => {
+    await requireSession()
+    return db
+      .select()
+      .from(contentieux)
+      .where(eq(contentieux.operationId, data.operationId))
+      .orderBy(asc(contentieux.dateDebut), asc(contentieux.id))
+  })
+
+interface FicheContentieux {
+  id?: number
+  operationId: number
+  objet?: string | null
+  dateDebut?: string | null
+  dateFin?: string | null
+  avocats?: string | null
+  commentaires?: string | null
+}
+
+export const saveContentieuxFn = createServerFn({ method: 'POST' })
+  .validator((d: FicheContentieux) => d)
+  .handler(async ({ data }) => {
+    await requireEcriture()
+    const valeurs = {
+      operationId: data.operationId,
+      objet: data.objet || null,
+      dateDebut: versDate(data.dateDebut),
+      dateFin: versDate(data.dateFin),
+      avocats: data.avocats || null,
+      commentaires: data.commentaires || null,
+    }
+    if (data.id) {
+      const touchees = await db
+        .update(contentieux)
+        .set(valeurs)
+        .where(eq(contentieux.id, data.id))
+        .returning({ id: contentieux.id })
+      if (touchees.length === 0) throw new Error('Ligne introuvable')
+      return { id: data.id }
+    }
+    const [cree] = await db
+      .insert(contentieux)
+      .values(valeurs)
+      .returning({ id: contentieux.id })
+    return { id: cree.id }
+  })
+
+export const deleteContentieuxFn = createServerFn({ method: 'POST' })
+  .validator((d: { id: number }) => d)
+  .handler(async ({ data }) => {
+    await requireEcriture()
+    await db.delete(contentieux).where(eq(contentieux.id, data.id))
+  })
+
+// Bouton « Modifier » du bloc Détails opération : notaires (opération) et
+// architectes (tranche), cf. boutons Modifier/Notaires/Architectes WinDev.
+// Les listes viennent de getOtlOptionsFn (Paramètres > OTL).
+export const saveOperationContactsFn = createServerFn({ method: 'POST' })
+  .validator(
+    (d: {
+      operationId: number
+      trancheId: number
+      notaireVenteId: number | null
+      clercVenteId: number | null
+      notaireFoncierId: number | null
+      clercFoncierId: number | null
+      architecteMandataireId: number | null
+      architecteCotraitantId: number | null
+    }) => d,
+  )
+  .handler(async ({ data }) => {
+    await requireEcriture()
+    const touchees = await db
+      .update(operation)
+      .set({
+        notaireVenteId: data.notaireVenteId,
+        clercVenteId: data.clercVenteId,
+        notaireFoncierId: data.notaireFoncierId,
+        clercFoncierId: data.clercFoncierId,
+      })
+      .where(eq(operation.id, data.operationId))
+      .returning({ id: operation.id })
+    if (touchees.length === 0) throw new Error('Opération introuvable')
+    await db
+      .update(tranche)
+      .set({
+        architecteMandataireId: data.architecteMandataireId,
+        architecteCotraitantId: data.architecteCotraitantId,
+      })
+      .where(eq(tranche.id, data.trancheId))
   })
