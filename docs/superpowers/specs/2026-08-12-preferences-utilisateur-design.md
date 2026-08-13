@@ -30,13 +30,13 @@ ne sont pas mémorisés du tout.
 
 ## Décisions
 
-| Sujet | Décision |
-|---|---|
-| Stockage | PostgreSQL, table applicative, **hors** `src/db/domaine.ts` → survit aux réimports `.bak` |
-| Forme | Clé/valeur JSONB, une ligne par préférence, PK `(user_id, cle)` |
-| `localStorage` | **Supprimé.** Les préférences arrivent au SSR via le loader, une seule source de vérité |
-| Portée de l'opération | Globale, partagée entre modules (fil conducteur WinDev) |
-| Restauration de l'opération | Redirection vers `?op=…&tranche=…` : URL représentative et partageable |
+| Sujet                       | Décision                                                                                  |
+| --------------------------- | ----------------------------------------------------------------------------------------- |
+| Stockage                    | PostgreSQL, table applicative, **hors** `src/db/domaine.ts` → survit aux réimports `.bak` |
+| Forme                       | Clé/valeur JSONB, une ligne par préférence, PK `(user_id, cle)`                           |
+| `localStorage`              | **Supprimé.** Les préférences arrivent au SSR via le loader, une seule source de vérité   |
+| Portée de l'opération       | Globale, partagée entre modules (fil conducteur WinDev)                                   |
+| Restauration de l'opération | Redirection vers `?op=…&tranche=…` : URL représentative et partageable                    |
 
 L'hybride `localStorage` + base a été écarté après coup : les préférences étant
 chargées côté serveur dès le premier rendu, le cache local ne couvrait plus qu'une
@@ -73,13 +73,13 @@ Migration générée par `npm run db:generate`, appliquée par `npm run db:migra
 
 ### Clés
 
-| Clé | Valeur | Écrite par |
-|---|---|---|
-| `table:<id>` | `TableParams` (tri, visibilité, ordre, largeurs, filtre, `pageSize`, `uneLigne`, `ligneCompacte`) | `DataTable` |
-| `onglet:operations` | libellé de l'onglet actif | `routes/_authed/operations.tsx` |
-| `onglet:commercialisation` | idem | `routes/_authed/commercialisation.tsx` |
-| `selection` | `{ op: number, tranche?: number }` | les deux pages |
-| `volet:operations` | `{ replie, recherche, inclureMasques }` | `PanneauOperations` |
+| Clé                        | Valeur                                                                                            | Écrite par                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `table:<id>`               | `TableParams` (tri, visibilité, ordre, largeurs, filtre, `pageSize`, `uneLigne`, `ligneCompacte`) | `DataTable`                            |
+| `onglet:operations`        | libellé de l'onglet actif                                                                         | `routes/_authed/operations.tsx`        |
+| `onglet:commercialisation` | idem                                                                                              | `routes/_authed/commercialisation.tsx` |
+| `selection`                | `{ op: number, tranche?: number }`                                                                | les deux pages                         |
+| `volet:operations`         | `{ replie, recherche, inclureMasques }`                                                           | `PanneauOperations`                    |
 
 Les `<id>` de table sont ceux déjà passés en prop (`operations-stades`,
 `operations-subventions`, `commercialisation-lots`, …).
@@ -121,15 +121,21 @@ composants voient toujours la même valeur.
 Toujours dans `src/lib/preferences.ts` :
 
 ```ts
-export function usePref<T>(cle: string, defaut: T): [T, (v: T | ((prec: T) => T)) => void]
+export function usePref<T>(
+  cle: string,
+  defaut: T,
+): [T, (v: T | ((prec: T) => T)) => void]
 ```
 
 **Lecture** : `useQuery(['prefs'])` — jamais un fetch, les données viennent du
 loader. Valeur rendue : `prefs[cle] ?? defaut`. Si `defaut` est un objet simple
 (ni tableau, ni primitive), fusion superficielle `{ ...defaut, ...stocke }` — une
 préférence enregistrée avant l'ajout d'un champ reste utilisable, et les
-`defaultHidden` par table continuent de s'appliquer (comportement actuel de
-`DataTable.tsx:76`).
+`defaultHidden` par table (comportement actuel de `DataTable.tsx:76`)
+s'appliquent tant que l'utilisateur n'a pas touché au menu Affichage : la fusion
+étant superficielle, `columnVisibility` est repris en bloc dès qu'il existe, et
+une colonne `defaultHidden` ajoutée après coup au code reste visible pour qui a
+déjà réglé ses colonnes. Comportement volontaire : un réglage explicite prime.
 
 **Écriture**, en deux temps :
 
@@ -143,12 +149,12 @@ colonne) : la session reste correcte, seule la persistance est perdue.
 
 ## Sites d'appel
 
-| Fichier | Changement |
-|---|---|
-| `src/components/DataTable.tsx:71-130` | `lireParams`, `cle`, `useState`, `restaure` et les deux `useEffect` supprimés au profit de `usePref('table:' + id, base)`. Le helper `set()` et « Réinitialiser la table » sont inchangés. `pageIndex` reste local, non mémorisé (comportement actuel). |
-| `src/routes/_authed/operations.tsx:354` | `useState<Onglet>` → `usePref('onglet:operations', ONGLETS[0])` |
-| `src/routes/_authed/commercialisation.tsx:351` | idem, clé `onglet:commercialisation` |
-| `src/components/PanneauOperations.tsx:20-22` | les trois `useState` fusionnés en `usePref('volet:operations', { replie: false, recherche: '', inclureMasques: false })` |
+| Fichier                                        | Changement                                                                                                                                                                                                                                              |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/components/DataTable.tsx:71-130`          | `lireParams`, `cle`, `useState`, `restaure` et les deux `useEffect` supprimés au profit de `usePref('table:' + id, base)`. Le helper `set()` et « Réinitialiser la table » sont inchangés. `pageIndex` reste local, non mémorisé (comportement actuel). |
+| `src/routes/_authed/operations.tsx:354`        | `useState<Onglet>` → `usePref('onglet:operations', ONGLETS[0])`                                                                                                                                                                                         |
+| `src/routes/_authed/commercialisation.tsx:351` | idem, clé `onglet:commercialisation`                                                                                                                                                                                                                    |
+| `src/components/PanneauOperations.tsx:20-22`   | les trois `useState` fusionnés en `usePref('volet:operations', { replie: false, recherche: '', inclureMasques: false })`                                                                                                                                |
 
 `DataTable` ne change qu'en un point : toutes les tables existantes et à venir en
 héritent sans modification.

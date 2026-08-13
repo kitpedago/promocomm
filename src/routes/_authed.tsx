@@ -16,11 +16,16 @@ export const Route = createFileRoute('/_authed')({
     // ensureQueryData : une seule requête par session de navigation, et c'est le
     // cache que relit usePref — le beforeLoad des pages enfants et les composants
     // voient toujours la même valeur.
-    const prefs = await context.queryClient.ensureQueryData({
-      queryKey: CLE_PREFS,
-      queryFn: () => getPrefsFn(),
-      staleTime: Infinity,
-    })
+    const prefs = await context.queryClient
+      .ensureQueryData({
+        queryKey: CLE_PREFS,
+        queryFn: () => getPrefsFn(),
+        staleTime: Infinity,
+      })
+      // contenu purement cosmétique, sur le passage de toutes les pages
+      // authentifiées : une migration non jouée ne doit pas rendre
+      // l'application inaccessible — /admin/import est la page qui répare.
+      .catch((): Prefs => ({}))
     // TanStack Router vérifie statiquement que tout ce que beforeLoad renvoie est
     // sérialisable (hydratation SSR). `Prefs` est du JSON arbitraire par
     // conception (cf. preferences.ts) : le type-checker ne peut rien en prouver,

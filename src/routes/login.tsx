@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { Button } from '#/components/ui/button'
@@ -26,7 +26,6 @@ export const Route = createFileRoute('/login')({
 // Connexion par service, transposée de FEN_Login (WinDev) : liste déroulante
 // des services, mot de passe grisé pour ceux qui n'en demandent pas.
 function LoginPage() {
-  const router = useRouter()
   const [slug, setSlug] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -50,8 +49,10 @@ function LoginPage() {
           password: String(form.get('password') ?? ''),
         },
       })
-      await router.invalidate()
-      await router.navigate({ to: '/' })
+      // rechargement de document, pas une navigation SPA (cf. header-user) :
+      // repartir d'un QueryClient neuf, sinon les préférences du compte
+      // précédent restent en cache et deviennent celles de ce compte-ci.
+      window.location.href = '/'
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Connexion impossible')
     } finally {

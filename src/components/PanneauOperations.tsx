@@ -48,11 +48,13 @@ export default function PanneauOperations({
     return liste
   }, [operations.data, recherche, inclureMasques])
 
-  // la ligne restaurée peut être hors écran dans une liste longue
+  // la ligne restaurée peut être hors écran dans une liste longue. `replie` en
+  // dépendance : au dépliage la ref vient d'être rattachée, l'effet rejoué fait
+  // le défilement.
   const refSelection = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     refSelection.current?.scrollIntoView({ block: 'nearest' })
-  }, [selectedId, filtrees])
+  }, [selectedId, filtrees, replie])
 
   if (replie) {
     return (

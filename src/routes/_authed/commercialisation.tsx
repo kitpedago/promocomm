@@ -15,14 +15,13 @@ import {
   getOperationCommFn,
 } from '#/lib/commercialisation.ts'
 import {
-  SELECTION_VIDE,
   selectionARejouer,
+  useMemoriserSelection,
   usePref,
 } from '#/lib/preferences.ts'
 import { getService } from '#/lib/services'
 import { fmtDate, fmtEuro } from '#/lib/utils.ts'
 
-import type { Selection } from '#/lib/preferences.ts'
 import type { ColumnDef } from '@tanstack/react-table'
 
 interface RechercheComm {
@@ -107,16 +106,21 @@ const COLONNES_LOTS: Array<ColumnDef<LigneLot, any>> = [
 function PageCommercialisation() {
   const { op, tranche, lot } = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
-  const [, setSelection] = usePref<Selection>('selection', SELECTION_VIDE)
 
   const operation = useQuery({
     queryKey: ['operation-comm', op],
     queryFn: () => getOperationCommFn({ data: { operationId: op! } }),
     enabled: op != null,
   })
-  // pas de choix « ENSEMBLE » : à défaut de tranche dans l'URL, on prend la
-  // première tranche de l'opération
-  const trancheActive = tranche ?? operation.data?.tranches[0]?.id
+  // pas de choix « ENSEMBLE » : à défaut de tranche dans l'URL — ou si celle
+  // demandée n'existe plus après un réimport .bak — on prend la première
+  // tranche de l'opération
+  const tranches = operation.data?.tranches
+  const trancheActive = (
+    tranches?.find((t) => t.id === tranche) ?? tranches?.[0]
+  )?.id
+  // l'URL fait foi : un lien partagé `?op=99` devient la sélection mémorisée
+  useMemoriserSelection(op, trancheActive)
   const lots = useQuery({
     queryKey: ['lots-comm', op, trancheActive],
     queryFn: () =>
@@ -130,11 +134,8 @@ function PageCommercialisation() {
     <div className="flex h-[calc(100vh-61px)] items-stretch overflow-hidden">
       <PanneauOperations
         selectedId={op ?? null}
-        onSelect={(id) => {
-          // nouvelle opération → la tranche mémorisée ne s'applique plus
-          setSelection({ op: id })
-          void navigate({ search: { op: id } })
-        }}
+        // nouvelle opération → la tranche mémorisée ne s'applique plus
+        onSelect={(id) => void navigate({ search: { op: id } })}
       />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col px-5 py-5 sm:px-7">
@@ -145,33 +146,36 @@ function PageCommercialisation() {
               Sélectionnez une opération dans la liste de gauche.
             </p>
           </div>
+        ) : !operation.data ? (
+          // une opération mémorisée puis supprimée dans WinDev ramène ici à
+          // chaque visite : le dire, plutôt qu'une table vide sans explication
+          <p className="text-[13px] text-[var(--muted)]">
+            {operation.isLoading ? 'Chargement…' : 'Opération introuvable.'}
+          </p>
         ) : (
           <>
             <div className="mb-3 flex flex-wrap items-center gap-3">
               <h1 className="text-xl leading-tight font-bold tracking-tight text-[var(--ink)]">
                 Lots ({lots.data?.length ?? '…'}) de l'opération{' '}
-                {operation.data?.libelle ?? '…'}
-                {operation.data?.sccv ? ` — ${operation.data.sccv}` : ''}
+                {operation.data.libelle}
+                {operation.data.sccv ? ` — ${operation.data.sccv}` : ''}
               </h1>
-              {operation.data?.hlm && (
+              {operation.data.hlm && (
                 <span className="badge-pill bg-[var(--ok-tint)] font-bold text-[var(--ink)]">
                   HLM
                 </span>
               )}
             </div>
 
-            {operation.data && (
-              <div className="mb-4">
-                <SelecteurTranche
-                  tranches={operation.data.tranches}
-                  value={trancheActive}
-                  onChange={(id) => {
-                    setSelection({ op, tranche: id })
-                    void navigate({ search: { op, tranche: id } })
-                  }}
-                />
-              </div>
-            )}
+            <div className="mb-4">
+              <SelecteurTranche
+                tranches={operation.data.tranches}
+                value={trancheActive}
+                onChange={(id) =>
+                  void navigate({ search: { op, tranche: id } })
+                }
+              />
+            </div>
 
             <DataTable
               id="commercialisation-lots"

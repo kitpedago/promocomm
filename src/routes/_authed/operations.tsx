@@ -19,14 +19,13 @@ import {
   getSubventionsFn,
 } from '#/lib/operations.ts'
 import {
-  SELECTION_VIDE,
   selectionARejouer,
+  useMemoriserSelection,
   usePref,
 } from '#/lib/preferences.ts'
 import { getService } from '#/lib/services'
 import { fmtDate, fmtEuro } from '#/lib/utils.ts'
 
-import type { Selection } from '#/lib/preferences.ts'
 import type { ColumnDef } from '@tanstack/react-table'
 
 interface RechercheOp {
@@ -85,28 +84,28 @@ function Case({ libelle, actif }: { libelle: string; actif?: boolean | null }) {
 function PageOperations() {
   const { op, tranche } = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
-  const [, setSelection] = usePref<Selection>('selection', SELECTION_VIDE)
 
   const fiche = useQuery({
     queryKey: ['operation-fiche', op],
     queryFn: () => getOperationFicheFn({ data: { operationId: op! } }),
     enabled: op != null,
   })
-  // à défaut de tranche dans l'URL, la première de l'opération (comme la
-  // combo WinDev, qui se positionne sur la première tranche)
-  const trancheActive = tranche ?? fiche.data?.tranches[0]?.id
   const d = fiche.data
-  const t = d?.tranches.find((x) => x.id === trancheActive)
+  // à défaut de tranche dans l'URL — ou si celle demandée n'existe plus, les
+  // identifiants de tranche étant recopiés du legacy à chaque réimport .bak
+  // alors que user_pref y survit — la première de l'opération (comme la combo
+  // WinDev, qui se positionne sur la première tranche)
+  const t = d?.tranches.find((x) => x.id === tranche) ?? d?.tranches[0]
+  const trancheActive = t?.id
+  // l'URL fait foi : un lien partagé `?op=99` devient la sélection mémorisée
+  useMemoriserSelection(op, trancheActive)
 
   return (
     <div className="flex h-[calc(100vh-61px)] items-stretch">
       <PanneauOperations
         selectedId={op ?? null}
-        onSelect={(id) => {
-          // nouvelle opération → la tranche mémorisée ne s'applique plus
-          setSelection({ op: id })
-          void navigate({ search: { op: id } })
-        }}
+        // nouvelle opération → la tranche mémorisée ne s'applique plus
+        onSelect={(id) => void navigate({ search: { op: id } })}
       />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden px-5 py-5 sm:px-7">
@@ -207,10 +206,9 @@ function PageOperations() {
               <SelecteurTranche
                 tranches={d.tranches}
                 value={trancheActive}
-                onChange={(id) => {
-                  setSelection({ op, tranche: id })
+                onChange={(id) =>
                   void navigate({ search: { op, tranche: id } })
-                }}
+                }
               />
             </div>
 

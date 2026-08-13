@@ -4,6 +4,7 @@ import {
   LIMITE_CLE,
   LIMITE_VALEUR,
   resoudrePref,
+  selectionAMemoriser,
   selectionARejouer,
   verifierEntree,
 } from './preferences.ts'
@@ -102,4 +103,63 @@ test('selectionARejouer : valeur stockée non-objet → rien à rejouer', () => 
 
 test('selectionARejouer : search.op déjà renseigné → rien à rejouer', () => {
   expect(selectionARejouer({ selection: { op: 5 } }, 7)).toBeUndefined()
+})
+
+// resoudrePref sans le cast `as T` : la fusion doit rester typée et complète
+test('fusion sans cast : le défaut fournit les champs absents, le stocké gagne', () => {
+  const defaut = { replie: false, recherche: '', inclureMasques: false }
+  const v = resoudrePref({ recherche: 'BEAUVAIS' }, defaut)
+  expect(v).toEqual({
+    replie: false,
+    recherche: 'BEAUVAIS',
+    inclureMasques: false,
+  })
+  // le défaut n'est pas muté : usePref le reçoit à chaque rendu
+  expect(defaut.recherche).toBe('')
+})
+
+test('fusion : une valeur falsy stockée écrase bien le défaut', () => {
+  expect(resoudrePref({ uneLigne: false }, { uneLigne: true })).toEqual({
+    uneLigne: false,
+  })
+})
+
+// M5 : un lien explicite ?op= devient la sélection mémorisée
+test('selectionAMemoriser : URL sans opération → rien à écrire', () => {
+  expect(selectionAMemoriser({ op: 412 }, undefined, undefined)).toBeUndefined()
+})
+
+test('selectionAMemoriser : URL déjà égale à la mémoire → rien à écrire', () => {
+  expect(selectionAMemoriser({ op: 99, tranche: 3 }, 99, 3)).toBeUndefined()
+  expect(selectionAMemoriser({}, undefined, undefined)).toBeUndefined()
+  expect(
+    selectionAMemoriser({ op: 99, tranche: undefined }, 99, undefined),
+  ).toBeUndefined()
+})
+
+test('selectionAMemoriser : lien partagé sur une autre opération → écrite', () => {
+  expect(selectionAMemoriser({ op: 412, tranche: 87 }, 99, 5)).toEqual({
+    op: 99,
+    tranche: 5,
+  })
+})
+
+test('selectionAMemoriser : même opération, tranche différente → écrite', () => {
+  expect(selectionAMemoriser({ op: 99, tranche: 3 }, 99, 5)).toEqual({
+    op: 99,
+    tranche: 5,
+  })
+  // tranche mémorisée disparue : la page retombe sur la première et la mémoire
+  // se répare
+  expect(selectionAMemoriser({ op: 99, tranche: 87 }, 99, 1)).toEqual({
+    op: 99,
+    tranche: 1,
+  })
+})
+
+test('selectionAMemoriser : rien de mémorisé encore → écrite', () => {
+  expect(selectionAMemoriser({}, 99, undefined)).toEqual({
+    op: 99,
+    tranche: undefined,
+  })
 })

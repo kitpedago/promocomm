@@ -1,9 +1,6 @@
-import { useRouter } from '@tanstack/react-router'
-
 import { authClient } from '#/lib/auth-client'
 
 export default function BetterAuthHeader() {
-  const router = useRouter()
   const { data: session, isPending } = authClient.useSession()
 
   if (isPending) {
@@ -28,8 +25,12 @@ export default function BetterAuthHeader() {
       <button
         onClick={() => {
           void authClient.signOut().then(() => {
-            void router.invalidate()
-            void router.navigate({ to: '/login' })
+            // rechargement de document, pas une navigation SPA : le
+            // QueryClient vit le temps du document et garderait les
+            // préférences (clé ['prefs']) du compte qui part — le compte
+            // suivant les verrait et, à sa première écriture, les
+            // persisterait sous son propre userId.
+            window.location.href = '/login'
           })
         }}
         className="h-9 cursor-pointer rounded-lg border border-[var(--input-border)] bg-[var(--card)] px-4 text-sm font-medium text-[var(--ink-soft)] transition-colors hover:border-[var(--ink)] hover:text-[var(--ink)]"

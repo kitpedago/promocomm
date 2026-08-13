@@ -5,6 +5,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createServerFn } from '@tanstack/react-start'
 import { eq } from 'drizzle-orm'
+import { useEffect } from 'react'
 
 import { db } from '#/db/index.ts'
 import { userPref } from '#/db/schema.ts'
@@ -20,7 +21,7 @@ const estObjetSimple = (v: unknown): v is Record<string, unknown> =>
 export function resoudrePref<T>(stocke: unknown, defaut: T): T {
   if (stocke === undefined || stocke === null) return defaut
   if (estObjetSimple(defaut) && estObjetSimple(stocke)) {
-    return { ...defaut, ...stocke } as T
+    return { ...defaut, ...stocke }
   }
   return stocke as T
 }
@@ -107,12 +108,16 @@ export function usePref<T>(
   defaut: T,
 ): [T, (v: T | ((prec: T) => T)) => void] {
   const queryClient = useQueryClient()
-  const { data } = useQuery<Prefs>({
+  // `select` : chaque observateur ne suit que sa propre clé. Sans lui, tous
+  // suivent l'objet racine que `setQueryData` remplace — une frappe dans la
+  // recherche du volet re-rendrait toutes les tables de la page.
+  const { data } = useQuery({
     queryKey: CLE_PREFS,
     queryFn: () => getPrefsFn(),
     staleTime: Infinity,
+    select: (p: Prefs) => p[cle],
   })
-  const valeur = resoudrePref(data?.[cle], defaut)
+  const valeur = resoudrePref(data, defaut)
 
   const ecrire = (v: T | ((prec: T) => T)) => {
     const prec = queryClient.getQueryData<Prefs>(CLE_PREFS)
@@ -157,4 +162,43 @@ export function selectionARejouer(
   const { op, tranche } = selection
   if (!estIdPositif(op)) return undefined
   return { op, tranche: typeof tranche === 'number' ? tranche : undefined }
+}
+
+/**
+ * Sélection à mémoriser quand l'URL porte une opération — un lien partagé
+ * `?op=99` l'emporte et devient la sélection mémorisée.
+ *
+ * Rend `undefined` quand il n'y a rien à écrire : sans cette égalité, l'effet
+ * qui l'appelle écrirait à chaque rendu. Pas de boucle avec la redirection de
+ * `selectionARejouer` : celle-ci ne part que si l'URL n'a pas d'`op`, et ici on
+ * n'écrit que si elle en a une — on ne touche jamais à l'URL.
+ */
+export function selectionAMemoriser(
+  memorisee: Selection,
+  op: number | undefined,
+  tranche: number | undefined,
+): Selection | undefined {
+  if (op == null) return undefined
+  if (memorisee.op === op && memorisee.tranche === tranche) return undefined
+  return { op, tranche }
+}
+
+/**
+ * Aligne la sélection mémorisée sur l'URL. Seul écrivain de la clé
+ * `selection` : les pages n'ont qu'à naviguer, la mémorisation suit. Écrire
+ * aussi dans les gestionnaires de clic serait sans effet — l'effet, qui voit
+ * encore l'URL d'avant, y reviendrait au rendu suivant.
+ */
+export function useMemoriserSelection(
+  op: number | undefined,
+  tranche: number | undefined,
+) {
+  const [selection, setSelection] = usePref<Selection>(
+    'selection',
+    SELECTION_VIDE,
+  )
+  const aMemoriser = selectionAMemoriser(selection, op, tranche)
+  useEffect(() => {
+    if (aMemoriser) setSelection(aMemoriser)
+  })
 }
