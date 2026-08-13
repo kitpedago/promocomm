@@ -13,6 +13,7 @@ export default function Onglets<T extends string>({
       {onglets.map((o) => (
         <button
           key={o}
+          type="button"
           onClick={() => onChange(o)}
           className={`-mb-0.5 cursor-pointer border-b-[3px] px-3 py-2 text-[13px] transition-colors ${
             o === actif

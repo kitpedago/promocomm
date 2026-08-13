@@ -9,15 +9,18 @@ export const DialogClose = DialogPrimitive.Close
 export function DialogContent({
   children,
   className = '',
+  sansDefilement = false,
 }: {
   children: React.ReactNode
   className?: string
+  /** la modale gère sa propre hauteur/défilement (fiches à onglets) */
+  sansDefilement?: boolean
 }) {
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[var(--ink)]/40" />
       <DialogPrimitive.Content
-        className={`fixed top-1/2 left-1/2 z-50 max-h-[90vh] w-full -translate-x-1/2 -translate-y-1/2 overflow-y-auto border border-[var(--line)] bg-[var(--paper)] p-5 shadow-xl ${className || 'max-w-xl'}`}
+        className={`fixed top-1/2 left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 border border-[var(--line)] bg-[var(--paper)] p-5 shadow-xl ${sansDefilement ? '' : 'max-h-[90vh] overflow-y-auto'} ${className || 'max-w-xl'}`}
       >
         {children}
         <DialogPrimitive.Close
@@ -32,7 +35,9 @@ export function DialogContent({
 }
 
 export function DialogHeader({ children }: { children: React.ReactNode }) {
-  return <div className="mb-4 border-b-2 border-[var(--gold)] pb-2">{children}</div>
+  return (
+    <div className="mb-4 border-b-2 border-[var(--gold)] pb-2">{children}</div>
+  )
 }
 
 export function DialogTitle({ children }: { children: React.ReactNode }) {

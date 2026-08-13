@@ -214,8 +214,9 @@ export function ChampSelectTexte({
 
 export function SousTitre({ children }: { children: React.ReactNode }) {
   return (
-    <p className="border-b border-[var(--line-soft)] pb-1 text-[13px] font-semibold text-[var(--gold-ink)] sm:col-span-2">
+    <p className="col-span-full flex items-center gap-3 text-[14px] font-semibold tracking-wide text-[var(--gold-ink)] uppercase">
       {children}
+      <span aria-hidden className="h-px flex-1 bg-[var(--line-soft)]" />
     </p>
   )
 }
