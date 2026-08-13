@@ -1,6 +1,11 @@
 // Module Commercialisation (FEN_TABLE_Commercialisation) — phase 1, lecture.
 // Référence : migration_windev/captures_ecrans/Commercialisation*.png.
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
@@ -20,6 +25,7 @@ import {
 import DataTable from '#/components/DataTable'
 import Onglets from '#/components/Onglets'
 import PanneauOperations from '#/components/PanneauOperations'
+import Scindeur from '#/components/Scindeur'
 import SelecteurTranche from '#/components/SelecteurTranche'
 import { Button } from '#/components/ui/button'
 import {
@@ -173,6 +179,25 @@ function PageCommercialisation() {
     enabled: op != null && operation.data != null,
   })
 
+  const tableLots = (
+    <DataTable
+      id="commercialisation-lots"
+      columns={COLONNES_LOTS}
+      data={lots.data ?? []}
+      unite="lots"
+      getRowId={(l) => String(l.id)}
+      selectedRowId={lot != null ? String(lot) : null}
+      onRowClick={(l) =>
+        void navigate({
+          search: { op, tranche: trancheActive, lot: l.id },
+        })
+      }
+      emptyText={
+        lots.isLoading ? 'Chargement…' : 'Aucun lot pour cette sélection.'
+      }
+    />
+  )
+
   return (
     // hauteur fixée à l'écran : la page ne défile pas, chaque table a son
     // ascenseur interne et les onglets du détail restent visibles en bas
@@ -230,26 +255,17 @@ function PageCommercialisation() {
               )}
             </div>
 
-            <DataTable
-              id="commercialisation-lots"
-              columns={COLONNES_LOTS}
-              data={lots.data ?? []}
-              unite="lots"
-              getRowId={(l) => String(l.id)}
-              selectedRowId={lot != null ? String(lot) : null}
-              onRowClick={(l) =>
-                void navigate({
-                  search: { op, tranche: trancheActive, lot: l.id },
-                })
-              }
-              emptyText={
-                lots.isLoading
-                  ? 'Chargement…'
-                  : 'Aucun lot pour cette sélection.'
-              }
-            />
-
-            {lot != null && <DetailLot key={lot} lotId={lot} />}
+            {lot == null ? (
+              tableLots
+            ) : (
+              <div className="min-h-0 flex-1">
+                <Scindeur
+                  id="commercialisation"
+                  haut={tableLots}
+                  bas={<DetailLot lotId={lot} />}
+                />
+              </div>
+            )}
           </>
         )}
       </div>
@@ -437,6 +453,9 @@ function DetailLot({ lotId }: { lotId: number }) {
   const detail = useQuery({
     queryKey: ['lot-detail', lotId],
     queryFn: () => getLotDetailFn({ data: { lotId } }),
+    // au changement de lot on garde l'ancien détail affiché le temps du
+    // fetch : pas de flash « Chargement… » (le composant reste monté, sans key)
+    placeholderData: keepPreviousData,
   })
   const nomenclatures = useQuery({
     queryKey: ['comm-nomenclatures'],
@@ -458,6 +477,15 @@ function DetailLot({ lotId }: { lotId: number }) {
   const [versementModale, setVersementModale] = useState<
     'creation' | LigneVersement | null
   >(null)
+  // sans remontage (pas de key), une sélection de l'ancien lot pointerait
+  // vers des lignes d'un autre lot — reset au changement
+  useEffect(() => {
+    setCommId(null)
+    setCommModale(null)
+    setAnnulationModale(null)
+    setVersementSel(null)
+    setVersementModale(null)
+  }, [lotId])
   const supprimerVersement = useMutation({
     mutationFn: (id: number) => deleteVersementFn({ data: { id } }),
     onSuccess: () => {
@@ -487,9 +515,9 @@ function DetailLot({ lotId }: { lotId: number }) {
     : []
 
   return (
-    // borné à la moitié basse de l'écran : les onglets restent visibles, c'est
-    // la table de l'onglet qui défile
-    <section className="island-shell mt-5 flex max-h-[52%] min-h-0 shrink-0 flex-col overflow-hidden rounded-xl">
+    // remplit le volet bas du Scindeur : hauteur constante quel que soit
+    // l'onglet actif, c'est le contenu de l'onglet qui défile
+    <section className="island-shell flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
       <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[var(--line-soft)] px-[18px] py-[14px]">
         <div>
           <h2 className="text-[15.5px] font-bold text-[var(--ink)]">
@@ -785,7 +813,7 @@ function Propagation({
               />
               <p className="text-[12px] text-[var(--muted)]">
                 Les lots investisseurs (INVEST, INV PLS, INV NP) ne sont pas
-                modifiés, comme dans WinDev.
+                modifiés.
               </p>
             </div>
             <ErreurMutation erreur={propagerAdresse.error} />
