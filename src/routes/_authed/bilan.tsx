@@ -1235,7 +1235,14 @@ function PageBilan() {
 function BilanSccv({ sccvId }: { sccvId: number }) {
   const { lectureSeule } = Route.useRouteContext()
   const queryClient = useQueryClient()
-  const [accordeon, setAccordeon] = useState<Accordeon>('Stock et CA')
+  const [accordeonStocke, setAccordeon] = usePref<Accordeon>(
+    'onglet:bilan',
+    ACCORDEONS[0],
+  )
+  // un onglet renommé depuis l'enregistrement ne doit pas laisser la page vide
+  const accordeon = ACCORDEONS.includes(accordeonStocke)
+    ? accordeonStocke
+    : ACCORDEONS[0]
 
   const bilan = useQuery({
     queryKey: ['bilan', sccvId],

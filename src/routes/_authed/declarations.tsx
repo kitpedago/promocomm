@@ -43,6 +43,7 @@ import {
   saveDeclaration940Fn,
   saveSgaFn,
 } from '#/lib/declarations.ts'
+import { usePref } from '#/lib/preferences.ts'
 import { getService } from '#/lib/services'
 import { fmtDate, fmtEuro } from '#/lib/utils.ts'
 
@@ -277,7 +278,14 @@ const COLONNES_940: Array<ColumnDef<Ligne940, any>> = [
 function OngletsDeclarations({ trancheId }: { trancheId: number }) {
   const { lectureSeule } = Route.useRouteContext()
   const queryClient = useQueryClient()
-  const [accordeon, setAccordeon] = useState<Accordeon>('Assurance DO/MRH')
+  const [accordeonStocke, setAccordeon] = usePref<Accordeon>(
+    'onglet:declarations',
+    ACCORDEONS[0],
+  )
+  // un onglet renommé depuis l'enregistrement ne doit pas laisser la page vide
+  const accordeon = ACCORDEONS.includes(accordeonStocke)
+    ? accordeonStocke
+    : ACCORDEONS[0]
 
   const declarations = useQuery({
     queryKey: ['declarations', trancheId],

@@ -32,6 +32,7 @@ import {
 } from '#/components/ui/select'
 import { Switch } from '#/components/ui/switch'
 import { Textarea } from '#/components/ui/textarea'
+import { usePref } from '#/lib/preferences.ts'
 import {
   deleteCompteBanqueFn,
   deleteParticipationFn,
@@ -1468,7 +1469,14 @@ function DetailSccv({
 }) {
   const { lectureSeule } = Route.useRouteContext()
   const queryClient = useQueryClient()
-  const [onglet, setOnglet] = useState<OngletSccv>('Associés')
+  const [ongletStocke, setOnglet] = usePref<OngletSccv>(
+    'onglet:sccv',
+    ONGLETS_SCCV[0],
+  )
+  // un onglet renommé depuis l'enregistrement ne doit pas laisser la page vide
+  const onglet = ONGLETS_SCCV.includes(ongletStocke)
+    ? ongletStocke
+    : ONGLETS_SCCV[0]
   const detail = useQuery({
     queryKey: ['sccv-detail', sccvId],
     queryFn: () => getSccvDetailFn({ data: { sccvId } }),

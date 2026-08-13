@@ -23,6 +23,7 @@ import {
   getSuiviTrancheFn,
 } from '#/lib/compta.ts'
 import { getSubventionsFn } from '#/lib/operations.ts'
+import { usePref } from '#/lib/preferences.ts'
 import { getService } from '#/lib/services'
 import { fmtDate, fmtEuro } from '#/lib/utils.ts'
 
@@ -196,7 +197,14 @@ const ACCORDEONS = [
 type Accordeon = (typeof ACCORDEONS)[number]
 
 function OngletsCompta({ trancheId }: { trancheId: number }) {
-  const [accordeon, setAccordeon] = useState<Accordeon>('Subventions')
+  const [accordeonStocke, setAccordeon] = usePref<Accordeon>(
+    'onglet:compta',
+    ACCORDEONS[0],
+  )
+  // un onglet renommé depuis l'enregistrement ne doit pas laisser la page vide
+  const accordeon = ACCORDEONS.includes(accordeonStocke)
+    ? accordeonStocke
+    : ACCORDEONS[0]
   return (
     <section className="island-shell flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
       <Onglets onglets={ACCORDEONS} actif={accordeon} onChange={setAccordeon} />
@@ -582,7 +590,13 @@ const ONGLETS_FINANCES = [
 type OngletFinance = (typeof ONGLETS_FINANCES)[number]
 
 function OngletFinances({ trancheId }: { trancheId: number }) {
-  const [onglet, setOnglet] = useState<OngletFinance>('Admin PSLA')
+  const [ongletStocke, setOnglet] = usePref<OngletFinance>(
+    'onglet:compta-finances',
+    ONGLETS_FINANCES[0],
+  )
+  const onglet = ONGLETS_FINANCES.includes(ongletStocke)
+    ? ongletStocke
+    : ONGLETS_FINANCES[0]
   return (
     <div className="flex h-full min-h-0 flex-col">
       <Onglets onglets={ONGLETS_FINANCES} actif={onglet} onChange={setOnglet} />
