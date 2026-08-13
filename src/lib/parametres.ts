@@ -9,35 +9,53 @@ import { asc, eq } from 'drizzle-orm'
 import {
   accordCadreAssurance,
   acquereurPlafondRessources,
+  actionAlerte,
   architecte,
+  archiveStadeAvancement,
   associe,
   banque,
   categorieFrais,
+  categorieSubvention,
   certification,
   civilite,
   commercial,
   commune,
   destination,
+  domaineStadeAvancement,
   equipePersonne,
+  etatStadeAvancementAlerte,
+  etudeNotaire,
   fonction,
+  fonctionInterlocuteurNotaire,
+  interlocuteurNotaire,
   gestionnaireSccv,
   label,
+  listeAvancement,
   missionMoeInterne,
+  modeleMail,
+  motifAnnulation,
   motifClauseParticuliere,
   motifRemunerationAssocie,
   moyenPaiement,
   natureAchat,
+  organismeSubvention,
+  parametreValeur,
   partenariat,
   performanceEnergetique,
   personne,
   prestataire,
+  regleAlerteStadeAvancement,
   reserveEntreprise,
   reservePiece,
   reserveType,
   secteurGeographique,
+  typeBatiment,
+  typeBatimentStade,
+  typeDateStadeAvancement,
   typeFoncier,
   typeMission,
   usageFrais,
+  zonageAbc,
 } from '#/db/domaine.ts'
 import { db } from '#/db/index.ts'
 import { requireEcriture, requireSession } from '#/lib/session.server.ts'
@@ -117,6 +135,10 @@ const REGISTRE = {
     champs: ['libelle', 'libelleComm', 'commentaire'],
   },
   'equipes-personnes': { table: equipePersonne, champs: ['libelle'] },
+  'etudes-notaires': {
+    table: etudeNotaire,
+    champs: ['nomEtude', 'adresse', 'cp', 'commune', 'email', 'commentaire'],
+  },
   fonctions: { table: fonction, champs: ['libelle'] },
   'gestionnaires-sccv': { table: gestionnaireSccv, champs: ['libelle'] },
   labels: { table: label, champs: ['libelle'] },
@@ -130,6 +152,22 @@ const REGISTRE = {
   'natures-achat': {
     table: natureAchat,
     champs: ['libelle', 'libelleLong', 'ordreComm'],
+  },
+  notaires: {
+    table: interlocuteurNotaire,
+    champs: [
+      'civilite',
+      'patronyme',
+      'prenom',
+      'telephone',
+      'email',
+      'etudeNotaireId',
+      'fonctionId',
+    ],
+  },
+  'fonctions-interlocuteurs': {
+    table: fonctionInterlocuteurNotaire,
+    champs: ['libelle'],
   },
   partenariats: { table: partenariat, champs: ['libelle'] },
   'performances-energetiques': {
@@ -170,6 +208,74 @@ const REGISTRE = {
   'types-fonciers': { table: typeFoncier, champs: ['libelle'] },
   'usages-frais': { table: usageFrais, champs: ['libelle'] },
   'types-missions': { table: typeMission, champs: ['libelle'] },
+  'domaines-stade': { table: domaineStadeAvancement, champs: ['libelle'] },
+  'motifs-annulation': { table: motifAnnulation, champs: ['libelle'] },
+  'zonages-abc': { table: zonageAbc, champs: ['libelle'] },
+  // rubrique Stades d'avancement
+  'stades-avancement': {
+    table: listeAvancement,
+    champs: [
+      'domaine',
+      'code',
+      'libelle',
+      'ordre',
+      'avecHonoGestion',
+      'pourcentageStandard',
+    ],
+  },
+  'archives-stades': {
+    table: archiveStadeAvancement,
+    champs: ['dateArchivage', 'libelle'],
+  },
+  'etats-alerte-stade': {
+    table: etatStadeAvancementAlerte,
+    champs: ['libelle'],
+  },
+  'types-date-stade': { table: typeDateStadeAvancement, champs: ['libelle'] },
+  'regles-alerte-stade': {
+    table: regleAlerteStadeAvancement,
+    champs: [
+      'typeDate1Id',
+      'stade1Id',
+      'etat1Id',
+      'typeDate2Id',
+      'stade2Id',
+      'etat2Id',
+      'texteAlerte',
+    ],
+  },
+  // rubrique Système
+  actions: { table: actionAlerte, champs: ['libelle'] },
+  'types-batiments': { table: typeBatiment, champs: ['libelle'] },
+  'types-batiments-stades': {
+    table: typeBatimentStade,
+    champs: [
+      'typeBatimentId',
+      'listeAvancementId',
+      'intervalleDureeMois',
+      'intervalleDureeMoisEtage',
+    ],
+  },
+  'valeurs-parametres': {
+    table: parametreValeur,
+    champs: ['param', 'typ', 'valeurD', 'valeurN', 'valeurT', 'valeurH'],
+  },
+  // rubrique Subventions
+  'categories-subvention': { table: categorieSubvention, champs: ['libelle'] },
+  'organismes-subvention': { table: organismeSubvention, champs: ['libelle'] },
+  // rubrique Modèle de mail
+  'modeles-mail': {
+    table: modeleMail,
+    champs: [
+      'libelle',
+      'sujet',
+      'corps',
+      'modeBrouillon',
+      'destinataire',
+      'destinataireCc',
+      'destinataireCci',
+    ],
+  },
 } as const
 
 export type SlugNomenclature = keyof typeof REGISTRE

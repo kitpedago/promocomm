@@ -11,7 +11,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 
 import { BoutonsTable, ErreurMutation } from '#/components/ChampsModale'
 import DataTable from '#/components/DataTable'
@@ -34,7 +34,7 @@ import {
   saveTrancheOtlFn,
 } from '#/lib/parametres.otl.ts'
 import { usePref } from '#/lib/preferences.ts'
-import { getService } from '#/lib/services'
+import { getService, MODULE_LABELS, MODULES, SERVICES } from '#/lib/services'
 import { fmtDate } from '#/lib/utils.ts'
 
 import type { DescChamp, ValeursFiche } from '#/components/ModaleFiche'
@@ -42,6 +42,11 @@ import type { SlugNomenclature } from '#/lib/parametres.ts'
 import type { ColumnDef } from '@tanstack/react-table'
 
 export const Route = createFileRoute('/_authed/parametres')({
+  // `?liste=` : arrivée directe sur une liste (boutons Notaires/Architectes
+  // de la modale Opération simplifiée)
+  validateSearch: (s: Record<string, unknown>): { liste?: string } => ({
+    liste: typeof s.liste === 'string' ? s.liste : undefined,
+  }),
   beforeLoad: ({ context }) => {
     const service = getService(context.session.user.service)
     if (!service?.modules.includes('parametres')) throw redirect({ to: '/' })
@@ -191,6 +196,12 @@ const LISTES: Array<ConfigListe> = [
     ],
   },
   {
+    slug: 'domaines-stade',
+    titre: "Domaine Stade d'avancement",
+    unite: 'domaine',
+    champs: LIBELLE,
+  },
+  {
     slug: 'equipes-personnes',
     titre: 'Equipes personnes',
     unite: 'équipe',
@@ -207,6 +218,12 @@ const LISTES: Array<ConfigListe> = [
     slug: 'missions-moe-interne',
     titre: 'Missions MOE Interne',
     unite: 'mission',
+    champs: LIBELLE,
+  },
+  {
+    slug: 'motifs-annulation',
+    titre: 'Motif annulation',
+    unite: 'motif',
     champs: LIBELLE,
   },
   {
@@ -276,36 +293,6 @@ const LISTES: Array<ConfigListe> = [
     ],
   },
   {
-    slug: 'reserves-types',
-    titre: 'Réserves — types',
-    unite: 'type',
-    champs: LIBELLE,
-  },
-  {
-    slug: 'reserves-pieces',
-    titre: 'Réserves — pièces',
-    unite: 'pièce',
-    champs: LIBELLE,
-  },
-  {
-    slug: 'reserves-entreprises',
-    titre: 'Réserves — entreprises',
-    unite: 'entreprise',
-    champs: [
-      { k: 'rs', l: 'Raison sociale', t: 'texte' },
-      { k: 'corpsEtat', l: "Corps d'état", t: 'texte' },
-      { k: 'adresse1', l: 'Adresse 1', t: 'texte' },
-      { k: 'adresse2', l: 'Adresse 2', t: 'texte' },
-      { k: 'cp', l: 'CP', t: 'texte' },
-      { k: 'commune', l: 'Commune', t: 'texte' },
-      { k: 'telephone', l: 'Téléphone', t: 'texte' },
-      { k: 'fax', l: 'Fax', t: 'texte' },
-      { k: 'contact', l: 'Contact', t: 'texte' },
-      { k: 'telContact', l: 'Tél. contact', t: 'texte' },
-      { k: 'email', l: 'Email', t: 'texte' },
-    ],
-  },
-  {
     slug: 'secteurs-geographiques',
     titre: 'Secteur Géographique Développement',
     unite: 'secteur',
@@ -329,19 +316,271 @@ const LISTES: Array<ConfigListe> = [
     unite: 'usage',
     champs: LIBELLE,
   },
+  {
+    slug: 'zonages-abc',
+    titre: 'Zonage ABC',
+    unite: 'zonage',
+    champs: LIBELLE,
+  },
+]
+
+// Rubrique Stades d'avancement (mêmes entrées que l'arbre WinDev, plus les
+// deux listes support des règles d'alerte, éditées dans l'écran WinDev)
+const STADES: Array<ConfigListe> = [
+  {
+    slug: 'archives-stades',
+    titre: "Archives Stades d'avancement",
+    unite: 'archive',
+    champs: [
+      { k: 'dateArchivage', l: "Date d'archivage", t: 'date' },
+      { k: 'libelle', l: 'Libellé', t: 'texte' },
+    ],
+  },
+  {
+    slug: 'regles-alerte-stade',
+    titre: "Règles d'alerte de stade avancement",
+    unite: 'règle',
+    champs: [
+      { t: 'titre', l: 'Si' },
+      { k: 'typeDate1Id', l: 'Type de date', t: 'select', options: [] },
+      { k: 'stade1Id', l: 'Stade', t: 'select', options: [] },
+      { k: 'etat1Id', l: 'État', t: 'select', options: [] },
+      { t: 'titre', l: 'Et' },
+      { k: 'typeDate2Id', l: 'Type de date', t: 'select', options: [] },
+      { k: 'stade2Id', l: 'Stade', t: 'select', options: [] },
+      { k: 'etat2Id', l: 'État', t: 'select', options: [] },
+      { t: 'titre', l: 'Alors' },
+      { k: 'texteAlerte', l: "Texte de l'alerte", t: 'long' },
+    ],
+    selects: {
+      typeDate1Id: 'types-date-stade',
+      stade1Id: 'stades-avancement',
+      etat1Id: 'etats-alerte-stade',
+      typeDate2Id: 'types-date-stade',
+      stade2Id: 'stades-avancement',
+      etat2Id: 'etats-alerte-stade',
+    },
+  },
+  {
+    slug: 'stades-avancement',
+    titre: "Stades d'avancement",
+    unite: 'stade',
+    champs: [
+      { k: 'domaine', l: 'Domaine', t: 'texte' },
+      { k: 'code', l: 'Code', t: 'texte' },
+      { k: 'libelle', l: 'Libellé', t: 'texte' },
+      { k: 'ordre', l: 'Ordre', t: 'entier' },
+      { k: 'avecHonoGestion', l: 'Avec hono. gestion', t: 'bool' },
+      { k: 'pourcentageStandard', l: '% standard', t: 'nombre' },
+    ],
+  },
+  {
+    slug: 'etats-alerte-stade',
+    titre: "États d'alerte",
+    unite: 'état',
+    champs: LIBELLE,
+  },
+  {
+    slug: 'types-date-stade',
+    titre: 'Types de date',
+    unite: 'type de date',
+    champs: LIBELLE,
+  },
+]
+
+// Rubrique Système. Hors périmètre web : Éditeur de code, Éditeur de requête,
+// Suivi tickets (Mantis) — outillage WinDev ; Import Lots → reste-a-faire.md
+const SYSTEME: Array<ConfigListe> = [
+  { slug: 'actions', titre: 'Actions', unite: 'action', champs: LIBELLE },
+  {
+    slug: 'types-batiments',
+    titre: 'Types de bâtiments',
+    unite: 'type de bâtiment',
+    champs: LIBELLE,
+  },
+  {
+    slug: 'types-batiments-stades',
+    titre: 'Intervalles bâtiments / stades',
+    unite: 'intervalle',
+    champs: [
+      { k: 'typeBatimentId', l: 'Type de bâtiment', t: 'select', options: [] },
+      { k: 'listeAvancementId', l: 'Stade', t: 'select', options: [] },
+      { k: 'intervalleDureeMois', l: 'Durée (mois)', t: 'nombre' },
+      {
+        k: 'intervalleDureeMoisEtage',
+        l: 'Durée par étage (mois)',
+        t: 'nombre',
+      },
+    ],
+    selects: {
+      typeBatimentId: 'types-batiments',
+      listeAvancementId: 'stades-avancement',
+    },
+  },
+  {
+    slug: 'valeurs-parametres',
+    titre: 'Valeur des paramètres',
+    unite: 'paramètre',
+    champs: [
+      { k: 'param', l: 'Paramètre', t: 'texte' },
+      { k: 'typ', l: 'Type', t: 'texte' },
+      { k: 'valeurT', l: 'Valeur texte', t: 'long' },
+      { k: 'valeurN', l: 'Valeur nombre', t: 'nombre' },
+      { k: 'valeurD', l: 'Valeur date', t: 'date' },
+      { k: 'valeurH', l: 'Valeur heure', t: 'texte' },
+    ],
+  },
+]
+
+const RESERVES: Array<ConfigListe> = [
+  { slug: 'reserves-pieces', titre: 'Pièces', unite: 'pièce', champs: LIBELLE },
+  {
+    slug: 'reserves-types',
+    titre: 'Types de réserve',
+    unite: 'type',
+    champs: LIBELLE,
+  },
+  {
+    slug: 'reserves-entreprises',
+    titre: 'Entreprises',
+    unite: 'entreprise',
+    champs: [
+      { k: 'rs', l: 'Raison sociale', t: 'texte' },
+      { k: 'corpsEtat', l: "Corps d'état", t: 'texte' },
+      { k: 'adresse1', l: 'Adresse 1', t: 'texte' },
+      { k: 'adresse2', l: 'Adresse 2', t: 'texte' },
+      { k: 'cp', l: 'CP', t: 'texte' },
+      { k: 'commune', l: 'Commune', t: 'texte' },
+      { k: 'telephone', l: 'Téléphone', t: 'texte' },
+      { k: 'fax', l: 'Fax', t: 'texte' },
+      { k: 'contact', l: 'Contact', t: 'texte' },
+      { k: 'telContact', l: 'Tél. contact', t: 'texte' },
+      { k: 'email', l: 'Email', t: 'texte' },
+    ],
+  },
+]
+
+const SUBVENTIONS: Array<ConfigListe> = [
+  {
+    slug: 'categories-subvention',
+    titre: 'Catégories subvention',
+    unite: 'catégorie',
+    champs: LIBELLE,
+  },
+  {
+    slug: 'organismes-subvention',
+    titre: 'Organismes subvention',
+    unite: 'organisme',
+    champs: LIBELLE,
+  },
+]
+
+const MODELES_MAIL: Array<ConfigListe> = [
+  {
+    slug: 'modeles-mail',
+    titre: 'Modèles de mail',
+    unite: 'modèle',
+    champs: [
+      { k: 'libelle', l: 'Libellé', t: 'texte' },
+      { k: 'modeBrouillon', l: 'Mode brouillon', t: 'bool' },
+      { k: 'destinataire', l: 'Destinataire', t: 'texte' },
+      { k: 'destinataireCc', l: 'Copie (CC)', t: 'texte' },
+      { k: 'destinataireCci', l: 'Copie cachée (CCI)', t: 'texte' },
+      { k: 'sujet', l: 'Sujet', t: 'texte' },
+      { k: 'corps', l: 'Corps', t: 'long' },
+    ],
+  },
+]
+
+const NOTAIRES: Array<ConfigListe> = [
+  {
+    slug: 'fonctions-interlocuteurs',
+    titre: 'Fonctions interlocuteurs notaires',
+    unite: 'fonction',
+    champs: LIBELLE,
+  },
+  {
+    slug: 'etudes-notaires',
+    titre: 'Études de notaires',
+    unite: 'étude',
+    champs: [
+      { k: 'nomEtude', l: "Nom de l'étude", t: 'texte' },
+      { k: 'adresse', l: 'Adresse', t: 'texte' },
+      { k: 'cp', l: 'CP', t: 'texte' },
+      { k: 'commune', l: 'Commune', t: 'texte' },
+      { k: 'email', l: 'Email', t: 'texte' },
+      { k: 'commentaire', l: 'Commentaire', t: 'long' },
+    ],
+  },
+  {
+    slug: 'notaires',
+    titre: 'Interlocuteurs notaires',
+    unite: 'interlocuteur',
+    champs: [
+      { k: 'civilite', l: 'Civilité', t: 'texte' },
+      { k: 'patronyme', l: 'Patronyme', t: 'texte' },
+      { k: 'prenom', l: 'Prénom', t: 'texte' },
+      { k: 'telephone', l: 'Téléphone', t: 'texte' },
+      { k: 'email', l: 'Email', t: 'texte' },
+      { k: 'etudeNotaireId', l: 'Étude', t: 'select', options: [] },
+      { k: 'fonctionId', l: 'Fonction', t: 'select', options: [] },
+    ],
+    selects: {
+      etudeNotaireId: 'etudes-notaires',
+      fonctionId: 'fonctions-interlocuteurs',
+    },
+  },
 ]
 
 const OTL = 'operations-tranches-lots'
+const DROITS = 'droits'
+
+const RUBRIQUES: Array<{ titre: string; listes: Array<ConfigListe> }> = [
+  { titre: 'Listes', listes: LISTES },
+  { titre: "Stades d'avancement", listes: STADES },
+  { titre: 'Système', listes: SYSTEME },
+  { titre: 'Réserves', listes: RESERVES },
+  { titre: 'Subventions', listes: SUBVENTIONS },
+  { titre: 'Modèle de mail', listes: MODELES_MAIL },
+  { titre: 'Notaires', listes: NOTAIRES },
+]
+const TOUTES = RUBRIQUES.flatMap((r) => r.listes)
 
 function PageParametres() {
-  const [slugStocke, setSlug] = usePref<string>(
+  const { liste } = Route.useSearch()
+  const navigate = useNavigate({ from: Route.fullPath })
+  const [slugStocke, setSlugStocke] = usePref<string>(
     'parametres:liste',
     LISTES[0].slug,
   )
+  // l'URL prime sur la préférence ; un clic dans le volet la retire
+  const slugActif = liste ?? slugStocke
+  const setSlug = (slug: string) => {
+    setSlugStocke(slug)
+    if (liste) void navigate({ search: {} })
+  }
   const config =
-    slugStocke === OTL
+    slugActif === OTL || slugActif === DROITS
       ? null
-      : (LISTES.find((l) => l.slug === slugStocke) ?? LISTES[0])
+      : (TOUTES.find((l) => l.slug === slugActif) ?? LISTES[0])
+
+  const boutonNav = (slug: string, titre: string, extra = '') => (
+    <button
+      key={slug}
+      onClick={() => setSlug(slug)}
+      className={`block w-full cursor-pointer px-3 py-1.5 text-left text-[13px] transition-colors ${extra} ${
+        slug === (config?.slug ?? slugActif)
+          ? 'bg-[var(--gold-tint)] font-semibold text-[var(--ink)]'
+          : 'font-medium text-[var(--ink-soft)] hover:bg-[var(--cream-hover)]'
+      }`}
+    >
+      {titre}
+    </button>
+  )
+
+  const titre =
+    config?.titre ??
+    (slugActif === DROITS ? 'Droits' : 'Opérations, Tranches et Lots')
 
   return (
     <div className="flex h-[calc(100vh-61px)] items-stretch">
@@ -349,45 +588,80 @@ function PageParametres() {
         <h2 className="px-3 pt-3 pb-2 text-[15px] font-bold text-[var(--ink)]">
           Paramètres
         </h2>
-        <p className="island-kicker px-3 pb-1">Listes</p>
-        <nav className="min-h-0 flex-1 overflow-y-auto border-t border-[var(--line-soft)]">
-          {LISTES.map((l) => (
-            <button
-              key={l.slug}
-              onClick={() => setSlug(l.slug)}
-              className={`block w-full cursor-pointer px-3 py-1.5 text-left text-[13px] transition-colors ${
-                l.slug === config?.slug
-                  ? 'bg-[var(--gold-tint)] font-semibold text-[var(--ink)]'
-                  : 'font-medium text-[var(--ink-soft)] hover:bg-[var(--cream-hover)]'
-              }`}
-            >
-              {l.titre}
-            </button>
+        <nav className="min-h-0 flex-1 overflow-y-auto border-t border-[var(--line-soft)] pb-3">
+          {RUBRIQUES.map((r) => (
+            <div key={r.titre}>
+              <p className="island-kicker px-3 pt-3 pb-1">{r.titre}</p>
+              {r.listes.map((l) => boutonNav(l.slug, l.titre))}
+              {/* entrées à écran dédié, à leur place dans l'arbre WinDev */}
+              {r.titre === 'Listes' &&
+                boutonNav(OTL, 'Opérations, tranches et lots')}
+              {r.titre === 'Système' && boutonNav(DROITS, 'Droits')}
+            </div>
           ))}
-          <button
-            onClick={() => setSlug(OTL)}
-            className={`block w-full cursor-pointer border-t border-[var(--line-soft)] px-3 py-1.5 text-left text-[13px] transition-colors ${
-              config == null
-                ? 'bg-[var(--gold-tint)] font-semibold text-[var(--ink)]'
-                : 'font-medium text-[var(--ink-soft)] hover:bg-[var(--cream-hover)]'
-            }`}
-          >
-            Opérations, tranches et lots
-          </button>
         </nav>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden px-5 py-5 sm:px-7">
         <h1 className="mb-4 text-xl leading-tight font-bold tracking-tight text-[var(--ink)]">
-          {config?.titre ?? 'Opérations, Tranches et Lots'}
+          {titre}
         </h1>
         {config ? (
           <ListeNomenclature key={config.slug} config={config} />
+        ) : slugActif === DROITS ? (
+          <VueDroits />
         ) : (
           <VueOtl />
         )}
       </div>
     </div>
+  )
+}
+
+// Matrice services × modules, lecture seule — les droits vivent dans
+// src/lib/services.ts (docs/services-droits.md pour le détail par contrôle)
+function VueDroits() {
+  return (
+    <section className="island-shell flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
+      <div className="min-h-0 flex-1 overflow-auto p-4">
+        <table className="w-max border-collapse text-[13px]">
+          <thead>
+            <tr>
+              <th className="border-b border-[var(--line)] px-3 py-2 text-left font-semibold text-[var(--ink)]">
+                Service
+              </th>
+              {MODULES.map((m) => (
+                <th
+                  key={m}
+                  className="border-b border-[var(--line)] px-3 py-2 text-center font-semibold text-[var(--ink)]"
+                >
+                  {MODULE_LABELS[m]}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {SERVICES.map((s) => (
+              <tr key={s.slug} className="odd:bg-[var(--cream)]">
+                <td className="px-3 py-1.5 font-medium whitespace-nowrap text-[var(--ink)]">
+                  {s.label}
+                </td>
+                {MODULES.map((m) => (
+                  <td key={m} className="px-3 py-1.5 text-center">
+                    {s.modules.includes(m) ? '✓' : '—'}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="mt-3 text-[12px] text-[var(--ink-soft)]">
+          Droits définis dans le code (src/lib/services.ts), lecture seule —
+          l'écriture est réservée aux services avec mot de passe (Consultation
+          exclue). Détail par écran : docs/services-droits.md.
+        </p>
+      </div>
+    </section>
   )
 }
 
@@ -419,7 +693,7 @@ function ListeNomenclature({ config }: { config: ConfigListe }) {
     if (slug) {
       const opts = (optionsParSlug.get(slug) ?? []).map((o) => ({
         id: o.id,
-        libelle: String(o.libelle ?? o.rs ?? o.code ?? o.id),
+        libelle: String(o.libelle ?? o.rs ?? o.nomEtude ?? o.code ?? o.id),
       }))
       return { ...c, options: opts }
     }

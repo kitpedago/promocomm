@@ -10,7 +10,7 @@ externe — le développement autonome est allé au bout de ce qu'il pouvait.
 | Sujet | État | Décision attendue |
 | --- | --- | --- |
 | **`tSubvention2`** | Dossier instruit : reprise morte — IDs en texte (max « 99 »), colonnes `Organisme_old`/`IDOperation_old`, **aucune référence dans les fenêtres ni requêtes WinDev**, les 291 déblocages pointent tous vers `tSubvention` (IDs int, dates jusqu'en 2024 contre 2023). | Confirmer l'abandon (recommandé). Si les taux historiques `PremierDeblocage*`/`SoldeDeblocage*` (qui ne vivent que sur cette table morte) ont une valeur, les reprendre en archive lecture seule. |
-| **Motif d'annulation d'une réservation** | Champ texte libre dans l'app (aucune valeur dans le legacy, `MotifAnnulation` vide sur 2 945 lignes). L'arbre FEN_Param prévoit pourtant une liste « Motif annulation » — sans table dans le .bak. | Texte libre suffisant, ou liste paramétrable à créer ? |
+| **Motif d'annulation d'une réservation** | La liste « Motif annulation » de l'arbre FEN_Param existe désormais dans `/parametres` (table `motif_annulation` côté app, vide — aucune table dans le .bak, elle survit aux réimports). L'annulation d'une réservation reste en texte libre. | Brancher le champ annulation sur la liste, ou garder le texte libre ? |
 | **TMA (travaux modificatifs acquéreur)** | Fonction **neutralisée à la source** dans le WinDev actuel (contrôles commentés dans FEN_TABLE_Commercialisation). Les données `tma` (178) sont reprises, aucun écran ne les édite. | Le besoin est-il réactivé ? Si oui : onglet TMA sur le détail du lot (les champs existent déjà au schéma). |
 | **Validations réactivées** (phase 4, pour mémoire) | RS obligatoire, SIRET nettoyé + avertissement 14 chiffres, total % participation ≠ 100 signalé — commentées dans le legacy, réactivées dans la reprise. | Valider ce comportement en recette. |
 
@@ -37,9 +37,9 @@ Le `.bak` importé (2026-07-04) est en retard sur l'analyse WinDev actuelle.
 | **Mails SAV** (chargé d'op, journalier, mensuels entreprises) | Serveur SMTP (hôte, compte, expéditeur), modèles de mails, périmètre des destinataires. Les données (`reserve.envoyer_mail`, `envoyer_mail_date`, emails des entreprises) sont prêtes. |
 | **Import Air-Bat** | Format du fichier d'échange (le legacy stocke `id_air_bat` + verrou `est_verrouille`, repris). |
 | **Impression / états** | Choix des états à reprendre parmi les `.wde` WinDev (réserves par lot/entreprise, enquêtes acquéreurs…) et de la cible (PDF serveur ?). |
-| **Alertes stades** | Les tables de règles legacy (`RegleAlerteStadeAvancement`, `EtatStadeAvancementAlerte`, `Contentieux`) sont **vides — jamais utilisées**. Ne construire l'écran que si le client alimente un besoin réel. |
+| **Alertes stades** | L'écran de paramétrage existe (`/parametres` > Stades d'avancement : règles, états, types de date — tables reprises, **vides dans le legacy, jamais utilisées**). Le moteur d'alerte (`GetAlerteStade`/`UpdateAlerteTranche` WinDev) n'est pas repris : à construire seulement si le client alimente les règles. Les archives de stades ne reprennent que les entêtes (le détail `ArchiveStadeAvancementListe` legacy est vide). |
 | **« Synchro. dates » entre tranches** | Fonction WinDev de synchronisation des jalons (`AvecSynchroEntreTranche`) — préciser le comportement attendu avec les utilisateurs avant transposition. |
-| **Exports Excel** | ✅ Couvert : bouton « Exporter » (CSV pour Excel) sur toutes les tables de l'app. Ne reste que si un format `.xlsx` spécifique est exigé. |
+| **Exports Excel** | ✅ Couvert : bouton « Exporter » (CSV pour Excel) sur toutes les tables de l'app, plus l'export d'interface de la Commercialisation (BTN_Exporter — 62 colonnes iso-`REQ_InterfaceCommercialisation_Lot`). Ne reste que si un format `.xlsx` spécifique est exigé. |
 
 ## 4. Bascule (fin de parcours)
 

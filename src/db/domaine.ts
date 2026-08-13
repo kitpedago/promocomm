@@ -280,8 +280,7 @@ export const organismeSubvention = pgTable('organisme_subvention', {
 })
 
 // Stades d'avancement de référence (65 jalons, domaine Chantier ou
-// Commercialisation — DomaineStadeAvancement n'est qu'une liste de codes texte,
-// non reprise en table)
+// Commercialisation)
 export const listeAvancement = pgTable('liste_avancement', {
   id: id(),
   domaine: text(),
@@ -292,6 +291,116 @@ export const listeAvancement = pgTable('liste_avancement', {
   // Gestion » et leur % standard, bouton Importer de FEN_TABLE_Honoraire)
   avecHonoGestion: boolean('avec_hono_gestion'),
   pourcentageStandard: real('pourcentage_standard'),
+})
+
+// Domaines des stades (legacy DomaineStadeAvancement : codes texte sans id —
+// ids générés à l'import ; liste_avancement.domaine reste le code texte)
+export const domaineStadeAvancement = pgTable('domaine_stade_avancement', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+// Motifs d'annulation d'une réservation (arbre FEN_Param ; aucune table dans
+// le .bak — liste vide au départ, tCommercialisation.MotifAnnulation jamais
+// renseigné dans le legacy)
+export const motifAnnulation = pgTable('motif_annulation', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+// Zonage ABC (legacy ZonageABC : codes texte sans id — ids générés à l'import ;
+// commune.zonage_abc_revise reste le code texte, comme dans WinDev)
+export const zonageAbc = pgTable('zonage_abc', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+// Modèles de mail (FEN_Param > Modèle de mail ; table legacy vide — le corps
+// RTF (bytea) n'est pas repris, texte simple côté nouvelle app)
+export const modeleMail = pgTable('modele_mail', {
+  id: id(),
+  libelle: text().notNull(),
+  sujet: text(),
+  corps: text(),
+  modeBrouillon: boolean('mode_brouillon'),
+  destinataire: text(),
+  destinataireCc: text('destinataire_cc'),
+  destinataireCci: text('destinataire_cci'),
+})
+
+// Types de bâtiments et intervalles entre stades (FEN_Param > Système,
+// CIntervalle.wdc : durée en mois entre deux jalons, + part par étage)
+export const typeBatiment = pgTable('type_batiment', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const typeBatimentStade = pgTable('type_batiment_stade', {
+  id: id(),
+  typeBatimentId: integer('type_batiment_id').references(() => typeBatiment.id),
+  listeAvancementId: integer('liste_avancement_id').references(
+    () => listeAvancement.id,
+  ),
+  intervalleDureeMois: real('intervalle_duree_mois'),
+  intervalleDureeMoisEtage: real('intervalle_duree_mois_etage'),
+})
+
+// Valeurs des paramètres système WinDev (legacy Param, clsParamSystem —
+// clé + valeur typée date/nombre/texte/heure ; repris tel quel pour l'écran
+// FEN_Param > Système > Valeur des paramètres)
+export const parametreValeur = pgTable('parametre_valeur', {
+  id: id(),
+  param: text().notNull(),
+  typ: text(),
+  valeurD: timestamp('valeur_d'),
+  valeurN: real('valeur_n'),
+  valeurT: text('valeur_t'),
+  valeurH: text('valeur_h'),
+})
+
+// Alertes de stade (FEN_Param > Stades d'avancement — tables legacy vides,
+// reprises pour l'écran Règles d'alerte)
+export const etatStadeAvancementAlerte = pgTable(
+  'etat_stade_avancement_alerte',
+  {
+    id: id(),
+    libelle: text().notNull(),
+  },
+)
+
+export const typeDateStadeAvancement = pgTable('type_date_stade_avancement', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const regleAlerteStadeAvancement = pgTable(
+  'regle_alerte_stade_avancement',
+  {
+    id: id(),
+    typeDate1Id: integer('type_date_1_id').references(
+      () => typeDateStadeAvancement.id,
+    ),
+    stade1Id: integer('stade_1_id').references(() => listeAvancement.id),
+    etat1Id: integer('etat_1_id').references(
+      () => etatStadeAvancementAlerte.id,
+    ),
+    typeDate2Id: integer('type_date_2_id').references(
+      () => typeDateStadeAvancement.id,
+    ),
+    stade2Id: integer('stade_2_id').references(() => listeAvancement.id),
+    etat2Id: integer('etat_2_id').references(
+      () => etatStadeAvancementAlerte.id,
+    ),
+    texteAlerte: text('texte_alerte'),
+  },
+)
+
+// Archives des stades d'avancement (entêtes seulement — le détail legacy
+// ArchiveStadeAvancementListe est vide, non repris, voir reste-a-faire.md)
+export const archiveStadeAvancement = pgTable('archive_stade_avancement', {
+  id: id(),
+  dateArchivage: timestamp('date_archivage'),
+  libelle: text().notNull(),
 })
 
 // ---------------------------------------------------------------------------

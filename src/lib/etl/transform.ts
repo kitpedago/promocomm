@@ -128,13 +128,58 @@ const copies: Array<Copy> = [
     'IDOrganismeSubvention',
   ),
   {
-    // DomaineStadeAvancement n'est qu'une liste de deux codes texte
-    // (Chantier / Commercialisation) : le domaine reste une colonne texte
     target: 'liste_avancement',
     cols: '(id, domaine, code, libelle, ordre, avec_hono_gestion, pourcentage_standard)',
     select: `SELECT s."IDListeAvancement", s."Domaine", s."Code", COALESCE(s."Libelle", ''), s."Ordre",
         s."AvecHonoGestion", s."PourcentageStandard"
       FROM legacy."tListeAvancement" s`,
+  },
+  {
+    // codes texte sans id dans le legacy (liste_avancement.domaine reste le
+    // code texte) : ids générés par ROW_NUMBER
+    target: 'domaine_stade_avancement',
+    cols: '(id, libelle)',
+    select: `SELECT ROW_NUMBER() OVER (ORDER BY s."CodeDomaineStadeAvancement"),
+        s."CodeDomaineStadeAvancement"
+      FROM legacy."DomaineStadeAvancement" s`,
+  },
+  // --- stades d'avancement : alertes, archives, intervalles (FEN_Param) ---
+  nomenclature(
+    'etat_stade_avancement_alerte',
+    'EtatStadeAvancementAlerte',
+    'IDEtatStadeAvancementAlerte',
+  ),
+  nomenclature(
+    'type_date_stade_avancement',
+    'TypeDateStadeAvancement',
+    'IDTypeDateStadeAvancement',
+  ),
+  {
+    // IDStadeAvancement1/2 pointent vers tListeAvancement (piège de nommage
+    // legacy, cf. modele-legacy.md)
+    target: 'regle_alerte_stade_avancement',
+    cols: `(id, type_date_1_id, stade_1_id, etat_1_id, type_date_2_id,
+            stade_2_id, etat_2_id, texte_alerte)`,
+    select: `SELECT s."IDRegleAlerteStadeAvancement", ${fk('IDTypeDate1')},
+        ${fk('IDStadeAvancement1')}, ${fk('IDEtatStadeAlerte1')}, ${fk('IDTypeDate2')},
+        ${fk('IDStadeAvancement2')}, ${fk('IDEtatStadeAlerte2')}, s."TxtSiALerte"
+      FROM legacy."RegleAlerteStadeAvancement" s`,
+  },
+  {
+    // entêtes seulement (ArchiveStadeAvancementListe vide, non reprise)
+    target: 'archive_stade_avancement',
+    cols: '(id, date_archivage, libelle)',
+    select: `SELECT s."IDArchiveStadeAvancement", s."DateArchivage", COALESCE(s."Libelle", '')
+      FROM legacy."ArchiveStadeAvancement" s`,
+  },
+  nomenclature('type_batiment', 'TypeBatiment', 'IDTypeBatiment'),
+  {
+    target: 'type_batiment_stade',
+    cols: `(id, type_batiment_id, liste_avancement_id, intervalle_duree_mois,
+            intervalle_duree_mois_etage)`,
+    select: `SELECT s."IDTypeBatimentStade", ${fk('IDTypeBatiment')}, ${fk('IDListeAvancement')},
+        s."IntervalleDureeMois", s."IntervalleDureeMoisEtage"
+      FROM legacy."TypeBatimentStade" s`,
   },
   nomenclature('type_mission', 'tListeTypeMission', 'IDTypeMission'),
   // --- paramètres (phase 9) ---
@@ -153,6 +198,31 @@ const copies: Array<Copy> = [
     'IDPrestataire',
     'afficher_mission:s."AfficherMission"',
   ),
+  {
+    // codes texte sans id dans le legacy (commune.zonage_abc_revise reste le
+    // code texte) : ids générés par ROW_NUMBER
+    target: 'zonage_abc',
+    cols: '(id, libelle)',
+    select: `SELECT ROW_NUMBER() OVER (ORDER BY s."CodeZonageABC"), s."CodeZonageABC"
+      FROM legacy."ZonageABC" s`,
+  },
+  {
+    // paramètres système WinDev (clés + valeurs typées, dont modèles de mails SAV)
+    target: 'parametre_valeur',
+    cols: '(id, param, typ, valeur_d, valeur_n, valeur_t, valeur_h)',
+    select: `SELECT s."IDParam", COALESCE(s."Param", ''), s."Typ", s."ValeurD",
+        s."ValeurN", s."ValeurT", s."ValeurH"
+      FROM legacy."Param" s`,
+  },
+  {
+    // Corps (RTF en bytea) non repris — table legacy vide
+    target: 'modele_mail',
+    cols: `(id, libelle, sujet, mode_brouillon, destinataire, destinataire_cc,
+            destinataire_cci)`,
+    select: `SELECT s."IDModeleMail", COALESCE(s."Libelle", ''), s."Sujet",
+        (s."ModeBrouillon" <> 0), s."Destinataire", s."DestinataireCC", s."DestinataireCCI"
+      FROM legacy."ModeleMail" s`,
+  },
 
   // --- interlocuteurs externes (notaires, architectes) ---
   nomenclature(
