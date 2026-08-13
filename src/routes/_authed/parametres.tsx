@@ -5,7 +5,12 @@
 // Hors périmètre ici : gestion directe Opérations/Tranches/Lots et import de
 // lots (voir docs/plan-implementation.md).
 import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
 import { BoutonsTable, ErreurMutation } from '#/components/ChampsModale'
@@ -252,11 +257,14 @@ const LISTES: Array<ConfigListe> = [
       { k: 'patronyme', l: 'Patronyme', t: 'texte' },
       { k: 'prenom', l: 'Prénom', t: 'texte' },
       { k: 'estPresent', l: 'Présent(e)', t: 'bool' },
-      { k: 'fonctionId', l: 'Fonction (id legacy)', t: 'entier' },
+      { k: 'fonctionId', l: 'Fonction', t: 'select', options: [] },
       { k: 'equipePersonneId', l: 'Équipe', t: 'select', options: [] },
       { k: 'email', l: 'Email', t: 'texte' },
     ],
-    selects: { equipePersonneId: 'equipes-personnes' },
+    selects: {
+      fonctionId: 'fonctions',
+      equipePersonneId: 'equipes-personnes',
+    },
   },
   {
     slug: 'prestataires',
@@ -393,16 +401,23 @@ function ListeNomenclature({ config }: { config: ConfigListe }) {
     queryFn: () => getNomenclatureFn({ data: { slug: config.slug } }),
   })
   // options des champs select : les listes référencées par la config
-  const slugsOptions = Object.values(config.selects ?? {})
-  const options0 = useQuery({
-    queryKey: ['nomenclature', slugsOptions[0]],
-    queryFn: () => getNomenclatureFn({ data: { slug: slugsOptions[0]! } }),
-    enabled: slugsOptions.length > 0,
+  const slugsOptions = [
+    ...new Set(Object.values(config.selects ?? {}).filter((s) => s != null)),
+  ]
+  const listesOptions = useQueries({
+    queries: slugsOptions.map((slug) => ({
+      queryKey: ['nomenclature', slug],
+      queryFn: () => getNomenclatureFn({ data: { slug } }),
+    })),
   })
+  const optionsParSlug = new Map(
+    slugsOptions.map((slug, i) => [slug, listesOptions[i].data ?? []]),
+  )
 
   const champs: Array<DescChamp> = config.champs.map((c) => {
-    if (c.t === 'select' && config.selects?.[c.k]) {
-      const opts = (options0.data ?? []).map((o) => ({
+    const slug = c.t === 'select' ? config.selects?.[c.k] : undefined
+    if (slug) {
+      const opts = (optionsParSlug.get(slug) ?? []).map((o) => ({
         id: o.id,
         libelle: String(o.libelle ?? o.rs ?? o.code ?? o.id),
       }))
@@ -907,9 +922,7 @@ function VueOtl() {
       <div className="flex min-h-0 flex-1 flex-col gap-8 overflow-auto px-[18px] py-4">
         <NiveauOtl
           titre="Opérations"
-          lignes={
-            (operations.data ?? [])
-          }
+          lignes={operations.data ?? []}
           colonnes={[
             colT('sccv', 'Structure juridique', 220),
             colT('libelle', 'Opération', 220),
@@ -937,9 +950,7 @@ function VueOtl() {
         {operationId != null && (
           <NiveauOtl
             titre={`Tranches de ${operationCourante?.libelle ?? ''}`}
-            lignes={
-              (tranches.data ?? [])
-            }
+            lignes={tranches.data ?? []}
             colonnes={[
               colN('id', 'IDTranche', 90),
               colT('libelle', 'Nom de la tranche', 200),
@@ -970,9 +981,7 @@ function VueOtl() {
         {trancheId != null && (
           <NiveauOtl
             titre={`Lots de ${trancheCourante?.libelle ?? ''}`}
-            lignes={
-              (lots.data ?? [])
-            }
+            lignes={lots.data ?? []}
             colonnes={[
               colT('numLot', 'Num lot', 140),
               colT('familleDeBien', 'Famille de bien', 130),
