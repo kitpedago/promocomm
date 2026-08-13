@@ -23,7 +23,11 @@ import {
   getSuiviTrancheFn,
 } from '#/lib/compta.ts'
 import { getSubventionsFn } from '#/lib/operations.ts'
-import { usePref } from '#/lib/preferences.ts'
+import {
+  selectionARejouer,
+  useMemoriserSelection,
+  usePref,
+} from '#/lib/preferences.ts'
 import { getService } from '#/lib/services'
 import { fmtDate, fmtEuro } from '#/lib/utils.ts'
 
@@ -40,9 +44,13 @@ export const Route = createFileRoute('/_authed/compta')({
     op: s.op ? Number(s.op) : undefined,
     tranche: s.tranche ? Number(s.tranche) : undefined,
   }),
-  beforeLoad: ({ context }) => {
+  beforeLoad: ({ context, search }) => {
     const service = getService(context.session.user.service)
     if (!service?.modules.includes('compta')) throw redirect({ to: '/' })
+    // même fil conducteur que /operations, cf. le commentaire de
+    // selectionARejouer pour la garde contre la boucle de redirection.
+    const selection = selectionARejouer(context.prefs, search.op)
+    if (selection) throw redirect({ to: '/compta', search: selection })
   },
   component: PageCompta,
 })
@@ -133,7 +141,13 @@ function PageCompta() {
     enabled: op != null,
   })
   const d = fiche.data
-  const trancheActive = tranche ?? d?.tranches[0]?.id
+  // à défaut de tranche dans l'URL — ou si celle demandée n'existe plus après
+  // un réimport .bak — la première tranche de l'opération
+  const trancheActive = (
+    d?.tranches.find((t) => t.id === tranche) ?? d?.tranches[0]
+  )?.id
+  // l'URL fait foi : un lien partagé `?op=99` devient la sélection mémorisée
+  useMemoriserSelection(op, trancheActive)
 
   return (
     <div className="flex h-[calc(100vh-61px)] items-stretch">
