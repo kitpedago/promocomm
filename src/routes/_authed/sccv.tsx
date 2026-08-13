@@ -5,7 +5,12 @@
 // des impôts).
 // Référence : docs/plan-implementation.md (module SCCV).
 import { useEffect, useRef, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
 
@@ -916,7 +921,6 @@ function PageSccv() {
             haut={tableSccv}
             bas={
               <DetailSccv
-                key={sccv}
                 sccvId={sccv}
                 nomenclatures={nomenclatures.data}
                 onModifierFiche={setModaleFiche}
@@ -1556,6 +1560,9 @@ function DetailSccv({
   const detail = useQuery({
     queryKey: ['sccv-detail', sccvId],
     queryFn: () => getSccvDetailFn({ data: { sccvId } }),
+    // au changement de SCCV on garde l'ancien détail affiché le temps du
+    // fetch : pas de flash « Chargement… » (le composant reste monté, sans key)
+    placeholderData: keepPreviousData,
   })
 
   const [participationSelectionnee, setParticipationSelectionnee] = useState<
@@ -1571,6 +1578,16 @@ function DetailSccv({
     'creation' | LigneCompteSccv | null
   >(null)
   const [centreImpotsOuvert, setCentreImpotsOuvert] = useState(false)
+
+  // sans remontage (pas de key), une sélection de l'ancienne SCCV pointerait
+  // vers des lignes d'une autre société — reset au changement
+  useEffect(() => {
+    setParticipationSelectionnee(null)
+    setParticipationModale(null)
+    setCompteSelectionne(null)
+    setCompteModale(null)
+    setCentreImpotsOuvert(false)
+  }, [sccvId])
 
   const supprimerParticipation = useMutation({
     mutationFn: (id: number) => deleteParticipationFn({ data: { id } }),
