@@ -201,12 +201,22 @@ Réservé Comptabilité/Administrateur. Le plus gros morceau ETL :
   Champs de modale factorisés dans `ChampsModale.tsx` (consigne « un composant
   unique par type de contrôle » — sccv.tsx encore sur ses copies locales).
 
-## Phase 9 — Paramètres et fonctions transverses
+## Phase 9 — Paramètres et fonctions transverses 🔶 (2026-08-13)
 
 - **Paramètres** : CRUD des ~30 nomenclatures (arbre FEN_Param), gestion directe
   Opérations/Tranches/Lots, import de lots.
 - **Transverses** (au fil du besoin, regroupées ici pour mémoire) : exports Excel,
   impression, envois de mails SAV, import Air-Bat, alertes stades.
+- **Livré 2026-08-13** (migration 0020) : écran `/parametres` — 31 listes de
+  l'arbre FEN_Param en CRUD générique (`lib/parametres.ts` : registre table +
+  liste blanche de champs ; `ModaleFiche` + colonnes dérivées des mêmes
+  descripteurs). Nomenclatures ajoutées à l'ETL : `commune` (583, code INSEE /
+  département / zonage ABC), `type_foncier` (3), `equipe_personne` (4). Les
+  suppressions de valeurs encore utilisées sont refusées par les FK Postgres.
+  Reste : gestion directe Opérations/Tranches/Lots + import de lots, et les
+  transverses (exports Excel, impression, mails SAV, import Air-Bat, alertes
+  stades, synchro dates) — intégrations à cadrer avec le client (SMTP, format
+  Air-Bat, modèles d'impression).
 
 ## Bascule (fin de parcours)
 
@@ -232,7 +242,7 @@ Réservé Comptabilité/Administrateur. Le plus gros morceau ETL :
 | 6     | Compta & Finances                                 | ✅ 2026-08-13 — lecture (2026-08-12) puis écriture : CRUD des subventions + déblocages, frais financiers, financements (fiche complète 50 champs), PSLA, déblocages PSLA, remboursements anticipés, GFA + réductions — modale générique `ModaleFiche` pilotée par descripteurs, suppressions en cascade iso-WinDev, cycle création/suppression vérifié navigateur. Restent côté client : arbitrage `tSubvention2` (génération vivante) ; « Premier/Solde » du déblocage n'existe pas dans le .bak                                                                                                                        |
 | 7     | Honoraires                                        | ✅ 2026-08-13 — ETL `tMission`/`tGrilleFacturation`/`tHonoCommHFNatureAchat`/`tHonoCommHFFacture`/`tFacture` (855/1 259/312/645/1 653) + `type_mission`, `prestataire`, extension `liste_avancement` ; écran `/honoraires` (accordéons Suivant Convention — missions + grille par stade avec Importer — et Commercialisation — barème par nature d'achat + factures, sur-entêtes colorés, totaux iso-WinDev). L'écran des factures de missions (FEN_Promotion, sans capture) suivra en phase 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 8     | Déclarations et Bilan                             | ✅ 2026-08-13 — Bilan par SCCV : ETL `tBilan_Stock`/`tBilan_CAHT`/`tBilan_Resultat` (428/207/607), écran `/bilan` (volet SCCV filtrable, accordéons Stock et CA / Résultats / IS - Non IS, CRUD, colonnes calculées iso-WinDev dont quotes-parts × % KPI). Déclarations : ETL `tAssuranceDoMrH`/`AccordCadreAssurance`/`tSGA` (HTML assaini)/`tDeclaration940` (348/5/199/124), écran `/declarations` (volet Opérations, tranche, accordéons Assurance DO/MRH / SGA / 940 & LASM, CRUD). Champs de modale factorisés (`ChampsModale.tsx`) |
-| 9     | Paramètres + transverses                          | à faire                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 9     | Paramètres + transverses                          | 🔶 2026-08-13 — `/parametres` : 31 nomenclatures de FEN_Param en CRUD générique (registre serveur à liste blanche + ModaleFiche) ; ETL commune/type_foncier/equipe_personne (migration 0020). Reste : gestion directe Opérations/Tranches/Lots, import de lots, transverses (Excel, impression, mails, Air-Bat, alertes) à cadrer client                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | —     | Bascule                                           | à faire                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 ## Consignes de développement (composants UI)

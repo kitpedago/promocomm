@@ -1613,3 +1613,26 @@ export const droit = pgTable('droit', {
   service: text().notNull(),
   type: integer().notNull(),
 })
+
+// ---------------------------------------------------------------------------
+// Paramètres (phase 9) — nomenclatures restantes de l'arbre FEN_Param
+// ---------------------------------------------------------------------------
+
+export const commune = pgTable('commune', {
+  id: id(),
+  libelle: text().notNull(),
+  codeInsee: text('code_insee'),
+  departement: text(),
+  codePostal: text('code_postal'),
+  zonageAbcRevise: text('zonage_abc_revise'),
+})
+
+export const typeFoncier = pgTable('type_foncier', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
+export const equipePersonne = pgTable('equipe_personne', {
+  id: id(),
+  libelle: text().notNull(),
+})

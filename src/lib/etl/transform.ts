@@ -137,6 +137,16 @@ const copies: Array<Copy> = [
       FROM legacy."tListeAvancement" s`,
   },
   nomenclature('type_mission', 'tListeTypeMission', 'IDTypeMission'),
+  // --- paramètres (phase 9) ---
+  {
+    target: 'commune',
+    cols: '(id, libelle, code_insee, departement, code_postal, zonage_abc_revise)',
+    select: `SELECT s."IDCommune", COALESCE(s."Libelle", ''), s."CodeINSEE",
+        s."Departement", s."CodePostal", s."ZonageABCRevise"
+      FROM legacy."Commune" s`,
+  },
+  nomenclature('type_foncier', 'TypeFoncier', 'IDTypeFoncier'),
+  nomenclature('equipe_personne', 'EquipePersonne', 'IDEquipePersonne'),
   nomenclature(
     'prestataire',
     'tListePrestataire',

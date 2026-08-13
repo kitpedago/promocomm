@@ -14,6 +14,7 @@ import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as AuthedIndexRouteImport } from './routes/_authed/index'
 import { Route as AuthedSccvRouteImport } from './routes/_authed/sccv'
 import { Route as AuthedSavRouteImport } from './routes/_authed/sav'
+import { Route as AuthedParametresRouteImport } from './routes/_authed/parametres'
 import { Route as AuthedOperationsRouteImport } from './routes/_authed/operations'
 import { Route as AuthedHonorairesRouteImport } from './routes/_authed/honoraires'
 import { Route as AuthedDeclarationsRouteImport } from './routes/_authed/declarations'
@@ -47,6 +48,11 @@ const AuthedSccvRoute = AuthedSccvRouteImport.update({
 const AuthedSavRoute = AuthedSavRouteImport.update({
   id: '/sav',
   path: '/sav',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedParametresRoute = AuthedParametresRouteImport.update({
+  id: '/parametres',
+  path: '/parametres',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedOperationsRoute = AuthedOperationsRouteImport.update({
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/declarations': typeof AuthedDeclarationsRoute
   '/honoraires': typeof AuthedHonorairesRoute
   '/operations': typeof AuthedOperationsRoute
+  '/parametres': typeof AuthedParametresRoute
   '/sav': typeof AuthedSavRoute
   '/sccv': typeof AuthedSccvRoute
   '/admin/import': typeof AuthedAdminImportRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/declarations': typeof AuthedDeclarationsRoute
   '/honoraires': typeof AuthedHonorairesRoute
   '/operations': typeof AuthedOperationsRoute
+  '/parametres': typeof AuthedParametresRoute
   '/sav': typeof AuthedSavRoute
   '/sccv': typeof AuthedSccvRoute
   '/': typeof AuthedIndexRoute
@@ -144,6 +152,7 @@ export interface FileRoutesById {
   '/_authed/declarations': typeof AuthedDeclarationsRoute
   '/_authed/honoraires': typeof AuthedHonorairesRoute
   '/_authed/operations': typeof AuthedOperationsRoute
+  '/_authed/parametres': typeof AuthedParametresRoute
   '/_authed/sav': typeof AuthedSavRoute
   '/_authed/sccv': typeof AuthedSccvRoute
   '/_authed/': typeof AuthedIndexRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/declarations'
     | '/honoraires'
     | '/operations'
+    | '/parametres'
     | '/sav'
     | '/sccv'
     | '/admin/import'
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/declarations'
     | '/honoraires'
     | '/operations'
+    | '/parametres'
     | '/sav'
     | '/sccv'
     | '/'
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/_authed/declarations'
     | '/_authed/honoraires'
     | '/_authed/operations'
+    | '/_authed/parametres'
     | '/_authed/sav'
     | '/_authed/sccv'
     | '/_authed/'
@@ -243,6 +255,13 @@ declare module '@tanstack/react-router' {
       path: '/sav'
       fullPath: '/sav'
       preLoaderRoute: typeof AuthedSavRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/parametres': {
+      id: '/_authed/parametres'
+      path: '/parametres'
+      fullPath: '/parametres'
+      preLoaderRoute: typeof AuthedParametresRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/operations': {
@@ -327,6 +346,7 @@ interface AuthedRouteChildren {
   AuthedDeclarationsRoute: typeof AuthedDeclarationsRoute
   AuthedHonorairesRoute: typeof AuthedHonorairesRoute
   AuthedOperationsRoute: typeof AuthedOperationsRoute
+  AuthedParametresRoute: typeof AuthedParametresRoute
   AuthedSavRoute: typeof AuthedSavRoute
   AuthedSccvRoute: typeof AuthedSccvRoute
   AuthedIndexRoute: typeof AuthedIndexRoute
@@ -342,6 +362,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedDeclarationsRoute: AuthedDeclarationsRoute,
   AuthedHonorairesRoute: AuthedHonorairesRoute,
   AuthedOperationsRoute: AuthedOperationsRoute,
+  AuthedParametresRoute: AuthedParametresRoute,
   AuthedSavRoute: AuthedSavRoute,
   AuthedSccvRoute: AuthedSccvRoute,
   AuthedIndexRoute: AuthedIndexRoute,
