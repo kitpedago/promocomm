@@ -1,7 +1,10 @@
 // Synchronise les comptes Better Auth des services (src/lib/services.ts +
 // mots de passe de src/lib/services.server.ts) : création si absent, mot de
 // passe realigné à chaque exécution (le code est la source de vérité tant que
-// les services ne sont pas en table). Idempotent. Usage : npm run db:seed
+// les services ne sont pas en table). Sème aussi les nomenclatures gérées
+// côté app (sans table legacy). Idempotent. Usage : npm run db:seed
+import { motifAnnulation } from '../src/db/domaine.ts'
+import { db } from '../src/db/index.ts'
 import { auth } from '../src/lib/auth.ts'
 import { SERVICE_PASSWORDS } from '../src/lib/services.server.ts'
 import { SERVICES, serviceEmail } from '../src/lib/services.ts'
@@ -24,7 +27,9 @@ for (const service of SERVICES) {
       name: service.label,
       service: service.slug,
     })
-    console.log(`↻ ${service.label} (${email}) — mot de passe/infos resynchronisés`)
+    console.log(
+      `↻ ${service.label} (${email}) — mot de passe/infos resynchronisés`,
+    )
     continue
   }
 
@@ -41,5 +46,23 @@ for (const service of SERVICES) {
     password: hash,
   })
   console.log(`+ ${service.label} (${email}) créé`)
+}
+
+// Motifs d'annulation d'une réservation (combo WinDev, table absente du .bak).
+// Semés seulement si la liste est vide : elle se gère ensuite dans /parametres.
+const MOTIFS_ANNULATION = [
+  'Changement situation personnelle',
+  'Changement de projet',
+  'Non obtention du financement',
+  'Modification du calendrier du programme',
+]
+const motifs = await db.select({ id: motifAnnulation.id }).from(motifAnnulation)
+if (motifs.length === 0) {
+  await db
+    .insert(motifAnnulation)
+    .values(MOTIFS_ANNULATION.map((libelle) => ({ libelle })))
+  console.log(`+ ${MOTIFS_ANNULATION.length} motifs d'annulation semés`)
+} else {
+  console.log(`↻ motifs d'annulation déjà présents (${motifs.length})`)
 }
 process.exit(0)
