@@ -167,8 +167,7 @@ const copies: Array<Copy> = [
   },
 
   // --- dimension financière (phase 6) : nomenclatures ---
-  nomenclature('banque', 'tBanque', 'IDBanque'),
-  nomenclature('index_taux', 'tIndextaux', 'IDIndextaux'),
+  // (banque et index_taux sont copiées par le bloc SCCV, plus bas)
   nomenclature(
     'type_financement',
     'tListeTypeFinancement',
@@ -229,15 +228,114 @@ const copies: Array<Copy> = [
   ),
 
   // --- colonne vertébrale ---
+  // --- module SCCV (phase 4) : référentiels ---
+  nomenclature(
+    'structure_juridique_stade',
+    'tStructureJuridique_Stade',
+    'IDStructureJuridique_Stade',
+  ),
+  nomenclature('gestionnaire_sccv', 'GestionnaireSCCV', 'IDGestionnaireSCCV'),
+  nomenclature('partenariat', 'Partenariat', 'IDPartenariat'),
+  nomenclature('index_taux', 'tIndextaux', 'IDIndextaux'),
+  nomenclature(
+    'motif_remuneration_associe',
+    'MotifRemunerationAssocie',
+    'IDMotifRemunerationAssocie',
+  ),
+  nomenclature(
+    'type_compte_banque',
+    'tListeTypeCompteBanque',
+    'IDTypeCompteBanque',
+  ),
+  nomenclature(
+    'utilisation_compte',
+    'tListeUtilisationCompte',
+    'IDUtilisationCompte',
+  ),
+  {
+    target: 'sie',
+    cols: '(id, libelle, adresse, cp, commune)',
+    select: `SELECT s."IDSIE", COALESCE(s."Libelle", ''), s."Adresse", s."CP", s."Commune"
+      FROM legacy."tSIE" s`,
+  },
+  {
+    target: 'personne',
+    cols: '(id, patronyme, prenom, est_present, fonction_id, equipe_personne_id, email)',
+    select: `SELECT s."IDPersonne", s."Patronyme", s."Prenom", s."EstPresent",
+        s."IDFonction", ${fk('IDEquipePersonne')}, s."EMail"
+      FROM legacy."tPersonne" s`,
+  },
+  {
+    target: 'banque',
+    cols: `(id, libelle, cc_nom, cc_adresse, cc_cp, cc_commune, cc_tel, cc_email,
+            pret_nom, pret_adresse, pret_cp, pret_commune, pret_tel, pret_email)`,
+    select: `SELECT s."IDBanque", COALESCE(s."Libelle", ''), s."CCNom", s."CCAdresse",
+        s."CCCP", s."CCCommune", s."CCTel", s."CCEMail",
+        s."PretNom", s."PretAdresse", s."PretCP", s."PretCommune", s."PretTel", s."PretEMail"
+      FROM legacy."tBanque" s`,
+  },
+  {
+    target: 'associe',
+    cols: `(id, rs, forme_juridique, siren, adresse1, adresse2, cp, commune, tel,
+            est_hlm, contact_nom_complet, contact_fonction, email, commentaire)`,
+    select: `SELECT s."IDAssocie", COALESCE(s."RS", ''), s."FormeJuridique", s."SIREN",
+        s."Adresse1", s."Adresse2", s."CP", s."Commune", s."Tel",
+        s."EstHLM", s."ContactNomComplet", s."ContactFonction", s."EMail", s."Commentaire"
+      FROM legacy."tAssocie" s`,
+  },
   {
     target: 'structure_juridique',
     cols: `(id, rs, num_tva_intra, siret, date_debut_activite, date_immat, date_liquidation,
-            capital, nb_part, montant_part, sccv_hf, sccv_hlm)`,
+            capital, nb_part, montant_part, sccv_hf, sccv_hlm,
+            stade_id, personne_comptable_id, gestionnaire_sccv_id, partenariat_id, hfsga,
+            date_bilan_debut_premier_exercice, date_bilan_fin_premier_exercice,
+            date_modif_cloture, date_planning_cloture, date_liberation_capital,
+            edi_tva, edi_liasse, cpte_fiscal, sie_id, civilite_id, interlocuteur_sie, date_mandat_sie)`,
     select: `SELECT s."IDStructureJuridique", s."RS", s."NumTVAIntra",
         NULLIF(s."Siret", 0)::bigint::text,
         s."DateDebutActivite", s."DateImmat", s."DateLiquidation",
-        s."CapitalSCCV", s."NbPart", s."MontantPart", s."SCCV_HF", s."SCCV_HLM"
+        s."CapitalSCCV", s."NbPart", s."MontantPart", s."SCCV_HF", s."SCCV_HLM",
+        ${fkSafe('Stade', 'tStructureJuridique_Stade', 'IDStructureJuridique_Stade')},
+        ${fkSafe('IDPersonneComptable', 'tPersonne', 'IDPersonne')},
+        ${fkSafe('IDGestionnaireSCCV', 'GestionnaireSCCV', 'IDGestionnaireSCCV')},
+        ${fkSafe('IDPartenariat', 'Partenariat', 'IDPartenariat')},
+        s."HFSGA",
+        s."DateBilanDebutPremierExercice", s."DateBilanFinPremierExercice",
+        s."DateModifCloture", s."DatePlanningCloture", s."DateLiberationCapital",
+        s."EDI_TVA", s."EDI_Liasse", s."CpteFiscal",
+        ${fkSafe('IDSIE', 'tSIE', 'IDSIE')},
+        ${fkSafe('IDCivilite', 'tCivilite', 'IDCivilite')},
+        s."InterlocuteurSIE", s."DateMandatSIE"
       FROM legacy."tStructureJuridique" s`,
+  },
+  {
+    target: 'participation',
+    cols: `(id, structure_juridique_id, associe_id, pourcentage, commentaires, conv_treso,
+            motif_remuneration_associe_id, date_signature_conv, date_application,
+            date_fin_remuneration, index_taux_remuneration_id, info_taux_remuneration)`,
+    select: `SELECT s."IDParticipation", s."IDStructureJuridique",
+        ${fkSafe('IDAssocie', 'tAssocie', 'IDAssocie')},
+        s."Pourcentage", s."Commmentaires", s."ConvTreso",
+        ${fkSafe('IDMotifRemunerationAssocie', 'MotifRemunerationAssocie', 'IDMotifRemunerationAssocie')},
+        s."DateSignatureConv", s."DateApplication", s."DateFinRemuneration",
+        ${fkSafe('IDIndexTaux_Remuneration', 'tIndextaux', 'IDIndextaux')},
+        s."InfoTauxRemuneration"
+      FROM legacy."tParticipation" s
+      WHERE EXISTS (SELECT 1 FROM legacy."tStructureJuridique" r
+                    WHERE r."IDStructureJuridique" = s."IDStructureJuridique")`,
+  },
+  {
+    target: 'compte_banque',
+    cols: `(id, structure_juridique_id, banque_id, type_compte_banque_id,
+            utilisation_compte_id, num_compte, iban, bic, est_cloture, commentaires)`,
+    select: `SELECT s."IDCompteBanque", s."IDStructureJuridique",
+        ${fkSafe('IDBanque', 'tBanque', 'IDBanque')},
+        ${fkSafe('IDTypeCompteBanque', 'tListeTypeCompteBanque', 'IDTypeCompteBanque')},
+        ${fkSafe('IDUtilisationCompte', 'tListeUtilisationCompte', 'IDUtilisationCompte')},
+        s."NumCompte", s."IBAN", s."BIC", s."EstCloture", s."Commentaires"
+      FROM legacy."tCompteBanque" s
+      WHERE EXISTS (SELECT 1 FROM legacy."tStructureJuridique" r
+                    WHERE r."IDStructureJuridique" = s."IDStructureJuridique")`,
   },
   {
     target: 'operation',

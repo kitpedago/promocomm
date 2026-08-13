@@ -31,12 +31,13 @@ Alimentation : `npm run db:transform` (ou automatiquement en fin d'import .bak) 
     le 2026-08-12, cf. fiche Opérations).
   - `tOperation` : personnes internes (ChargeOpe, assistante), certifications/labels,
     TypeFoncier, ApporteurFoncier, PourcentageKPI.
-  - `tStructureJuridique` : volet comptable/fiscal (SIE, EDI, gestionnaire SCCV, dates bilan).
+  - `tStructureJuridique` : volet comptable/fiscal (SIE, EDI, gestionnaire SCCV, dates bilan)
+    → repris depuis le 2026-08-12, cf. section phase 4 ci-dessous.
   - `tAcquereur.IDConseillerTechnique` (référence non identifiée), `Identifiant`, `Etape`, `Enquete*`.
   - `tCommercialisation` : `PrestataireCommercialisation/Comm1/Comm2` (→ `tListePrestataire`,
     confirmé par REQ_InterfaceCommercialisation_Lot — à ajouter en tranche 2), `TMAMailing*`.
 
-## Tables (45)
+## Tables (58)
 
 **Nomenclatures (29)** : `civilite`, `csp`, `situation_familiale`, `situation_famille` (les deux
 coexistent sur l'acquéreur — héritage à clarifier avec le client), `type_menage`,
@@ -59,6 +60,36 @@ une colonne), `stade_avancement` (6 935 jalons datés par tranche ; la facture l
 module Honoraires), `subvention` (224 ; déblocages et suivi budgétaire en phase 6).
 `tranche` porte au passage les blocs Terrain (opérateur / OFS-BRS / bail) et
 Informations diverses (certification, label, performance énergétique, MOE interne).
+
+**Module SCCV et associés (13 tables/extensions, phase 4, 2026-08-12)** :
+`structure_juridique_stade` (7), `gestionnaire_sccv` (12), `partenariat` (4),
+`index_taux` (4), `motif_remuneration_associe` (2), `type_compte_banque` (2),
+`utilisation_compte` (3), `sie` (13, service des impôts des entreprises),
+`personne` (44, collaborateurs internes — legacy `tPersonne` ; seuls les
+comptables, `fonction_id = 1`, sont utilisés par le module, `fonction_id` et
+`equipe_personne_id` repris bruts sans table de référence faute d'écran),
+`banque` (17, avancée depuis la phase 6 pour l'onglet Comptes bancaires),
+`associe` (33, personnes morales associées), `participation` (299, parts des
+associés dans les SCCV), `compte_banque` (195). `structure_juridique` reçoit en
+extension le volet gestion (stade, comptable, gestionnaire, partenariat) et le
+volet Centre des impôts (EDI TVA/liasse, compte fiscal, SIE, interlocuteur, date
+de mandat).
+
+- `participation.pourcentage` est stocké en fraction 0–1 (iso-legacy
+  `Pourcentage`), converti en % côté UI (`enPourcent`/`enFraction` dans
+  `sccv.helpers.ts`).
+- `participation.periodiciteVersement` : le legacy a bien une table
+  `Periodicite` (2 lignes, `ANNUEL`/`TRIM`) mais ses codes ne sont exposés que
+  par un texte, sans colonne ID exploitable comme FK ; et côté
+  `tParticipation`, `IDPeriodicite_Versement` est à 100 % vide (298 NULL +
+  1 zéro sur 299 lignes) — rien à reprendre par ETL. D'où le choix d'un champ
+  texte (pas une table de référence) servant une combo statique
+  `ANNUEL`/`TRIM` côté UI.
+- Caches non repris : `cur*` de `tStructureJuridique` et le texte dénormalisé
+  `GestionnaireSCCV` (le nom du gestionnaire passe désormais par la jointure
+  vers `gestionnaire_sccv`) — recalcul prévu en phase 7 si un besoin
+  d'affichage rapide apparaît.
+- Pas d'écran de suppression de SCCV (iso-WinDev, la fiche ne se supprime pas).
 
 **Cœur (11)** :
 

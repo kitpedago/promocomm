@@ -87,13 +87,23 @@ trois onglets de la fiche). Reste :
 - Au passage : les caches `stade_com`/`situation_*` du tableau de bord pourront être
   recalculés depuis `tStadeAvancement` au lieu d'être repris tels quels.
 
-## Phase 4 — SCCV et associés
+## Phase 4 — SCCV et associés ✅ (2026-08-12)
 
-- **ETL** : `tParticipation` (299), `tAssocie`, `tCompteBanque` (195), `tSIE`,
-  volet comptable/fiscal de `tStructureJuridique` (gestionnaire, EDI, dates bilan).
-- **Écrans** : liste SCCV (filtres stade/comptable/gestionnaire/liquidée, colonnes TVA,
-  Siret, HF/HLM) ; onglets Associés (%, convention tréso, rémunération), Opérations,
-  Comptes bancaires, Centre des impôts.
+Livré : ETL des 13 tables/extensions du module (voir [schema-cible.md](schema-cible.md))
+— `tParticipation` (299), `tAssocie` (→ `associe`, 33), `tCompteBanque` (195),
+`tSIE` (→ `sie`, 13), `tBanque` (17, avancée depuis la phase 6 pour l'onglet
+Comptes bancaires), volet comptable/fiscal de `tStructureJuridique` (gestionnaire,
+EDI, dates bilan) et les nomenclatures du module (stade, gestionnaire,
+partenariat, index de taux, motif de rémunération, type/utilisation de compte).
+Écrans : liste SCCV (88 lignes, filtres stade/comptable/gestionnaire/liquidée,
+21 colonnes) et fiche en 4 onglets (Associés, Opérations, Comptes bancaires,
+Centre des impôts) ; CRUD complet sur la fiche, les participations et les comptes
+bancaires (pas de suppression de SCCV, iso-WinDev).
+
+**À signaler au client** : validations commentées dans le legacy et réactivées
+dans la reprise — raison sociale obligatoire, SIRET nettoyé des espaces à la
+saisie avec avertissement (non bloquant) s'il ne fait pas 14 chiffres, total des
+% de participation signalé (non bloquant) s'il diffère de 100.
 
 ## Phase 5 — SAV Promotion
 
@@ -157,7 +167,7 @@ Réservé Comptabilité/Administrateur. Le plus gros morceau ETL :
 | 1     | Consultation commerciale + composants transverses | ✅ 2026-08-12 — Commercialisation et Acquéreurs livrés le 2026-07-05 (panneau maître, sélecteur de tranche, table unique `DataTable` avec pagination, détail lot 7 onglets, filtre en arbre par opération, lot courant calculé) ; fiche Opérations partielle (identité, adresse, tranches, lots) le 2026-08-12 |
 | 2     | Écriture commerciale + droits fins                | à faire                                                                                                                                                                                                                                                                                                        |
 | 3     | Suivi de production (Opérations)                  | à faire                                                                                                                                                                                                                                                                                                        |
-| 4     | SCCV et associés                                  | à faire                                                                                                                                                                                                                                                                                                        |
+| 4     | SCCV et associés                                  | ✅ 2026-08-12 — ETL (13 tables/extensions), liste (88) + fiche 4 onglets, CRUD complet ; validations réactivées à signaler au client (RS obligatoire, SIRET, total % ≠ 100)                                                                                                                                  |
 | 5     | SAV Promotion                                     | à faire                                                                                                                                                                                                                                                                                                        |
 | 6     | Compta & Finances                                 | 🔶 2026-08-12 — lecture livrée : ETL complet (financement, PSLA + déblocages, remboursements anticipés, GFA + réductions, frais financiers, budgets, déblocages subventions, blocs financiers de `tranche`, 21 nomenclatures) ; écran `/compta` (Subventions + déblocages, Suivi résultat + frais, Finances 6 sous-onglets). Reste : écriture, arbitrage `tSubvention2`, champs Premier/Solde déblocage subvention |
 | 7     | Honoraires                                        | à faire                                                                                                                                                                                                                                                                                                        |
