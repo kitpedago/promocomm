@@ -12,6 +12,7 @@ import { Search } from 'lucide-react'
 import Champ from '#/components/Champ'
 import DataTable from '#/components/DataTable'
 import Onglets from '#/components/Onglets'
+import Scindeur from '#/components/Scindeur'
 import { Button } from '#/components/ui/button'
 import {
   Dialog,
@@ -133,7 +134,9 @@ const colCheck = <T,>(
   accessorKey: id,
   header,
   size,
-  cell: (c) => <span className="block text-center">{c.getValue() ? '✓' : '—'}</span>,
+  cell: (c) => (
+    <span className="block text-center">{c.getValue() ? '✓' : '—'}</span>
+  ),
 })
 
 // ---------------------------------------------------------------------------
@@ -338,7 +341,10 @@ function ChampSelectTexte({
 }) {
   return (
     <ChampForm libelle={libelle}>
-      <Select value={value ?? VIDE} onValueChange={(v) => onChange(v === VIDE ? null : v)}>
+      <Select
+        value={value ?? VIDE}
+        onValueChange={(v) => onChange(v === VIDE ? null : v)}
+      >
         <SelectTrigger className="h-9 w-full text-[13px]">
           <SelectValue />
         </SelectTrigger>
@@ -490,7 +496,9 @@ function versEntreeFiche(f: FicheSccvBrute): EntreeFicheSccv {
     partenariatId: f.partenariatId,
     dateDebutActivite: versInputDate(f.dateDebutActivite),
     dateImmat: versInputDate(f.dateImmat),
-    dateBilanDebutPremierExercice: versInputDate(f.dateBilanDebutPremierExercice),
+    dateBilanDebutPremierExercice: versInputDate(
+      f.dateBilanDebutPremierExercice,
+    ),
     dateBilanFinPremierExercice: versInputDate(f.dateBilanFinPremierExercice),
     dateModifCloture: f.dateModifCloture,
     datePlanningCloture: f.datePlanningCloture,
@@ -558,7 +566,9 @@ function ModaleFicheSccv({
   const optionsComptable = [
     ...(nomenclatures?.comptables ?? []),
     ...(fiche?.personneComptableId != null &&
-    !(nomenclatures?.comptables ?? []).some((c) => c.id === fiche.personneComptableId)
+    !(nomenclatures?.comptables ?? []).some(
+      (c) => c.id === fiche.personneComptableId,
+    )
       ? [
           {
             id: fiche.personneComptableId,
@@ -572,7 +582,9 @@ function ModaleFicheSccv({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{fiche ? 'Modifier la SCCV' : 'Nouvelle SCCV'}</DialogTitle>
+          <DialogTitle>
+            {fiche ? 'Modifier la SCCV' : 'Nouvelle SCCV'}
+          </DialogTitle>
         </DialogHeader>
         <form
           onSubmit={(e) => {
@@ -582,7 +594,12 @@ function ModaleFicheSccv({
         >
           <div className="grid gap-x-8 gap-y-3 md:grid-cols-2">
             <div className="flex flex-col gap-3">
-              <ChampSaisie libelle="Raison sociale" value={valeurs.rs} onChange={set('rs')} required />
+              <ChampSaisie
+                libelle="Raison sociale"
+                value={valeurs.rs}
+                onChange={set('rs')}
+                required
+              />
               <ChampSaisie
                 libelle="SIRET"
                 value={valeurs.siret ?? ''}
@@ -708,8 +725,12 @@ function ModaleFicheSccv({
               <ChampSaisie
                 libelle="Montant parts"
                 type="number"
-                value={valeurs.montantPart != null ? String(valeurs.montantPart) : ''}
-                onChange={(v) => set('montantPart')(v === '' ? null : Number(v))}
+                value={
+                  valeurs.montantPart != null ? String(valeurs.montantPart) : ''
+                }
+                onChange={(v) =>
+                  set('montantPart')(v === '' ? null : Number(v))
+                }
               />
               <ChampSaisie
                 libelle="Date libération capital"
@@ -754,8 +775,7 @@ function PageSccv() {
   const [liquidee, setLiquidee] = useState(false)
   const [recherche, setRecherche] = useState('')
   // pas de recherche serveur en dessous de 3 caractères (iso-WinDev)
-  const contient =
-    recherche.trim().length >= 3 ? recherche.trim() : undefined
+  const contient = recherche.trim().length >= 3 ? recherche.trim() : undefined
 
   const nomenclatures = useQuery({
     queryKey: ['sccv-nomenclatures'],
@@ -772,10 +792,11 @@ function PageSccv() {
   // Modale « Fiche SCCV » centralisée ici : 'creation', une fiche (édition,
   // depuis le double-clic sur une ligne ou le bouton Modifier du détail) ou
   // null (fermée).
-  const [modaleFiche, setModaleFiche] = useState<'creation' | FicheSccvBrute | null>(
-    null,
-  )
-  const ficheEnEdition = modaleFiche && modaleFiche !== 'creation' ? modaleFiche : null
+  const [modaleFiche, setModaleFiche] = useState<
+    'creation' | FicheSccvBrute | null
+  >(null)
+  const ficheEnEdition =
+    modaleFiche && modaleFiche !== 'creation' ? modaleFiche : null
 
   // Double-clic sur une ligne (détection manuelle : deux clics rapprochés
   // sur le même id — DataTable n'expose qu'onRowClick)
@@ -783,8 +804,11 @@ function PageSccv() {
   const gererClicLigne = (r: LigneSccv) => {
     const maintenant = Date.now()
     const estDoubleClic =
-      dernierClic.current.id === r.id && maintenant - dernierClic.current.t < 400
-    dernierClic.current = estDoubleClic ? { id: -1, t: 0 } : { id: r.id, t: maintenant }
+      dernierClic.current.id === r.id &&
+      maintenant - dernierClic.current.t < 400
+    dernierClic.current = estDoubleClic
+      ? { id: -1, t: 0 }
+      : { id: r.id, t: maintenant }
     void navigate({ search: { sccv: r.id } })
     if (estDoubleClic && !lectureSeule) {
       void queryClient
@@ -797,6 +821,20 @@ function PageSccv() {
         })
     }
   }
+
+  const tableSccv = (
+    <DataTable
+      id="sccv"
+      columns={COLONNES_SCCV}
+      data={liste.data ?? []}
+      unite="SCCV"
+      getRowId={(r) => String(r.id)}
+      selectedRowId={sccv != null ? String(sccv) : null}
+      onRowClick={gererClicLigne}
+      defaultHidden={DEFAUT_MASQUEES}
+      emptyText={liste.isLoading ? 'Chargement…' : 'Aucune SCCV trouvée.'}
+    />
+  )
 
   return (
     <div className="flex h-[calc(100vh-61px)] flex-col overflow-hidden px-5 py-5 sm:px-7">
@@ -825,7 +863,10 @@ function PageSccv() {
         />
 
         <label className="flex items-center gap-2 text-[13px] font-medium text-[var(--ink-soft)]">
-          <Switch checked={liquidee} onCheckedChange={(v) => setLiquidee(!!v)} />
+          <Switch
+            checked={liquidee}
+            onCheckedChange={(v) => setLiquidee(!!v)}
+          />
           Liquidées
         </label>
 
@@ -856,31 +897,33 @@ function PageSccv() {
         </label>
 
         {!lectureSeule && (
-          <Button size="sm" className="ml-auto" onClick={() => setModaleFiche('creation')}>
+          <Button
+            size="sm"
+            className="ml-auto"
+            onClick={() => setModaleFiche('creation')}
+          >
             Nouvelle SCCV
           </Button>
         )}
       </div>
 
-      <DataTable
-        id="sccv"
-        columns={COLONNES_SCCV}
-        data={liste.data ?? []}
-        unite="SCCV"
-        getRowId={(r) => String(r.id)}
-        selectedRowId={sccv != null ? String(sccv) : null}
-        onRowClick={gererClicLigne}
-        defaultHidden={DEFAUT_MASQUEES}
-        emptyText={liste.isLoading ? 'Chargement…' : 'Aucune SCCV trouvée.'}
-      />
-
-      {sccv != null && (
-        <DetailSccv
-          key={sccv}
-          sccvId={sccv}
-          nomenclatures={nomenclatures.data}
-          onModifierFiche={setModaleFiche}
-        />
+      {sccv == null ? (
+        tableSccv
+      ) : (
+        <div className="min-h-0 flex-1">
+          <Scindeur
+            id="sccv"
+            haut={tableSccv}
+            bas={
+              <DetailSccv
+                key={sccv}
+                sccvId={sccv}
+                nomenclatures={nomenclatures.data}
+                onModifierFiche={setModaleFiche}
+              />
+            }
+          />
+        </div>
       )}
 
       <ModaleFicheSccv
@@ -1042,7 +1085,9 @@ function ModaleParticipation({
     commentaires: null,
   }
   const [valeurs, setValeurs] = useState<EntreeParticipation>(() =>
-    participation ? versEntreeParticipation(sccvId, participation) : videParticipation,
+    participation
+      ? versEntreeParticipation(sccvId, participation)
+      : videParticipation,
   )
   const enregistrer = useMutation({
     mutationFn: (d: EntreeParticipation) => saveParticipationFn({ data: d }),
@@ -1054,7 +1099,9 @@ function ModaleParticipation({
   useEffect(() => {
     if (open) {
       setValeurs(
-        participation ? versEntreeParticipation(sccvId, participation) : videParticipation,
+        participation
+          ? versEntreeParticipation(sccvId, participation)
+          : videParticipation,
       )
       enregistrer.reset()
     }
@@ -1068,7 +1115,8 @@ function ModaleParticipation({
   const autres = participations.filter((p) => p.id !== participation?.id)
   const total =
     Math.round(
-      (autres.reduce((s, p) => s + (p.pourcentage ?? 0), 0) + (valeurs.pourcentage ?? 0)) *
+      (autres.reduce((s, p) => s + (p.pourcentage ?? 0), 0) +
+        (valeurs.pourcentage ?? 0)) *
         100,
     ) / 100
 
@@ -1077,13 +1125,17 @@ function ModaleParticipation({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {participation ? 'Modifier la participation' : 'Nouvelle participation'}
+            {participation
+              ? 'Modifier la participation'
+              : 'Nouvelle participation'}
           </DialogTitle>
         </DialogHeader>
         <form
           onSubmit={(e) => {
             e.preventDefault()
-            enregistrer.mutate(participation ? { ...valeurs, id: participation.id } : valeurs)
+            enregistrer.mutate(
+              participation ? { ...valeurs, id: participation.id } : valeurs,
+            )
           }}
         >
           <div className="grid gap-3 sm:grid-cols-2">
@@ -1097,7 +1149,9 @@ function ModaleParticipation({
               libelle="Pourcentage"
               type="number"
               step="0.01"
-              value={valeurs.pourcentage != null ? String(valeurs.pourcentage) : ''}
+              value={
+                valeurs.pourcentage != null ? String(valeurs.pourcentage) : ''
+              }
               onChange={(v) => set('pourcentage')(v === '' ? null : Number(v))}
             />
             <ChampBascule
@@ -1297,8 +1351,16 @@ function ModaleCompteBanque({
               value={valeurs.numCompte ?? ''}
               onChange={set('numCompte')}
             />
-            <ChampSaisie libelle="IBAN" value={valeurs.iban ?? ''} onChange={set('iban')} />
-            <ChampSaisie libelle="BIC" value={valeurs.bic ?? ''} onChange={set('bic')} />
+            <ChampSaisie
+              libelle="IBAN"
+              value={valeurs.iban ?? ''}
+              onChange={set('iban')}
+            />
+            <ChampSaisie
+              libelle="BIC"
+              value={valeurs.bic ?? ''}
+              onChange={set('bic')}
+            />
             <ChampBascule
               libelle="Clôturé"
               checked={!!valeurs.estCloture}
@@ -1360,10 +1422,14 @@ function ModaleCentreImpots({
   const [valeurs, setValeurs] = useState(() => volet(fiche))
   const enregistrer = useMutation({
     mutationFn: () =>
-      saveSccvFn({ data: { ...versEntreeFiche(fiche), ...valeurs, id: fiche.id } }),
+      saveSccvFn({
+        data: { ...versEntreeFiche(fiche), ...valeurs, id: fiche.id },
+      }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['sccv-liste'] })
-      void queryClient.invalidateQueries({ queryKey: ['sccv-detail', fiche.id] })
+      void queryClient.invalidateQueries({
+        queryKey: ['sccv-detail', fiche.id],
+      })
       // l'interlocuteur SIE saisi rejoint les suggestions (REQ_InterlocuteurSIE,
       // liste distincte dérivée de la fiche elle-même)
       void queryClient.invalidateQueries({ queryKey: ['sccv-nomenclatures'] })
@@ -1401,7 +1467,11 @@ function ModaleCentreImpots({
         >
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap gap-5">
-              <ChampBascule libelle="EDI TVA" checked={!!valeurs.ediTva} onChange={set('ediTva')} />
+              <ChampBascule
+                libelle="EDI TVA"
+                checked={!!valeurs.ediTva}
+                onChange={set('ediTva')}
+              />
               <ChampBascule
                 libelle="EDI Liasse"
                 checked={!!valeurs.ediLiasse}
@@ -1494,10 +1564,12 @@ function DetailSccv({
   const [participationModale, setParticipationModale] = useState<
     'creation' | LigneParticipation | null
   >(null)
-  const [compteSelectionne, setCompteSelectionne] = useState<number | null>(null)
-  const [compteModale, setCompteModale] = useState<'creation' | LigneCompteSccv | null>(
+  const [compteSelectionne, setCompteSelectionne] = useState<number | null>(
     null,
   )
+  const [compteModale, setCompteModale] = useState<
+    'creation' | LigneCompteSccv | null
+  >(null)
   const [centreImpotsOuvert, setCentreImpotsOuvert] = useState(false)
 
   const supprimerParticipation = useMutation({
@@ -1535,7 +1607,7 @@ function DetailSccv({
   const civilite = nomenclatures?.civilites.find((c) => c.id === f.civiliteId)
 
   return (
-    <section className="island-shell mt-5 flex max-h-[52%] min-h-0 shrink-0 flex-col overflow-hidden rounded-xl">
+    <section className="island-shell flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
       <header className="flex shrink-0 flex-wrap items-center gap-2 border-b border-[var(--line-soft)] px-[18px] py-[14px]">
         <h2 className="text-[15.5px] font-bold text-[var(--ink)]">{f.rs}</h2>
         {f.dateLiquidation && (
@@ -1562,7 +1634,10 @@ function DetailSccv({
           <div className="flex h-full min-h-0 flex-col gap-2">
             {!lectureSeule && (
               <div className="flex shrink-0 gap-2">
-                <Button size="sm" onClick={() => setParticipationModale('creation')}>
+                <Button
+                  size="sm"
+                  onClick={() => setParticipationModale('creation')}
+                >
                   Nouveau
                 </Button>
                 <Button
@@ -1603,7 +1678,9 @@ function DetailSccv({
               unite="associés"
               getRowId={(p) => String(p.id)}
               selectedRowId={
-                participationSelectionnee != null ? String(participationSelectionnee) : null
+                participationSelectionnee != null
+                  ? String(participationSelectionnee)
+                  : null
               }
               onRowClick={(p) => setParticipationSelectionnee(p.id)}
               totalFor={['pourcentage']}
@@ -1648,7 +1725,10 @@ function DetailSccv({
                   variant="destructive"
                   disabled={compteSelectionne == null}
                   onClick={() => {
-                    if (compteSelectionne != null && confirm('Supprimer ce compte bancaire ?')) {
+                    if (
+                      compteSelectionne != null &&
+                      confirm('Supprimer ce compte bancaire ?')
+                    ) {
                       supprimerCompte.mutate(compteSelectionne)
                     }
                   }}
@@ -1664,7 +1744,9 @@ function DetailSccv({
               data={d.comptes}
               unite="comptes"
               getRowId={(c) => String(c.id)}
-              selectedRowId={compteSelectionne != null ? String(compteSelectionne) : null}
+              selectedRowId={
+                compteSelectionne != null ? String(compteSelectionne) : null
+              }
               onRowClick={(c) => setCompteSelectionne(c.id)}
               emptyText="Aucun compte bancaire."
             />
@@ -1687,7 +1769,9 @@ function DetailSccv({
               <Champ libelle="SIE">{sie?.libelle}</Champ>
               <Champ libelle="Civilité">{civilite?.libelle}</Champ>
               <Champ libelle="Interlocuteur SIE">{f.interlocuteurSie}</Champ>
-              <Champ libelle="Date mandat SIE">{fmtDate(f.dateMandatSie)}</Champ>
+              <Champ libelle="Date mandat SIE">
+                {fmtDate(f.dateMandatSie)}
+              </Champ>
             </div>
           </div>
         )}
@@ -1695,7 +1779,9 @@ function DetailSccv({
 
       <ModaleParticipation
         sccvId={sccvId}
-        participation={participationModale === 'creation' ? null : participationModale}
+        participation={
+          participationModale === 'creation' ? null : participationModale
+        }
         participations={d.participations}
         open={participationModale != null}
         onOpenChange={(o) => {
