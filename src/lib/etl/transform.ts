@@ -182,7 +182,11 @@ const copies: Array<Copy> = [
   ),
   nomenclature('action_alerte', 'tListeActionAlerte', 'IDActionAlerte'),
   nomenclature('statut_apport', 'StatutApport', 'IDStatutApport'),
-  nomenclature('mandat_hypothequer', 'MandatHypothequer', 'IDMandatHypothequer'),
+  nomenclature(
+    'mandat_hypothequer',
+    'MandatHypothequer',
+    'IDMandatHypothequer',
+  ),
   nomenclature('statut_cout_mandat', 'StatutCoutMandat', 'IDStatutCoutMandat'),
   nomenclature('periode_taux_gfa', 'PeriodeTauxGFA', 'IDPeriodeTauxGFA'),
   nomenclature('action_fin_gfa_type', 'ActionFinGFAType', 'IDActionFinGFAType'),
@@ -607,6 +611,55 @@ const copies: Array<Copy> = [
         ${fkSafe('IDGFA', 'tGFA', 'IDGFA')},
         s."Montant", s."DateReduc", s."Comm"
       FROM legacy."ReducGFA" s`,
+  },
+
+  // --- bilan par SCCV (phase 8) ---
+  {
+    target: 'bilan_stock',
+    cols: `(id, structure_juridique_id, annee, stock_total_debit_33a35, stock_total_credit_33a35,
+            stock_credit_713300, stock_psla_phase_loc_nb, stock_psla_phase_loc_cout,
+            stock_invendu_nb, stock_invendu_cout)`,
+    select: `SELECT s."IDBilanStock", s."IDStructureJuridique", s."Annee",
+        s."StockTotalDebit33a35", s."StockTotalCredit33a35", s."StockCredit713300",
+        s."StockPSLAPhaseLocNb", s."StockPSLAPhaseLocCout", s."StockInvenduNb", s."StockInvenduCout"
+      FROM legacy."tBilan_Stock" s`,
+  },
+  {
+    target: 'bilan_caht',
+    cols: `(id, structure_juridique_id, annee, caht_vefa, caht_lv_psla, caht_loyers,
+            caht_tma, caht_terrain, caht_autres, caht_commentaire,
+            nb_lot_vefa, nb_lot_lv_psla, nb_lot_autre, nb_lot_commentaire)`,
+    select: `SELECT s."IDBilanCAHT", s."IDStructureJuridique", s."Annee",
+        s."CAHT_VEFA", s."CAHT_LV_PSLA", s."CAHT_Loyers", s."CAHT_TMA", s."CAHT_Terrain",
+        s."CAHT_Autres", s."CAHT_Commentaire",
+        s."NbLot_VEFA", s."NbLot_LV_PSLA", s."NbLot_Autre", s."NbLot_Commentaire"
+      FROM legacy."tBilan_CAHT" s`,
+  },
+  {
+    // colonnes *_old (QuotePartHF_ResultCpta_*) exclues, convention schéma cible
+    target: 'bilan_resultat',
+    cols: `(id, structure_juridique_id, annee, result_cpta_sccv_total, ran_sccv, cpte_courant_sccv,
+            date_pvag, result_acompte_montant, result_acompte_date_versement,
+            reintegration_fiscale_sccv, deduction_fiscale_sccv,
+            reintegration_fiscale_comm, deduction_fiscale_comm,
+            result_cpta_sccv_is, result_cpta_sccv_non_is,
+            reint_hf_result_fiscal, deduc_hf_perte_fiscale, reint_hf_perte_comptable, deduc_hf_result_comptable,
+            pourc_hf_annee, commentaire_pourc_hf,
+            result_fisca_sccv_is, result_fisca_sccv_non_is,
+            ran_sccv_is, ran_sccv_non_is, ran_sccv_total,
+            quote_part_hf_ran_is, quote_part_hf_ran_non_is, quote_part_hf_ran_total)`,
+    select: `SELECT s."IDBilanResultat", s."IDStructureJuridique", s."Annee",
+        s."ResultCpta_SCCV_Total", s."RAN_SCCV", s."CpteCourant_SCCV",
+        s."DatePVAG", s."ResultAcompteMontant", s."ResultAcompteDateVersement",
+        s."ReintegrationFiscale_SCCV", s."DeductionFiscale_SCCV",
+        s."ReintegrationFiscaleComm", s."DeductionFiscaleCOmm",
+        s."ResultCpta_SCCV_IS", s."ResultCpta_SCCV_NonIS",
+        s."ReintHF_ResultFiscal", s."DeducHF_PerteFiscale", s."ReintHF_PerteComptable", s."DeducHF_ResultComptable",
+        s."PourcHFAnnee", s."CommentairePourcHF",
+        s."ResultFisca_SCCV_IS", s."ResultFisca_SCCV_NonIS",
+        s."RAN_SCCV_IS", s."RAN_SCCV_NonIS", s."RAN_SCCV_Total",
+        s."QuotePartHF_RAN_IS", s."QuotePartHF_RAN_NonIS", s."QuotePartHF_RAN_Total"
+      FROM legacy."tBilan_Resultat" s`,
   },
 
   {

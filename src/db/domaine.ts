@@ -337,9 +337,9 @@ export const participation = pgTable('participation', {
   pourcentage: real(), // fraction 0–1 (iso-legacy), affichée en %
   commentaires: text(),
   convTreso: boolean('conv_treso'),
-  motifRemunerationAssocieId: integer('motif_remuneration_associe_id').references(
-    () => motifRemunerationAssocie.id,
-  ),
+  motifRemunerationAssocieId: integer(
+    'motif_remuneration_associe_id',
+  ).references(() => motifRemunerationAssocie.id),
   dateSignatureConv: timestamp('date_signature_conv'),
   dateApplication: timestamp('date_application'),
   dateFinRemuneration: timestamp('date_fin_remuneration'),
@@ -1264,4 +1264,80 @@ export const reducGfa = pgTable('reduc_gfa', {
   montant: montant('montant'),
   dateReduc: timestamp('date_reduc'),
   commentaire: text(),
+})
+
+// ---------------------------------------------------------------------------
+// Bilan par SCCV (phase 8) — saisie annuelle Stock / CA HT / Résultats
+// (FEN_TABLE_Bilan ; l'accordéon IS - Non IS lit bilan_resultat)
+// ---------------------------------------------------------------------------
+
+export const bilanStock = pgTable('bilan_stock', {
+  id: id(),
+  structureJuridiqueId: integer('structure_juridique_id')
+    .notNull()
+    .references(() => structureJuridique.id),
+  annee: integer(),
+  stockTotalDebit33a35: montant('stock_total_debit_33a35'),
+  stockTotalCredit33a35: montant('stock_total_credit_33a35'),
+  stockCredit713300: montant('stock_credit_713300'),
+  stockPslaPhaseLocNb: integer('stock_psla_phase_loc_nb'),
+  stockPslaPhaseLocCout: montant('stock_psla_phase_loc_cout'),
+  stockInvenduNb: integer('stock_invendu_nb'),
+  stockInvenduCout: montant('stock_invendu_cout'),
+})
+
+export const bilanCaht = pgTable('bilan_caht', {
+  id: id(),
+  structureJuridiqueId: integer('structure_juridique_id')
+    .notNull()
+    .references(() => structureJuridique.id),
+  annee: integer(),
+  cahtVefa: montant('caht_vefa'),
+  cahtLvPsla: montant('caht_lv_psla'),
+  cahtLoyers: montant('caht_loyers'),
+  cahtTma: montant('caht_tma'),
+  cahtTerrain: montant('caht_terrain'),
+  cahtAutres: montant('caht_autres'),
+  cahtCommentaire: text('caht_commentaire'),
+  nbLotVefa: integer('nb_lot_vefa'),
+  nbLotLvPsla: integer('nb_lot_lv_psla'),
+  nbLotAutre: integer('nb_lot_autre'),
+  nbLotCommentaire: text('nb_lot_commentaire'),
+})
+
+export const bilanResultat = pgTable('bilan_resultat', {
+  id: id(),
+  structureJuridiqueId: integer('structure_juridique_id')
+    .notNull()
+    .references(() => structureJuridique.id),
+  annee: integer(),
+  // accordéon Résultats
+  resultCptaSccvTotal: montant('result_cpta_sccv_total'),
+  ranSccv: montant('ran_sccv'),
+  cpteCourantSccv: montant('cpte_courant_sccv'),
+  datePvag: timestamp('date_pvag'),
+  resultAcompteMontant: montant('result_acompte_montant'),
+  resultAcompteDateVersement: timestamp('result_acompte_date_versement'),
+  reintegrationFiscaleSccv: montant('reintegration_fiscale_sccv'),
+  deductionFiscaleSccv: montant('deduction_fiscale_sccv'),
+  reintegrationFiscaleComm: text('reintegration_fiscale_comm'),
+  deductionFiscaleComm: text('deduction_fiscale_comm'),
+  // héritage : ventilations comptables IS/non-IS conservées mais non affichées
+  resultCptaSccvIs: montant('result_cpta_sccv_is'),
+  resultCptaSccvNonIs: montant('result_cpta_sccv_non_is'),
+  reintHfResultFiscal: montant('reint_hf_result_fiscal'),
+  deducHfPerteFiscale: montant('deduc_hf_perte_fiscale'),
+  reintHfPerteComptable: montant('reint_hf_perte_comptable'),
+  deducHfResultComptable: montant('deduc_hf_result_comptable'),
+  // accordéon IS - Non IS
+  pourcHfAnnee: real('pourc_hf_annee'), // fraction 0–1 (iso-legacy), « % KPI de l'année »
+  commentairePourcHf: text('commentaire_pourc_hf'),
+  resultFiscaSccvIs: montant('result_fisca_sccv_is'),
+  resultFiscaSccvNonIs: montant('result_fisca_sccv_non_is'),
+  ranSccvIs: montant('ran_sccv_is'),
+  ranSccvNonIs: montant('ran_sccv_non_is'),
+  ranSccvTotal: montant('ran_sccv_total'),
+  quotePartHfRanIs: montant('quote_part_hf_ran_is'),
+  quotePartHfRanNonIs: montant('quote_part_hf_ran_non_is'),
+  quotePartHfRanTotal: montant('quote_part_hf_ran_total'),
 })

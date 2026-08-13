@@ -16,6 +16,7 @@ import { Route as AuthedSccvRouteImport } from './routes/_authed/sccv'
 import { Route as AuthedOperationsRouteImport } from './routes/_authed/operations'
 import { Route as AuthedComptaRouteImport } from './routes/_authed/compta'
 import { Route as AuthedCommercialisationRouteImport } from './routes/_authed/commercialisation'
+import { Route as AuthedBilanRouteImport } from './routes/_authed/bilan'
 import { Route as AuthedAcquereursRouteImport } from './routes/_authed/acquereurs'
 import { Route as AuthedModuleRouteImport } from './routes/_authed/$module'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -55,6 +56,11 @@ const AuthedCommercialisationRoute = AuthedCommercialisationRouteImport.update({
   path: '/commercialisation',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedBilanRoute = AuthedBilanRouteImport.update({
+  id: '/bilan',
+  path: '/bilan',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedAcquereursRoute = AuthedAcquereursRouteImport.update({
   id: '/acquereurs',
   path: '/acquereurs',
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/$module': typeof AuthedModuleRoute
   '/acquereurs': typeof AuthedAcquereursRoute
+  '/bilan': typeof AuthedBilanRoute
   '/commercialisation': typeof AuthedCommercialisationRoute
   '/compta': typeof AuthedComptaRoute
   '/operations': typeof AuthedOperationsRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/$module': typeof AuthedModuleRoute
   '/acquereurs': typeof AuthedAcquereursRoute
+  '/bilan': typeof AuthedBilanRoute
   '/commercialisation': typeof AuthedCommercialisationRoute
   '/compta': typeof AuthedComptaRoute
   '/operations': typeof AuthedOperationsRoute
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_authed/$module': typeof AuthedModuleRoute
   '/_authed/acquereurs': typeof AuthedAcquereursRoute
+  '/_authed/bilan': typeof AuthedBilanRoute
   '/_authed/commercialisation': typeof AuthedCommercialisationRoute
   '/_authed/compta': typeof AuthedComptaRoute
   '/_authed/operations': typeof AuthedOperationsRoute
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/$module'
     | '/acquereurs'
+    | '/bilan'
     | '/commercialisation'
     | '/compta'
     | '/operations'
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/$module'
     | '/acquereurs'
+    | '/bilan'
     | '/commercialisation'
     | '/compta'
     | '/operations'
@@ -145,6 +156,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_authed/$module'
     | '/_authed/acquereurs'
+    | '/_authed/bilan'
     | '/_authed/commercialisation'
     | '/_authed/compta'
     | '/_authed/operations'
@@ -211,6 +223,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedCommercialisationRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/bilan': {
+      id: '/_authed/bilan'
+      path: '/bilan'
+      fullPath: '/bilan'
+      preLoaderRoute: typeof AuthedBilanRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/acquereurs': {
       id: '/_authed/acquereurs'
       path: '/acquereurs'
@@ -245,6 +264,7 @@ declare module '@tanstack/react-router' {
 interface AuthedRouteChildren {
   AuthedModuleRoute: typeof AuthedModuleRoute
   AuthedAcquereursRoute: typeof AuthedAcquereursRoute
+  AuthedBilanRoute: typeof AuthedBilanRoute
   AuthedCommercialisationRoute: typeof AuthedCommercialisationRoute
   AuthedComptaRoute: typeof AuthedComptaRoute
   AuthedOperationsRoute: typeof AuthedOperationsRoute
@@ -256,6 +276,7 @@ interface AuthedRouteChildren {
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedModuleRoute: AuthedModuleRoute,
   AuthedAcquereursRoute: AuthedAcquereursRoute,
+  AuthedBilanRoute: AuthedBilanRoute,
   AuthedCommercialisationRoute: AuthedCommercialisationRoute,
   AuthedComptaRoute: AuthedComptaRoute,
   AuthedOperationsRoute: AuthedOperationsRoute,
