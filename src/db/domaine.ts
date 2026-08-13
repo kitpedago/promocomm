@@ -457,6 +457,10 @@ export const operation = pgTable('operation', {
   masquerComptable: boolean('masquer_comptable'),
   masquerPromo: boolean('masquer_promo'),
   commentaire: text(),
+  // chargés d'opération (phase 3) — colonnes curIDPersonne_ChargeOpe* du
+  // legacy : « cur » trompeur, ce sont des champs saisis sans autre source
+  chargeOpe1Id: integer('charge_ope1_id').references(() => personne.id),
+  chargeOpe2Id: integer('charge_ope2_id').references(() => personne.id),
 })
 
 export const tranche = pgTable('tranche', {
@@ -583,6 +587,20 @@ export const tranche = pgTable('tranche', {
     'type_mission_budget_architecte_id',
   ).references(() => typeMissionBudgetArchitecte.id),
   dateContratArchitecte: timestamp('date_contrat_architecte'),
+  // stades courants de la tranche (phase 3) — blocs IDListeAvancement_* :
+  // chantier (actuel/prochain) et suivi commercialisation (actuel/prochain)
+  listeAvancementActuelId: integer('liste_avancement_actuel_id').references(
+    () => listeAvancement.id,
+  ),
+  listeAvancementProchainId: integer(
+    'liste_avancement_prochain_id',
+  ).references(() => listeAvancement.id),
+  listeAvancementSuiviActuelId: integer(
+    'liste_avancement_suivi_actuel_id',
+  ).references(() => listeAvancement.id),
+  listeAvancementSuiviProchainId: integer(
+    'liste_avancement_suivi_prochain_id',
+  ).references(() => listeAvancement.id),
 })
 
 // Onglet « Stade d'avancement » : un jalon daté par tranche (6 935 lignes).

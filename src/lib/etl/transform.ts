@@ -356,7 +356,8 @@ const copies: Array<Copy> = [
             notaire_vente_id, clerc_vente_id, notaire_foncier_id, clerc_foncier_id,
             possibilite_investisseur, taux_investisseur_autorise, commentaire_investisseur,
             date_validation_engagement, date_abandon, commentaires_abandon,
-            masquer_commercial, masquer_comptable, masquer_promo, commentaire)`,
+            masquer_commercial, masquer_comptable, masquer_promo, commentaire,
+            charge_ope1_id, charge_ope2_id)`,
     select: `SELECT s."IDOperation", ${fk('IDStructureJuridique')}, s."Libelle", s."Adresse", s."CP", s."Commune",
         s."NomZAC", ${fk('IDSecteurGeographiqueDeveloppement')},
         s."SurRennesMetropole", s."ANRU", s."ANRUComment", s."IndivColl", s."AnneeDGD", s."AbreviationPourCodeReserve",
@@ -366,7 +367,9 @@ const copies: Array<Copy> = [
         ${fkSafe('IDInterlocuteurNotaire_Clerc_Foncier', 'InterlocuteurNotaire', 'IDInterlocuteurNotaire')},
         s."PossibiliteInvestisseur", s."TauxInvestisseurAutorise", s."CommentaireInvestisseur",
         s."DateValidationEngagement", s."DateAbandon", s."CommentairesAbandon",
-        s."MasquerCommercial", s."MasquerComptable", s."MasquerPromo", s."Commentaire"
+        s."MasquerCommercial", s."MasquerComptable", s."MasquerPromo", s."Commentaire",
+        ${fkSafe('curIDPersonne_ChargeOpe1', 'tPersonne', 'IDPersonne')},
+        ${fkSafe('curIDPersonne_ChargeOpe2', 'tPersonne', 'IDPersonne')}
       FROM legacy."tOperation" s`,
   },
   {
@@ -395,7 +398,9 @@ const copies: Array<Copy> = [
             quote_part_commentaire, mode_repart_quote_part_id, nb_lvo_prev, nb_lvo_prev_annee,
             frais_budget_date, frais_budget_commentaire, frais_actua_date, frais_actua_commentaire,
             frais_consomme_date, frais_consomme_commentaire, frais_reel_date, frais_reel_commentaire,
-            liste_budget_frais_stade_id, type_mission_budget_architecte_id, date_contrat_architecte)`,
+            liste_budget_frais_stade_id, type_mission_budget_architecte_id, date_contrat_architecte,
+            liste_avancement_actuel_id, liste_avancement_prochain_id,
+            liste_avancement_suivi_actuel_id, liste_avancement_suivi_prochain_id)`,
     select: `SELECT s."IDTranche", s."IDOperation", s."Libelle", ${fk('IDConcept')},
         ${fkSafe('IDArchitecte_Mandataire', 'tArchitecte', 'IDArchitecte')},
         ${fkSafe('IDArchitecte_CoTraitant', 'tArchitecte', 'IDArchitecte')},
@@ -430,7 +435,11 @@ const copies: Array<Copy> = [
         s."FraisConsommeDate", s."FraisConsommeCommentaire", s."FraisReelDate", s."FraisReelCommentaire",
         ${fkSafe('IDListeBudget_FraisStade', 'tListeBudget', 'IDListeBudget')},
         ${fkSafe('IDTypeMissionBudgetArchitecte', 'TypeMissionBudgetArchitecte', 'IDTypeMissionBudgetArchitecte')},
-        s."DateContratArchitecte"
+        s."DateContratArchitecte",
+        ${fkSafe('IDListeAvancement_actuel', 'tListeAvancement', 'IDListeAvancement')},
+        ${fkSafe('IDListeAvancement_prochain', 'tListeAvancement', 'IDListeAvancement')},
+        ${fkSafe('IDListeAvancement_suivi_actuel', 'tListeAvancement', 'IDListeAvancement')},
+        ${fkSafe('IDListeAvancement_suivi_prochain', 'tListeAvancement', 'IDListeAvancement')}
       FROM legacy."tTranche" s`,
   },
   {

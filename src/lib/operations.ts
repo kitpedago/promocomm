@@ -8,6 +8,7 @@ import { alias } from 'drizzle-orm/pg-core'
 
 import {
   architecte,
+  personne,
   categorieSubvention,
   certification,
   etudeNotaire,
@@ -29,6 +30,10 @@ import { db } from '#/db/index.ts'
 import { requireSession } from '#/lib/session.server.ts'
 
 const archiMandataire = alias(architecte, 'archi_mandataire')
+const chargeOpe1 = alias(personne, 'charge_ope1')
+const chargeOpe2 = alias(personne, 'charge_ope2')
+const stadeActuel = alias(listeAvancement, 'stade_actuel')
+const stadeProchain = alias(listeAvancement, 'stade_prochain')
 const archiCotraitant = alias(architecte, 'archi_cotraitant')
 const signataireTerrain = alias(signataire, 'signataire_terrain')
 const signataireOfs = alias(signataire, 'signataire_ofs')
@@ -58,12 +63,21 @@ export const getOperationFicheFn = createServerFn({ method: 'GET' })
           masquerComptable: operation.masquerComptable,
           masquerPromo: operation.masquerPromo,
           sccvHlm: structureJuridique.sccvHlm,
+          // chargés d'opération (phase 3)
+          chargeOpe1: sql<
+            string | null
+          >`NULLIF(TRIM(CONCAT_WS(' ', ${chargeOpe1.prenom}, ${chargeOpe1.patronyme})), '')`,
+          chargeOpe2: sql<
+            string | null
+          >`NULLIF(TRIM(CONCAT_WS(' ', ${chargeOpe2.prenom}, ${chargeOpe2.patronyme})), '')`,
         })
         .from(operation)
         .leftJoin(
           structureJuridique,
           eq(operation.structureJuridiqueId, structureJuridique.id),
         )
+        .leftJoin(chargeOpe1, eq(operation.chargeOpe1Id, chargeOpe1.id))
+        .leftJoin(chargeOpe2, eq(operation.chargeOpe2Id, chargeOpe2.id))
         .where(eq(operation.id, data.operationId))
     ).at(0)
     if (!fiche) return null
@@ -128,6 +142,9 @@ export const getOperationFicheFn = createServerFn({ method: 'GET' })
           JOIN ${listeAvancement} la ON la.id = sa.liste_avancement_id
           WHERE sa.tranche_id = ${tranche.id} AND la.libelle ILIKE 'compromis'
           ORDER BY sa.date_reelle NULLS LAST LIMIT 1)`,
+        // stades courants de la tranche (phase 3)
+        stadeActuel: stadeActuel.libelle,
+        stadeProchain: stadeProchain.libelle,
         // onglet Informations diverses
         certification: certification.libelle,
         label: label.libelle,
@@ -154,6 +171,14 @@ export const getOperationFicheFn = createServerFn({ method: 'GET' })
         eq(tranche.terrainOfsSignataireId, signataireOfs.id),
       )
       .leftJoin(ofsNom, eq(tranche.ofsNomId, ofsNom.id))
+      .leftJoin(
+        stadeActuel,
+        eq(tranche.listeAvancementActuelId, stadeActuel.id),
+      )
+      .leftJoin(
+        stadeProchain,
+        eq(tranche.listeAvancementProchainId, stadeProchain.id),
+      )
       .leftJoin(certification, eq(tranche.certificationId, certification.id))
       .leftJoin(label, eq(tranche.labelId, label.id))
       .leftJoin(

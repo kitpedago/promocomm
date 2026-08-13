@@ -6,6 +6,7 @@ import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
 import {
   acquereur,
   banqueCourtage,
+  personne,
   commercialisation,
   destination,
   droit,
@@ -21,6 +22,8 @@ import {
   typeAcquereur,
   versementDepotGarantie,
 } from '#/db/domaine.ts'
+import { alias } from 'drizzle-orm/pg-core'
+
 import { db } from '#/db/index.ts'
 import { requireDroit, requireSession } from '#/lib/session.server.ts'
 
@@ -49,6 +52,9 @@ export const getOperationsCommFn = createServerFn({ method: 'GET' }).handler(
   },
 )
 
+const chargeOpe1 = alias(personne, 'charge_ope1')
+const chargeOpe2 = alias(personne, 'charge_ope2')
+
 // En-tête d'une opération + ses tranches avec compteurs (récap du sélecteur)
 export const getOperationCommFn = createServerFn({ method: 'GET' })
   .validator((data: { operationId: number }) => data)
@@ -62,12 +68,20 @@ export const getOperationCommFn = createServerFn({ method: 'GET' })
           commune: operation.commune,
           sccv: structureJuridique.rs,
           hlm: structureJuridique.sccvHlm,
+          chargeOpe1: sql<
+            string | null
+          >`NULLIF(TRIM(CONCAT_WS(' ', ${chargeOpe1.prenom}, ${chargeOpe1.patronyme})), '')`,
+          chargeOpe2: sql<
+            string | null
+          >`NULLIF(TRIM(CONCAT_WS(' ', ${chargeOpe2.prenom}, ${chargeOpe2.patronyme})), '')`,
         })
         .from(operation)
         .leftJoin(
           structureJuridique,
           eq(operation.structureJuridiqueId, structureJuridique.id),
         )
+        .leftJoin(chargeOpe1, eq(operation.chargeOpe1Id, chargeOpe1.id))
+        .leftJoin(chargeOpe2, eq(operation.chargeOpe2Id, chargeOpe2.id))
         .where(eq(operation.id, data.operationId))
     ).at(0)
     if (!op) return null

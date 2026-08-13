@@ -178,6 +178,11 @@ function PageOperations() {
                 </div>
 
                 <div className="flex flex-col gap-3">
+                  <Champ libelle="Chargé d'opération">
+                    {[d.chargeOpe1, d.chargeOpe2]
+                      .filter(Boolean)
+                      .join(' et ') || null}
+                  </Champ>
                   <Case
                     libelle="Possibilité investisseur"
                     actif={d.possibiliteInvestisseur}
@@ -389,7 +394,21 @@ function OngletsTranche({ tranche: t }: { tranche: LigneTranche }) {
       <div className="min-h-0 flex-1 overflow-auto px-[18px] py-4">
         {onglet === "Stade d'avancement" && (
           // les 40+ jalons défilent dans la table, pas la page
-          <div className="flex h-full min-h-0 flex-col">
+          <div className="flex h-full min-h-0 flex-col gap-2">
+            <div className="flex shrink-0 flex-wrap gap-x-8 gap-y-1 text-[13px] text-[var(--ink-soft)]">
+              <span>
+                Stade actuel :{' '}
+                <span className="font-semibold text-[var(--ink)]">
+                  {t.stadeActuel ?? '—'}
+                </span>
+              </span>
+              <span>
+                Stade prochain :{' '}
+                <span className="font-semibold text-[var(--ink)]">
+                  {t.stadeProchain ?? '—'}
+                </span>
+              </span>
+            </div>
             <DataTable
               id="operations-stades"
               columns={COLONNES_STADES}

@@ -163,6 +163,14 @@ function PageSav() {
                 {d.sccv ? ` — ${d.sccv}` : ''}
                 {d.commune ? ` ${d.commune}` : ''}
               </h1>
+              {(d.chargeOpe1 ?? d.chargeOpe2) && (
+                <span className="text-[13px] text-[var(--ink-soft)]">
+                  Chargé d'opération :{' '}
+                  <span className="font-semibold">
+                    {[d.chargeOpe1, d.chargeOpe2].filter(Boolean).join(' et ')}
+                  </span>
+                </span>
+              )}
             </div>
 
             {trancheActive != null && (

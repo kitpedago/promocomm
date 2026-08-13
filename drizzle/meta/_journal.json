@@ -134,6 +134,13 @@
       "when": 1786628892241,
       "tag": "0018_lethal_thaddeus_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1786629812654,
+      "tag": "0019_easy_cargill",
+      "breakpoints": true
     }
   ]
 }
