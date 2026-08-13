@@ -1341,3 +1341,63 @@ export const bilanResultat = pgTable('bilan_resultat', {
   quotePartHfRanNonIs: montant('quote_part_hf_ran_non_is'),
   quotePartHfRanTotal: montant('quote_part_hf_ran_total'),
 })
+
+// ---------------------------------------------------------------------------
+// Déclarations (phase 8) — Assurance DO/MRH, SGA, 940 & LASM par tranche
+// (FEN_Declaration)
+// ---------------------------------------------------------------------------
+
+// Codes des accords cadres d'assurance (combo de l'accordéon Assurance DoMrh)
+export const accordCadreAssurance = pgTable('accord_cadre_assurance', {
+  id: id(),
+  code: text().notNull(),
+})
+
+export const assuranceDoMrh = pgTable('assurance_do_mrh', {
+  id: id(),
+  trancheId: integer('tranche_id')
+    .notNull()
+    .references(() => tranche.id),
+  numContrat: text('num_contrat'),
+  // valeurs libres du legacy (DO, CNR, TRC et combinaisons) — reste en texte
+  typeContrat: text('type_contrat'),
+  dateSouscription: timestamp('date_souscription'),
+  dateDgd: timestamp('date_dgd'),
+  dateResiliation: timestamp('date_resiliation'),
+  dateFinTrc: timestamp('date_fin_trc'),
+  accordCadre: text('accord_cadre'),
+  coutOperation: montant('cout_operation'),
+  montantCotisation: montant('montant_cotisation'),
+  commentaire: text(),
+  surOpe: boolean('sur_ope'),
+})
+
+export const sga = pgTable('sga', {
+  id: id(),
+  trancheId: integer('tranche_id')
+    .notNull()
+    .references(() => tranche.id),
+  numFiche: integer('num_fiche'),
+  estPsla: boolean('est_psla'),
+  dateCreation: timestamp('date_creation'),
+  dateSortie: timestamp('date_sortie'),
+  prixTerrainHt: montant('prix_terrain_ht'),
+  prixFraisAnnexeHt: montant('prix_frais_annexe_ht'),
+  prixRevientBudget: montant('prix_revient_budget'),
+  prixVenteBudget: montant('prix_vente_budget'),
+  listeBudgetId: integer('liste_budget_id').references(() => listeBudget.id),
+  commentaire: text(), // HTML brut du legacy assaini par le transform
+  surfaceUtile: real('surface_utile'),
+})
+
+export const declaration940 = pgTable('declaration_940', {
+  id: id(),
+  // nullable : 4 lignes legacy sans tranche (backlog défauts source)
+  trancheId: integer('tranche_id').references(() => tranche.id),
+  date940: timestamp('date_940'),
+  stockLogtDat: integer('stock_logt_dat'),
+  dateTvaLasm: timestamp('date_tva_lasm'),
+  surOpe: boolean('sur_ope'),
+  finSuivi: boolean('fin_suivi'),
+  commentaires: text(),
+})

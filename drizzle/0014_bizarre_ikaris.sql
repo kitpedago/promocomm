@@ -1,0 +1,1 @@
+ALTER TABLE "declaration_940" ALTER COLUMN "tranche_id" DROP NOT NULL;

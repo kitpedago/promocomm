@@ -8,6 +8,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { ChevronsLeft, ChevronsRight } from 'lucide-react'
 
+import {
+  BoutonsTable,
+  ChampDate,
+  ChampNombre,
+  ChampTexteLong,
+  ErreurMutation,
+  SousTitre,
+  versInputDate,
+} from '#/components/ChampsModale'
 import DataTable from '#/components/DataTable'
 import Onglets from '#/components/Onglets'
 import { Button } from '#/components/ui/button'
@@ -19,8 +28,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '#/components/ui/dialog'
-import { Input } from '#/components/ui/input'
-import { Label } from '#/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -29,7 +36,6 @@ import {
   SelectValue,
 } from '#/components/ui/select'
 import { Switch } from '#/components/ui/switch'
-import { Textarea } from '#/components/ui/textarea'
 import {
   deleteBilanCahtFn,
   deleteBilanResultatFn,
@@ -343,166 +349,6 @@ function PanneauSccv({
         )}
       </nav>
     </aside>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Champs de formulaire des modales (pattern sccv.tsx)
-// ---------------------------------------------------------------------------
-
-function ChampForm({
-  libelle,
-  children,
-}: {
-  libelle: string
-  children: React.ReactNode
-}) {
-  return (
-    <Label className="flex flex-col items-stretch gap-1">
-      <span className="text-[11px] font-bold tracking-wide text-[var(--ink-faded)] uppercase">
-        {libelle}
-      </span>
-      {children}
-    </Label>
-  )
-}
-
-function ChampNombre({
-  libelle,
-  value,
-  onChange,
-  step = '0.01',
-  required,
-}: {
-  libelle: string
-  value: number | null | undefined
-  onChange: (v: number | null) => void
-  step?: string
-  required?: boolean
-}) {
-  return (
-    <ChampForm libelle={libelle}>
-      <Input
-        type="number"
-        step={step}
-        required={required}
-        value={value != null ? String(value) : ''}
-        onChange={(e) =>
-          onChange(e.target.value === '' ? null : Number(e.target.value))
-        }
-        className="h-9 text-[13px]"
-      />
-    </ChampForm>
-  )
-}
-
-function ChampDate({
-  libelle,
-  value,
-  onChange,
-}: {
-  libelle: string
-  value: string | null | undefined
-  onChange: (v: string | null) => void
-}) {
-  return (
-    <ChampForm libelle={libelle}>
-      <Input
-        type="date"
-        value={value ?? ''}
-        onChange={(e) => onChange(e.target.value || null)}
-        className="h-9 text-[13px]"
-      />
-    </ChampForm>
-  )
-}
-
-function ChampTexteLong({
-  libelle,
-  value,
-  onChange,
-}: {
-  libelle: string
-  value: string
-  onChange: (v: string) => void
-}) {
-  return (
-    <ChampForm libelle={libelle}>
-      <Textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        rows={2}
-        className="text-[13px]"
-      />
-    </ChampForm>
-  )
-}
-
-function SousTitre({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="border-b border-[var(--line-soft)] pb-1 text-[13px] font-semibold text-[var(--gold-ink)] sm:col-span-2">
-      {children}
-    </p>
-  )
-}
-
-function ErreurMutation({ erreur }: { erreur: unknown }) {
-  if (!erreur) return null
-  return (
-    <p className="mt-3 text-[13px] text-red-700">
-      {erreur instanceof Error ? erreur.message : 'Erreur à l’enregistrement.'}
-    </p>
-  )
-}
-
-// Timestamps du serveur : Date ou string ISO selon la sérialisation
-function versInputDate(v: string | Date | null | undefined): string | null {
-  if (!v) return null
-  const iso = v instanceof Date ? v.toISOString() : v
-  return iso.slice(0, 10)
-}
-
-// ---------------------------------------------------------------------------
-// Boutons Nouveau / Modifier / Supprimer d'une table (pattern sccv.tsx)
-// ---------------------------------------------------------------------------
-
-function BoutonsTable({
-  selection,
-  onNouveau,
-  onModifier,
-  onSupprimer,
-  confirmation,
-}: {
-  selection: number | null
-  onNouveau: () => void
-  onModifier: () => void
-  onSupprimer: () => void
-  confirmation: string
-}) {
-  return (
-    <div className="flex shrink-0 gap-2">
-      <Button size="sm" onClick={onNouveau}>
-        Nouveau
-      </Button>
-      <Button
-        size="sm"
-        variant="outline"
-        disabled={selection == null}
-        onClick={onModifier}
-      >
-        Modifier
-      </Button>
-      <Button
-        size="sm"
-        variant="destructive"
-        disabled={selection == null}
-        onClick={() => {
-          if (confirm(confirmation)) onSupprimer()
-        }}
-      >
-        Supprimer
-      </Button>
-    </div>
   )
 }
 

@@ -14,6 +14,7 @@ import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as AuthedIndexRouteImport } from './routes/_authed/index'
 import { Route as AuthedSccvRouteImport } from './routes/_authed/sccv'
 import { Route as AuthedOperationsRouteImport } from './routes/_authed/operations'
+import { Route as AuthedDeclarationsRouteImport } from './routes/_authed/declarations'
 import { Route as AuthedComptaRouteImport } from './routes/_authed/compta'
 import { Route as AuthedCommercialisationRouteImport } from './routes/_authed/commercialisation'
 import { Route as AuthedBilanRouteImport } from './routes/_authed/bilan'
@@ -44,6 +45,11 @@ const AuthedSccvRoute = AuthedSccvRouteImport.update({
 const AuthedOperationsRoute = AuthedOperationsRouteImport.update({
   id: '/operations',
   path: '/operations',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedDeclarationsRoute = AuthedDeclarationsRouteImport.update({
+  id: '/declarations',
+  path: '/declarations',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedComptaRoute = AuthedComptaRouteImport.update({
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/bilan': typeof AuthedBilanRoute
   '/commercialisation': typeof AuthedCommercialisationRoute
   '/compta': typeof AuthedComptaRoute
+  '/declarations': typeof AuthedDeclarationsRoute
   '/operations': typeof AuthedOperationsRoute
   '/sccv': typeof AuthedSccvRoute
   '/admin/import': typeof AuthedAdminImportRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/bilan': typeof AuthedBilanRoute
   '/commercialisation': typeof AuthedCommercialisationRoute
   '/compta': typeof AuthedComptaRoute
+  '/declarations': typeof AuthedDeclarationsRoute
   '/operations': typeof AuthedOperationsRoute
   '/sccv': typeof AuthedSccvRoute
   '/': typeof AuthedIndexRoute
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/_authed/bilan': typeof AuthedBilanRoute
   '/_authed/commercialisation': typeof AuthedCommercialisationRoute
   '/_authed/compta': typeof AuthedComptaRoute
+  '/_authed/declarations': typeof AuthedDeclarationsRoute
   '/_authed/operations': typeof AuthedOperationsRoute
   '/_authed/sccv': typeof AuthedSccvRoute
   '/_authed/': typeof AuthedIndexRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/bilan'
     | '/commercialisation'
     | '/compta'
+    | '/declarations'
     | '/operations'
     | '/sccv'
     | '/admin/import'
@@ -145,6 +155,7 @@ export interface FileRouteTypes {
     | '/bilan'
     | '/commercialisation'
     | '/compta'
+    | '/declarations'
     | '/operations'
     | '/sccv'
     | '/'
@@ -159,6 +170,7 @@ export interface FileRouteTypes {
     | '/_authed/bilan'
     | '/_authed/commercialisation'
     | '/_authed/compta'
+    | '/_authed/declarations'
     | '/_authed/operations'
     | '/_authed/sccv'
     | '/_authed/'
@@ -207,6 +219,13 @@ declare module '@tanstack/react-router' {
       path: '/operations'
       fullPath: '/operations'
       preLoaderRoute: typeof AuthedOperationsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/declarations': {
+      id: '/_authed/declarations'
+      path: '/declarations'
+      fullPath: '/declarations'
+      preLoaderRoute: typeof AuthedDeclarationsRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/compta': {
@@ -267,6 +286,7 @@ interface AuthedRouteChildren {
   AuthedBilanRoute: typeof AuthedBilanRoute
   AuthedCommercialisationRoute: typeof AuthedCommercialisationRoute
   AuthedComptaRoute: typeof AuthedComptaRoute
+  AuthedDeclarationsRoute: typeof AuthedDeclarationsRoute
   AuthedOperationsRoute: typeof AuthedOperationsRoute
   AuthedSccvRoute: typeof AuthedSccvRoute
   AuthedIndexRoute: typeof AuthedIndexRoute
@@ -279,6 +299,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedBilanRoute: AuthedBilanRoute,
   AuthedCommercialisationRoute: AuthedCommercialisationRoute,
   AuthedComptaRoute: AuthedComptaRoute,
+  AuthedDeclarationsRoute: AuthedDeclarationsRoute,
   AuthedOperationsRoute: AuthedOperationsRoute,
   AuthedSccvRoute: AuthedSccvRoute,
   AuthedIndexRoute: AuthedIndexRoute,

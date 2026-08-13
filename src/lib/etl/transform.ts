@@ -662,6 +662,46 @@ const copies: Array<Copy> = [
       FROM legacy."tBilan_Resultat" s`,
   },
 
+  // --- déclarations (phase 8) ---
+  {
+    // le legacy n'a que la colonne Code — l'id est généré à la copie
+    target: 'accord_cadre_assurance',
+    cols: '(code)',
+    select: `SELECT s."Code" FROM legacy."AccordCadreAssurance" s`,
+  },
+  {
+    target: 'assurance_do_mrh',
+    cols: `(id, tranche_id, num_contrat, type_contrat, date_souscription, date_dgd,
+            date_resiliation, date_fin_trc, accord_cadre, cout_operation,
+            montant_cotisation, commentaire, sur_ope)`,
+    select: `SELECT s."IDAssuranceDoMrH", s."IDTranche", s."NumContrat", s."TypeContrat",
+        s."DateSouscription", s."DateDGD", s."DateResiliation", s."DateFinTRC",
+        s."AccordCadre", s."CoutOperation", s."MontantCotisation", s."Commentaire", s."SurOpe"
+      FROM legacy."tAssuranceDoMrH" s`,
+  },
+  {
+    // Commentaire : HTML brut dans le legacy (WinDev riche) → balises retirées
+    target: 'sga',
+    cols: `(id, tranche_id, num_fiche, est_psla, date_creation, date_sortie,
+            prix_terrain_ht, prix_frais_annexe_ht, prix_revient_budget, prix_vente_budget,
+            liste_budget_id, commentaire, surface_utile)`,
+    select: `SELECT s."IDSGA", s."IDTranche", s."NumFiche", s."EstPSLA",
+        s."DateCreation", s."DateSortie",
+        s."PrixTerrainHT", s."PrixFraisAnnexeHT", s."PrixRevientBudget", s."PrixVenteBudget",
+        ${fkSafe('IDBudget', 'tListeBudget', 'IDListeBudget')},
+        NULLIF(TRIM(regexp_replace(COALESCE(s."Commentaire", ''), '<[^>]*>', '', 'g')), ''),
+        s."SurfaceUtile"
+      FROM legacy."tSGA" s`,
+  },
+  {
+    target: 'declaration_940',
+    cols: `(id, tranche_id, date_940, stock_logt_dat, date_tva_lasm, sur_ope,
+            fin_suivi, commentaires)`,
+    select: `SELECT s."IDDeclaration940", s."IDTranche", s."Dat", s."StockLogtDAT",
+        s."DateTvaLASM", s."SurOpe", s."FinSuivi", s."Commentaires"
+      FROM legacy."tDeclaration940" s`,
+  },
+
   {
     target: 'commercial',
     cols: '(id, denomination, prenom, initiales, email, societe, fonction)',
