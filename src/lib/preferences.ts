@@ -117,11 +117,18 @@ export function usePref<T>(
   const ecrire = (v: T | ((prec: T) => T)) => {
     const prec = queryClient.getQueryData<Prefs>(CLE_PREFS)
     const courant = resoudrePref(prec?.[cle], defaut)
-    const suivant =
-      typeof v === 'function' ? (v as (p: T) => T)(courant) : v
+    const suivant = typeof v === 'function' ? (v as (p: T) => T)(courant) : v
     queryClient.setQueryData<Prefs>(CLE_PREFS, { ...prec, [cle]: suivant })
     pousser(cle, suivant)
   }
 
   return [valeur, ecrire]
 }
+
+/** Opération et tranche courantes, partagées par tous les modules (fil conducteur WinDev). */
+export interface Selection {
+  op?: number
+  tranche?: number
+}
+
+export const SELECTION_VIDE: Selection = {}

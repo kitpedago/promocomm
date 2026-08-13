@@ -14,10 +14,11 @@ import {
   getLotsCommFn,
   getOperationCommFn,
 } from '#/lib/commercialisation.ts'
-import { usePref } from '#/lib/preferences.ts'
+import { SELECTION_VIDE, usePref } from '#/lib/preferences.ts'
 import { getService } from '#/lib/services'
 import { fmtDate, fmtEuro } from '#/lib/utils.ts'
 
+import type { Selection } from '#/lib/preferences.ts'
 import type { ColumnDef } from '@tanstack/react-table'
 
 interface RechercheComm {
@@ -32,10 +33,16 @@ export const Route = createFileRoute('/_authed/commercialisation')({
     tranche: s.tranche ? Number(s.tranche) : undefined,
     lot: s.lot ? Number(s.lot) : undefined,
   }),
-  beforeLoad: ({ context }) => {
+  beforeLoad: ({ context, search }) => {
     const service = getService(context.session.user.service)
     if (!service?.modules.includes('commercialisation')) {
       throw redirect({ to: '/' })
+    }
+    // même fil conducteur que /operations : pas de boucle, la redirection
+    // renseigne justement search.op.
+    const selection = context.prefs.selection as Selection | undefined
+    if (search.op == null && selection?.op != null) {
+      throw redirect({ to: '/commercialisation', search: selection })
     }
   },
   component: PageCommercialisation,
@@ -96,6 +103,7 @@ const COLONNES_LOTS: Array<ColumnDef<LigneLot, any>> = [
 function PageCommercialisation() {
   const { op, tranche, lot } = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
+  const [, setSelection] = usePref<Selection>('selection', SELECTION_VIDE)
 
   const operation = useQuery({
     queryKey: ['operation-comm', op],
@@ -118,7 +126,11 @@ function PageCommercialisation() {
     <div className="flex h-[calc(100vh-61px)] items-stretch overflow-hidden">
       <PanneauOperations
         selectedId={op ?? null}
-        onSelect={(id) => void navigate({ search: { op: id } })}
+        onSelect={(id) => {
+          // nouvelle opération → la tranche mémorisée ne s'applique plus
+          setSelection({ op: id })
+          void navigate({ search: { op: id } })
+        }}
       />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col px-5 py-5 sm:px-7">
@@ -149,9 +161,10 @@ function PageCommercialisation() {
                 <SelecteurTranche
                   tranches={operation.data.tranches}
                   value={trancheActive}
-                  onChange={(id) =>
+                  onChange={(id) => {
+                    setSelection({ op, tranche: id })
                     void navigate({ search: { op, tranche: id } })
-                  }
+                  }}
                 />
               </div>
             )}

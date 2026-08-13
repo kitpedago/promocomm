@@ -2,7 +2,7 @@
 // « Contient » ≥ 3 caractères sans accent, case « Inclure les Masquer … »,
 // compteur, repliable). Le flag de masquage filtré dépend du module
 // (commercial par défaut, comptable pour Compta & Finances).
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronsLeft, ChevronsRight } from 'lucide-react'
 
@@ -47,6 +47,12 @@ export default function PanneauOperations({
     }
     return liste
   }, [operations.data, recherche, inclureMasques])
+
+  // la ligne restaurée peut être hors écran dans une liste longue
+  const refSelection = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    refSelection.current?.scrollIntoView({ block: 'nearest' })
+  }, [selectedId, filtrees])
 
   if (replie) {
     return (
@@ -117,6 +123,7 @@ export default function PanneauOperations({
         {filtrees.map((o) => (
           <button
             key={o.id}
+            ref={o.id === selectedId ? refSelection : undefined}
             onClick={() => onSelect(o.id)}
             className={`flex w-full cursor-pointer flex-col px-3 py-1.5 text-left transition-colors ${
               o.id === selectedId

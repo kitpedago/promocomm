@@ -18,10 +18,11 @@ import {
   getStadesFn,
   getSubventionsFn,
 } from '#/lib/operations.ts'
-import { usePref } from '#/lib/preferences.ts'
+import { SELECTION_VIDE, usePref } from '#/lib/preferences.ts'
 import { getService } from '#/lib/services'
 import { fmtDate, fmtEuro } from '#/lib/utils.ts'
 
+import type { Selection } from '#/lib/preferences.ts'
 import type { ColumnDef } from '@tanstack/react-table'
 
 interface RechercheOp {
@@ -34,9 +35,16 @@ export const Route = createFileRoute('/_authed/operations')({
     op: s.op ? Number(s.op) : undefined,
     tranche: s.tranche ? Number(s.tranche) : undefined,
   }),
-  beforeLoad: ({ context }) => {
+  beforeLoad: ({ context, search }) => {
     const service = getService(context.session.user.service)
     if (!service?.modules.includes('operations')) throw redirect({ to: '/' })
+    // arrivée sans paramètre → on rejoue la dernière sélection dans l'URL, au
+    // SSR : pas de clignotement, et l'URL reste partageable. Pas de boucle,
+    // la redirection renseigne justement search.op.
+    const selection = context.prefs.selection as Selection | undefined
+    if (search.op == null && selection?.op != null) {
+      throw redirect({ to: '/operations', search: selection })
+    }
   },
   component: PageOperations,
 })
@@ -76,6 +84,7 @@ function Case({ libelle, actif }: { libelle: string; actif?: boolean | null }) {
 function PageOperations() {
   const { op, tranche } = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
+  const [, setSelection] = usePref<Selection>('selection', SELECTION_VIDE)
 
   const fiche = useQuery({
     queryKey: ['operation-fiche', op],
@@ -92,7 +101,11 @@ function PageOperations() {
     <div className="flex h-[calc(100vh-61px)] items-stretch">
       <PanneauOperations
         selectedId={op ?? null}
-        onSelect={(id) => void navigate({ search: { op: id } })}
+        onSelect={(id) => {
+          // nouvelle opération → la tranche mémorisée ne s'applique plus
+          setSelection({ op: id })
+          void navigate({ search: { op: id } })
+        }}
       />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden px-5 py-5 sm:px-7">
@@ -193,9 +206,10 @@ function PageOperations() {
               <SelecteurTranche
                 tranches={d.tranches}
                 value={trancheActive}
-                onChange={(id) =>
+                onChange={(id) => {
+                  setSelection({ op, tranche: id })
                   void navigate({ search: { op, tranche: id } })
-                }
+                }}
               />
             </div>
 
@@ -351,7 +365,10 @@ const pourcent = (n: number | null | undefined) =>
   n != null ? `${(n * 100).toFixed(2).replace('.', ',')} %` : null
 
 function OngletsTranche({ tranche: t }: { tranche: LigneTranche }) {
-  const [ongletStocke, setOnglet] = usePref<Onglet>('onglet:operations', ONGLETS[0])
+  const [ongletStocke, setOnglet] = usePref<Onglet>(
+    'onglet:operations',
+    ONGLETS[0],
+  )
   // un onglet renommé depuis l'enregistrement ne doit pas laisser la page vide
   const onglet = ONGLETS.includes(ongletStocke) ? ongletStocke : ONGLETS[0]
 
