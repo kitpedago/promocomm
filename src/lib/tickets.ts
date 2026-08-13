@@ -17,7 +17,8 @@ import {
   ticketCommentaire,
   ticketLecture,
 } from '#/db/schema.ts'
-import { requireSession } from '#/lib/session.server.ts'
+import { notifierTicketSms } from '#/lib/ovh-sms.server.ts'
+import { requireAdmin, requireSession } from '#/lib/session.server.ts'
 import { SERVICES, getService, serviceEmail } from '#/lib/services'
 import {
   TICKET_GRAVITES,
@@ -55,13 +56,6 @@ async function identite(): Promise<{
   const nom =
     getService(session.user.service)?.label ?? email.split('@')[0]
   return { email, nom, estAdmin: session.user.service === 'admin' }
-}
-
-async function requireAdmin() {
-  const session = await requireSession()
-  if (session.user.service !== 'admin')
-    throw new Error('Réservé au service Administrateur')
-  return session
 }
 
 /**
@@ -397,6 +391,16 @@ export const createTicketFn = createServerFn({ method: 'POST' })
       .returning({ id: ticket.id })
     await insertCaptures(row.id, data.captures, who)
     await marquerLu(row.id, who.email)
+    // Alerte SMS « un ticket est publié » (Paramètres → Système → Alerte SMS) —
+    // best-effort : toute erreur est avalée par notifierTicketSms, la création
+    // du ticket n'échoue jamais à cause du SMS
+    await notifierTicketSms({
+      id: row.id,
+      type: data.type,
+      gravite: data.gravite,
+      titre: data.titre,
+      auteur: who.nom,
+    })
     return { id: row.id }
   })
 

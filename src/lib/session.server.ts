@@ -23,6 +23,15 @@ export async function requireEcriture() {
   return session
 }
 
+// Réservé au service Administrateur (= le dev) : qualification des tickets,
+// configuration de l'Alerte SMS…
+export async function requireAdmin() {
+  const session = await requireSession()
+  if (session.user.service !== 'admin')
+    throw new Error('Réservé au service Administrateur')
+  return session
+}
+
 // Droits fins (table legacy Droit) : la présence d'une restriction — lecture
 // seule (1) ou masqué (2) — sur le contrôle WinDev interdit la mutation pour
 // le service courant. Aucune ligne = autorisé (admin n'en a aucune).
