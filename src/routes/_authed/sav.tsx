@@ -39,10 +39,7 @@ import {
   getSavTrancheFn,
   saveReserveFn,
 } from '#/lib/sav.ts'
-import {
-  selectionARejouer,
-  useMemoriserSelection,
-} from '#/lib/preferences.ts'
+import { selectionARejouer, useMemoriserSelection } from '#/lib/preferences.ts'
 import { getService } from '#/lib/services'
 import { fmtDate } from '#/lib/utils.ts'
 

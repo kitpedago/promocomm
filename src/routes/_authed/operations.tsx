@@ -1,21 +1,30 @@
-// Module Opérations (FEN_TABLE_Operation) — lecture : détails (notaires,
-// architectes, investisseur, masquages), combo tranche, puis les onglets
-// de la tranche (Stade d'avancement, Terrain, Subventions, Informations diverses).
-// Références : migration_windev/captures_ecrans/Opérations.png,
+// Module Opérations (FEN_TABLE_Operation) — détails (notaires, architectes,
+// investisseur, masquages ; bouton Modifier pour notaires/architectes), combo
+// tranche, puis les onglets de la tranche (Stade d'avancement, Terrain,
+// Subventions, Informations diverses) et l'onglet Contentieux (par opération,
+// CRUD). Références : migration_windev/captures_ecrans/Opérations.png,
 // Opération_OngletTerrain.png, Opération_OngletInfoDiverses.png.
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, Pencil } from 'lucide-react'
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  Link,
+  redirect,
+  useNavigate,
+} from '@tanstack/react-router'
 
 import Champ from '#/components/Champ'
 import {
   BoutonsTable,
+  ChampBascule,
   ChampDate,
+  ChampNombre,
   ChampSelectId,
   ChampTexte,
   ChampTexteLong,
   ErreurMutation,
+  SousTitre,
   versInputDate,
 } from '#/components/ChampsModale'
 import DataTable from '#/components/DataTable'
@@ -39,7 +48,7 @@ import {
   getStadesFn,
   getSubventionsFn,
   saveContentieuxFn,
-  saveOperationContactsFn,
+  saveOperationSimpleFn,
 } from '#/lib/operations.ts'
 import { getOtlOptionsFn } from '#/lib/parametres.otl.ts'
 import {
@@ -268,7 +277,7 @@ function PageOperations() {
             )}
 
             {t && (
-              <ModaleContacts
+              <ModaleOperationSimple
                 fiche={d}
                 tranche={t}
                 open={modaleContacts}
@@ -282,10 +291,10 @@ function PageOperations() {
   )
 }
 
-// Modale du bouton « Modifier » : notaires de l'opération et architectes de
-// la tranche (boutons Modifier/Notaires/Architectes de la capture WinDev —
-// la gestion des listes elles-mêmes est dans Paramètres > OTL)
-function ModaleContacts({
+// Modale du bouton « Modifier » — iso-fenêtre WinDev Operation_Simple
+// (capture Fiche_Operation_Simple.png) : Investisseur, Masquer, Notaires,
+// Architectes ; boutons vers Paramètres pour gérer les listes.
+function ModaleOperationSimple({
   fiche,
   tranche: t,
   open,
@@ -304,7 +313,13 @@ function ModaleContacts({
     enabled: open,
   }).data
 
-  const [valeurs, setValeurs] = useState({
+  const depuisFiche = () => ({
+    possibiliteInvestisseur: fiche.possibiliteInvestisseur,
+    tauxInvestisseurAutorise: fiche.tauxInvestisseurAutorise,
+    commentaireInvestisseur: fiche.commentaireInvestisseur ?? '',
+    masquerCommercial: fiche.masquerCommercial,
+    masquerComptable: fiche.masquerComptable,
+    masquerPromo: fiche.masquerPromo,
     notaireVenteId: fiche.notaireVenteId,
     clercVenteId: fiche.clercVenteId,
     notaireFoncierId: fiche.notaireFoncierId,
@@ -312,27 +327,29 @@ function ModaleContacts({
     architecteMandataireId: t.architecteMandataireId,
     architecteCotraitantId: t.architecteCotraitantId,
   })
+  const [valeurs, setValeurs] = useState(depuisFiche)
   // resynchronise la fiche affichée à chaque ouverture (autre op/tranche)
   const [cleOuverture, setCleOuverture] = useState<string | null>(null)
   const cle = `${fiche.id}:${t.id}:${open}`
   if (open && cle !== cleOuverture) {
     setCleOuverture(cle)
-    setValeurs({
-      notaireVenteId: fiche.notaireVenteId,
-      clercVenteId: fiche.clercVenteId,
-      notaireFoncierId: fiche.notaireFoncierId,
-      clercFoncierId: fiche.clercFoncierId,
-      architecteMandataireId: t.architecteMandataireId,
-      architecteCotraitantId: t.architecteCotraitantId,
-    })
+    setValeurs(depuisFiche())
   }
-  const set = (k: keyof typeof valeurs) => (v: number | null) =>
-    setValeurs((s) => ({ ...s, [k]: v }))
+  type Valeurs = ReturnType<typeof depuisFiche>
+  const set =
+    <TCle extends keyof Valeurs>(k: TCle) =>
+    (v: Valeurs[TCle]) =>
+      setValeurs((s) => ({ ...s, [k]: v }))
 
   const enregistrer = useMutation({
     mutationFn: () =>
-      saveOperationContactsFn({
-        data: { operationId: fiche.id, trancheId: t.id, ...valeurs },
+      saveOperationSimpleFn({
+        data: {
+          operationId: fiche.id,
+          trancheId: t.id,
+          ...valeurs,
+          commentaireInvestisseur: valeurs.commentaireInvestisseur || null,
+        },
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({
@@ -342,11 +359,22 @@ function ModaleContacts({
     },
   })
 
+  const lienListe = (liste: string, libelle: string) => (
+    <Link
+      to="/parametres"
+      search={{ liste }}
+      className="badge-pill shrink-0 bg-[var(--gold-tint)] font-bold normal-case"
+      onClick={() => onOpenChange(false)}
+    >
+      {libelle}
+    </Link>
+  )
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Modifier — notaires et architectes</DialogTitle>
+          <DialogTitle>Opération simplifiée — {fiche.libelle}</DialogTitle>
         </DialogHeader>
         <form
           onSubmit={(e) => {
@@ -355,6 +383,49 @@ function ModaleContacts({
           }}
         >
           <div className="grid gap-3 sm:grid-cols-2">
+            <SousTitre>Investisseur</SousTitre>
+            <div className="flex flex-col gap-3">
+              <ChampBascule
+                libelle="Possibilité investisseur"
+                checked={!!valeurs.possibiliteInvestisseur}
+                onChange={set('possibiliteInvestisseur')}
+              />
+              <ChampNombre
+                libelle="Taux investisseur autorisé"
+                value={valeurs.tauxInvestisseurAutorise}
+                onChange={set('tauxInvestisseurAutorise')}
+              />
+              <ChampTexte
+                libelle="Commentaire investisseur"
+                value={valeurs.commentaireInvestisseur}
+                onChange={set('commentaireInvestisseur')}
+              />
+            </div>
+            <div className="flex flex-col gap-3">
+              <p className="text-[11px] font-bold tracking-wide text-[var(--ink-faded)] uppercase">
+                Masquer
+              </p>
+              <ChampBascule
+                libelle="Masquer Commercial"
+                checked={!!valeurs.masquerCommercial}
+                onChange={set('masquerCommercial')}
+              />
+              <ChampBascule
+                libelle="Masquer Comptable"
+                checked={!!valeurs.masquerComptable}
+                onChange={set('masquerComptable')}
+              />
+              <ChampBascule
+                libelle="Masquer Promo"
+                checked={!!valeurs.masquerPromo}
+                onChange={set('masquerPromo')}
+              />
+            </div>
+
+            <SousTitre>
+              Notaires
+              {lienListe('notaires', 'Gérer les notaires')}
+            </SousTitre>
             <ChampSelectId
               libelle="Notaire Vente"
               value={valeurs.notaireVenteId}
@@ -379,14 +450,19 @@ function ModaleContacts({
               onChange={set('clercFoncierId')}
               options={options?.notaires ?? []}
             />
+
+            <SousTitre>
+              Architectes — tranche {libelleTranche(t)}
+              {lienListe('architectes', 'Gérer les architectes')}
+            </SousTitre>
             <ChampSelectId
-              libelle={`Architecte mandataire (tranche ${libelleTranche(t)})`}
+              libelle="Architecte mandataire"
               value={valeurs.architecteMandataireId}
               onChange={set('architecteMandataireId')}
               options={options?.architectes ?? []}
             />
             <ChampSelectId
-              libelle={`Architecte cotraitant (tranche ${libelleTranche(t)})`}
+              libelle="Architecte cotraitant"
               value={valeurs.architecteCotraitantId}
               onChange={set('architecteCotraitantId')}
               options={options?.architectes ?? []}
@@ -400,7 +476,7 @@ function ModaleContacts({
               </Button>
             </DialogClose>
             <Button type="submit" size="sm" disabled={enregistrer.isPending}>
-              Enregistrer
+              Valider
             </Button>
           </DialogFooter>
         </form>

@@ -332,14 +332,20 @@ export const deleteContentieuxFn = createServerFn({ method: 'POST' })
     await db.delete(contentieux).where(eq(contentieux.id, data.id))
   })
 
-// Bouton « Modifier » du bloc Détails opération : notaires (opération) et
-// architectes (tranche), cf. boutons Modifier/Notaires/Architectes WinDev.
-// Les listes viennent de getOtlOptionsFn (Paramètres > OTL).
-export const saveOperationContactsFn = createServerFn({ method: 'POST' })
+// Bouton « Modifier » du bloc Détails opération → modale Operation_Simple
+// WinDev : investisseur + masquages + notaires (opération), architectes
+// (tranche). Les listes viennent de getOtlOptionsFn (Paramètres > OTL).
+export const saveOperationSimpleFn = createServerFn({ method: 'POST' })
   .validator(
     (d: {
       operationId: number
       trancheId: number
+      possibiliteInvestisseur: boolean | null
+      tauxInvestisseurAutorise: number | null
+      commentaireInvestisseur: string | null
+      masquerCommercial: boolean | null
+      masquerComptable: boolean | null
+      masquerPromo: boolean | null
       notaireVenteId: number | null
       clercVenteId: number | null
       notaireFoncierId: number | null
@@ -353,6 +359,12 @@ export const saveOperationContactsFn = createServerFn({ method: 'POST' })
     const touchees = await db
       .update(operation)
       .set({
+        possibiliteInvestisseur: data.possibiliteInvestisseur,
+        tauxInvestisseurAutorise: data.tauxInvestisseurAutorise,
+        commentaireInvestisseur: data.commentaireInvestisseur || null,
+        masquerCommercial: data.masquerCommercial,
+        masquerComptable: data.masquerComptable,
+        masquerPromo: data.masquerPromo,
         notaireVenteId: data.notaireVenteId,
         clercVenteId: data.clercVenteId,
         notaireFoncierId: data.notaireFoncierId,
