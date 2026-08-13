@@ -842,6 +842,7 @@ const copies: Array<Copy> = [
             montant_subv, montant_subv_acpte, solde_demande,
             avec_honoraire_courtage, montant_hono_courtage_client, montant_hono_courtage_banque,
             avec_souscription_capital_kpi, pas_de_souscription_capital, date_souscription, commentaires_souscription,
+            prestataire_comm1_id, prestataire_comm2_id,
             avec_clause_particuliere, motif_clause_particuliere_id, commentaire_clause_particuliere,
             avec_tma, tma_montant_ouverture_dossier, tma_date_envoi_courrier, tma_date_paiement_solde,
             tma_pmr_montant, tma_pmr_contrat_signe, tma_pmr_date_remis_notaire, tma_commentaire,
@@ -866,6 +867,7 @@ const copies: Array<Copy> = [
         s."MontantSubv", s."MontantSubvAcpte", s."SoldeDemande",
         s."AvecHonoraireCourtage", s."MontantHonoraireCourtageClient", s."MontantHonoraireCourtageBanque",
         s."AvecSouscriptionCapitalKPI", s."PasDeSouscriptionAuCapital", s."DateSouscription", s."CommentairesSouscription",
+        ${fk('PrestataireComm1')}, ${fk('PrestataireComm2')},
         s."AvecClauseParticuliereComm", ${fkSafe('IDMotifClauseParticuliereComm', 'MotifClauseParticuliereComm', 'IDMotifClauseParticuliereComm')}, s."CommentaireClauseParticuliereComm",
         s."AvecTMA", s."TMAMontantOuvertureDossier", s."TMADateEnvoiCourrier", s."TMADatePaiementSolde",
         s."TMA_PMR_Montant", s."TMA_PMR_ContratSigne", s."TMA_PMR_DateRemisNotaireContratEtPlanVEFA", s."TMACommentaire",
@@ -903,6 +905,20 @@ const copies: Array<Copy> = [
     select: `SELECT s."IDTMA", s."IDCommercialisation", s."RefDevis", s."DateDevis", s."ObjetDevis",
         s."DateSignatureDevis", s."MontantDevis", s."MontantVersement1", s."MontantVersement2", s."Commentaires"
       FROM legacy."tTMA" s`,
+  },
+
+  {
+    // droits fins (phase 2) : IDService legacy = ordre de la liste FEN_Login
+    target: 'droit',
+    cols: '(id, fenetre, controle, indice, service, type)',
+    select: `SELECT s."IDDroit", s."Fenetre", s."Controle", s."Indice",
+        CASE s."IDService"
+          WHEN 1 THEN 'promo' WHEN 2 THEN 'compta' WHEN 3 THEN 'consultation'
+          WHEN 4 THEN 'dcial' WHEN 5 THEN 'admin' WHEN 6 THEN 'juridique'
+          WHEN 7 THEN 'direction-promo' END,
+        s."IDTypeDroit"
+      FROM legacy."Droit" s
+      WHERE s."IDService" BETWEEN 1 AND 7`,
   },
 
   // --- SAV Promotion (phase 5) ---

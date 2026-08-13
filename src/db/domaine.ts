@@ -796,6 +796,14 @@ export const commercialisation = pgTable('commercialisation', {
   banqueCourtageId: integer('banque_courtage_id').references(
     () => banqueCourtage.id,
   ),
+  // prestataires de commercialisation de la fiche (phase 2 —
+  // PrestataireCommercialisation legacy jamais renseigné, non repris)
+  prestataireComm1Id: integer('prestataire_comm1_id').references(
+    () => prestataire.id,
+  ),
+  prestataireComm2Id: integer('prestataire_comm2_id').references(
+    () => prestataire.id,
+  ),
   // cycle de vie de la vente
   dateResa: timestamp('date_resa'),
   datePrevueSignatureActe: timestamp('date_prevue_signature_acte'),
@@ -1572,3 +1580,18 @@ export const reserve = pgTable(
   },
   (t) => [index('reserve_lot_id_idx').on(t.lotId)],
 )
+
+// ---------------------------------------------------------------------------
+// Droits fins (phase 2) — table legacy Droit : RESTRICTIONS par service et par
+// contrôle WinDev (type 1 = lecture seule, 2 = masqué). Le service est stocké
+// en slug applicatif (mapping IDService → ordre de la liste FEN_Login).
+// ---------------------------------------------------------------------------
+
+export const droit = pgTable('droit', {
+  id: id(),
+  fenetre: text().notNull(),
+  controle: text().notNull(),
+  indice: integer(),
+  service: text().notNull(),
+  type: integer().notNull(),
+})

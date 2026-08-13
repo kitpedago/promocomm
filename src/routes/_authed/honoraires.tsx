@@ -20,6 +20,7 @@ import {
   versInputDate,
 } from '#/components/ChampsModale'
 import DataTable from '#/components/DataTable'
+import Scindeur from '#/components/Scindeur'
 import Onglets from '#/components/Onglets'
 import PanneauOperations from '#/components/PanneauOperations'
 import SelecteurTranche from '#/components/SelecteurTranche'
@@ -421,163 +422,181 @@ function OngletsHonoraires({ trancheId }: { trancheId: number }) {
 
       <div className="min-h-0 flex-1 overflow-auto px-[18px] py-4">
         {accordeon === 'Honoraires suivant Convention' && (
-          <div className="flex flex-col gap-2">
-            {!lectureSeule && (
-              <BoutonsTable
-                selection={missionSel}
-                onNouveau={() => setMissionModale('creation')}
-                onModifier={() => {
-                  const l = d.missions.find((x) => x.id === missionSel)
-                  if (l) setMissionModale(l)
-                }}
-                onSupprimer={() => {
-                  if (missionSel != null) supprimerMission.mutate(missionSel)
-                }}
-                confirmation="Supprimer cette mission (et sa grille de facturation) ?"
-              />
-            )}
-            <ErreurMutation erreur={supprimerMission.error} />
-            <DataTable
-              id="honoraires-missions"
-              columns={COLONNES_MISSIONS}
-              data={d.missions}
-              unite="missions"
-              getRowId={(r) => String(r.id)}
-              selectedRowId={missionSel != null ? String(missionSel) : null}
-              onRowClick={(r) => {
-                setMissionSel(r.id)
-                setGrilleSel(null)
-              }}
-              defaultHidden={MISSIONS_MASQUEES}
-              emptyText="Aucune mission."
-            />
-
-            <p className="mt-2 shrink-0 text-[15px] font-bold text-[var(--ink)]">
-              Grille facturation
-            </p>
-            {!lectureSeule && missionSel != null && (
-              <div className="flex shrink-0 flex-wrap items-center gap-2">
-                <BoutonsTable
-                  selection={grilleSel}
-                  onNouveau={() => setGrilleModale('creation')}
-                  onModifier={() => {
-                    const l = grillesMission.find((x) => x.id === grilleSel)
-                    if (l) setGrilleModale(l)
+          <Scindeur
+            id="honoraires-convention"
+            haut={
+              <div className="flex min-h-0 flex-1 flex-col gap-2">
+                {!lectureSeule && (
+                  <BoutonsTable
+                    selection={missionSel}
+                    onNouveau={() => setMissionModale('creation')}
+                    onModifier={() => {
+                      const l = d.missions.find((x) => x.id === missionSel)
+                      if (l) setMissionModale(l)
+                    }}
+                    onSupprimer={() => {
+                      if (missionSel != null)
+                        supprimerMission.mutate(missionSel)
+                    }}
+                    confirmation="Supprimer cette mission (et sa grille de facturation) ?"
+                  />
+                )}
+                <ErreurMutation erreur={supprimerMission.error} />
+                <DataTable
+                  id="honoraires-missions"
+                  columns={COLONNES_MISSIONS}
+                  data={d.missions}
+                  unite="missions"
+                  getRowId={(r) => String(r.id)}
+                  selectedRowId={missionSel != null ? String(missionSel) : null}
+                  onRowClick={(r) => {
+                    setMissionSel(r.id)
+                    setGrilleSel(null)
                   }}
-                  onSupprimer={() => {
-                    if (grilleSel != null) supprimerGrille.mutate(grilleSel)
-                  }}
-                  confirmation="Supprimer cette ligne de grille ?"
+                  defaultHidden={MISSIONS_MASQUEES}
+                  emptyText="Aucune mission."
                 />
-                {/* iso-WinDev : grisé dès qu'un stade existe pour la mission */}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={
-                    grillesMission.length > 0 || importerGrille.isPending
-                  }
-                  onClick={() => importerGrille.mutate(missionSel)}
-                  title="Importe les stades d'avancement « Avec hono Gestion » et leur % standard"
-                >
-                  Importer
-                </Button>
               </div>
-            )}
-            <ErreurMutation
-              erreur={supprimerGrille.error ?? importerGrille.error}
-            />
-            <DataTable
-              id="honoraires-grille"
-              columns={COLONNES_GRILLE}
-              data={grillesMission}
-              unite="stades"
-              getRowId={(r) => String(r.id)}
-              selectedRowId={grilleSel != null ? String(grilleSel) : null}
-              onRowClick={(r) => setGrilleSel(r.id)}
-              totalFor={['pourcentage', 'montant']}
-              emptyText={
-                missionSel == null
-                  ? 'Sélectionnez une mission.'
-                  : 'Aucun stade : « Importer » recopie la grille standard.'
-              }
-            />
-          </div>
+            }
+            bas={
+              <div className="flex min-h-0 flex-1 flex-col gap-2">
+                <p className="shrink-0 text-[15px] font-bold text-[var(--ink)]">
+                  Grille facturation
+                </p>
+                {!lectureSeule && missionSel != null && (
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    <BoutonsTable
+                      selection={grilleSel}
+                      onNouveau={() => setGrilleModale('creation')}
+                      onModifier={() => {
+                        const l = grillesMission.find((x) => x.id === grilleSel)
+                        if (l) setGrilleModale(l)
+                      }}
+                      onSupprimer={() => {
+                        if (grilleSel != null) supprimerGrille.mutate(grilleSel)
+                      }}
+                      confirmation="Supprimer cette ligne de grille ?"
+                    />
+                    {/* iso-WinDev : grisé dès qu'un stade existe pour la mission */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={
+                        grillesMission.length > 0 || importerGrille.isPending
+                      }
+                      onClick={() => importerGrille.mutate(missionSel)}
+                      title="Importe les stades d'avancement « Avec hono Gestion » et leur % standard"
+                    >
+                      Importer
+                    </Button>
+                  </div>
+                )}
+                <ErreurMutation
+                  erreur={supprimerGrille.error ?? importerGrille.error}
+                />
+                <DataTable
+                  id="honoraires-grille"
+                  columns={COLONNES_GRILLE}
+                  data={grillesMission}
+                  unite="stades"
+                  getRowId={(r) => String(r.id)}
+                  selectedRowId={grilleSel != null ? String(grilleSel) : null}
+                  onRowClick={(r) => setGrilleSel(r.id)}
+                  totalFor={['pourcentage', 'montant']}
+                  emptyText={
+                    missionSel == null
+                      ? 'Sélectionnez une mission.'
+                      : 'Aucun stade : « Importer » recopie la grille standard.'
+                  }
+                />
+              </div>
+            }
+          />
         )}
 
         {accordeon === 'Honoraires de commercialisation' && (
-          <div className="flex flex-col gap-2">
-            {!lectureSeule && (
-              <BoutonsTable
-                selection={natureSel}
-                onNouveau={() => setNatureModale('creation')}
-                onModifier={() => {
-                  const l = d.natures.find((x) => x.id === natureSel)
-                  if (l) setNatureModale(l)
-                }}
-                onSupprimer={() => {
-                  if (natureSel != null) supprimerNature.mutate(natureSel)
-                }}
-                confirmation="Supprimer ce barème ?"
-              />
-            )}
-            <ErreurMutation erreur={supprimerNature.error} />
-            <DataTable
-              id="honoraires-natures"
-              columns={COLONNES_NATURES}
-              data={d.natures}
-              unite="barèmes"
-              getRowId={(r) => String(r.id)}
-              selectedRowId={natureSel != null ? String(natureSel) : null}
-              onRowClick={(r) => setNatureSel(r.id)}
-              totalFor={[
-                'montantCla',
-                'montantLeveeOption',
-                'montantResa',
-                'montantActe',
-              ]}
-              emptyText="Aucun barème par nature d'achat."
-            />
-
-            <p className="mt-2 shrink-0 text-[15px] font-bold text-[var(--ink)]">
-              Factures
-            </p>
-            {!lectureSeule && (
-              <BoutonsTable
-                selection={factureSel}
-                onNouveau={() => setFactureModale('creation')}
-                onModifier={() => {
-                  const l = d.factures.find((x) => x.id === factureSel)
-                  if (l) setFactureModale(l)
-                }}
-                onSupprimer={() => {
-                  if (factureSel != null) supprimerFacture.mutate(factureSel)
-                }}
-                confirmation="Supprimer cette facture ?"
-              />
-            )}
-            <ErreurMutation erreur={supprimerFacture.error} />
-            <DataTable
-              id="honoraires-factures"
-              columns={COLONNES_FACTURES}
-              data={d.factures}
-              unite="factures"
-              getRowId={(r) => String(r.id)}
-              selectedRowId={factureSel != null ? String(factureSel) : null}
-              onRowClick={(r) => setFactureSel(r.id)}
-              totalFor={[
-                'nbCla',
-                'montantCla',
-                'nbLeveeOption',
-                'montantLeveeOption',
-                'nbResa',
-                'montantResa',
-                'nbActe',
-                'montantActe',
-                'totalFacture',
-              ]}
-              emptyText="Aucune facture."
-            />
-          </div>
+          <Scindeur
+            id="honoraires-commercialisation"
+            haut={
+              <div className="flex min-h-0 flex-1 flex-col gap-2">
+                {!lectureSeule && (
+                  <BoutonsTable
+                    selection={natureSel}
+                    onNouveau={() => setNatureModale('creation')}
+                    onModifier={() => {
+                      const l = d.natures.find((x) => x.id === natureSel)
+                      if (l) setNatureModale(l)
+                    }}
+                    onSupprimer={() => {
+                      if (natureSel != null) supprimerNature.mutate(natureSel)
+                    }}
+                    confirmation="Supprimer ce barème ?"
+                  />
+                )}
+                <ErreurMutation erreur={supprimerNature.error} />
+                <DataTable
+                  id="honoraires-natures"
+                  columns={COLONNES_NATURES}
+                  data={d.natures}
+                  unite="barèmes"
+                  getRowId={(r) => String(r.id)}
+                  selectedRowId={natureSel != null ? String(natureSel) : null}
+                  onRowClick={(r) => setNatureSel(r.id)}
+                  totalFor={[
+                    'montantCla',
+                    'montantLeveeOption',
+                    'montantResa',
+                    'montantActe',
+                  ]}
+                  emptyText="Aucun barème par nature d'achat."
+                />
+              </div>
+            }
+            bas={
+              <div className="flex min-h-0 flex-1 flex-col gap-2">
+                <p className="shrink-0 text-[15px] font-bold text-[var(--ink)]">
+                  Factures
+                </p>
+                {!lectureSeule && (
+                  <BoutonsTable
+                    selection={factureSel}
+                    onNouveau={() => setFactureModale('creation')}
+                    onModifier={() => {
+                      const l = d.factures.find((x) => x.id === factureSel)
+                      if (l) setFactureModale(l)
+                    }}
+                    onSupprimer={() => {
+                      if (factureSel != null)
+                        supprimerFacture.mutate(factureSel)
+                    }}
+                    confirmation="Supprimer cette facture ?"
+                  />
+                )}
+                <ErreurMutation erreur={supprimerFacture.error} />
+                <DataTable
+                  id="honoraires-factures"
+                  columns={COLONNES_FACTURES}
+                  data={d.factures}
+                  unite="factures"
+                  getRowId={(r) => String(r.id)}
+                  selectedRowId={factureSel != null ? String(factureSel) : null}
+                  onRowClick={(r) => setFactureSel(r.id)}
+                  totalFor={[
+                    'nbCla',
+                    'montantCla',
+                    'nbLeveeOption',
+                    'montantLeveeOption',
+                    'nbResa',
+                    'montantResa',
+                    'nbActe',
+                    'montantActe',
+                    'totalFacture',
+                  ]}
+                  emptyText="Aucune facture."
+                />
+              </div>
+            }
+          />
         )}
       </div>
 

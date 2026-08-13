@@ -19,6 +19,7 @@ import {
 } from '#/components/ChampsModale'
 import DataTable from '#/components/DataTable'
 import Onglets from '#/components/Onglets'
+import Scindeur from '#/components/Scindeur'
 import { Button } from '#/components/ui/button'
 import {
   Dialog,
@@ -1323,80 +1324,84 @@ function BilanSccv({ sccvId }: { sccvId: number }) {
 
         <div className="min-h-0 flex-1 overflow-auto px-[18px] py-4">
           {accordeon === 'Stock et CA' && (
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-col gap-2">
-                <p className="text-[13px] font-semibold text-[var(--gold-ink)]">
-                  Stock
-                </p>
-                {!lectureSeule && (
-                  <BoutonsTable
-                    selection={stockSel}
-                    onNouveau={() => setStockModale('creation')}
-                    onModifier={() => {
-                      const l = d.stock.find((x) => x.id === stockSel)
-                      if (l) setStockModale(l)
-                    }}
-                    onSupprimer={() => {
-                      if (stockSel != null) supprimerStock.mutate(stockSel)
-                    }}
-                    confirmation="Supprimer cette ligne de stock ?"
+            <Scindeur
+              id="bilan-stock-caht"
+              haut={
+                <div className="flex min-h-0 flex-1 flex-col gap-2">
+                  <p className="shrink-0 text-[13px] font-semibold text-[var(--gold-ink)]">
+                    Stock
+                  </p>
+                  {!lectureSeule && (
+                    <BoutonsTable
+                      selection={stockSel}
+                      onNouveau={() => setStockModale('creation')}
+                      onModifier={() => {
+                        const l = d.stock.find((x) => x.id === stockSel)
+                        if (l) setStockModale(l)
+                      }}
+                      onSupprimer={() => {
+                        if (stockSel != null) supprimerStock.mutate(stockSel)
+                      }}
+                      confirmation="Supprimer cette ligne de stock ?"
+                    />
+                  )}
+                  <ErreurMutation erreur={supprimerStock.error} />
+                  <DataTable
+                    id="bilan-stock"
+                    columns={COLONNES_STOCK}
+                    data={d.stock}
+                    unite="années"
+                    getRowId={(r) => String(r.id)}
+                    selectedRowId={stockSel != null ? String(stockSel) : null}
+                    onRowClick={(r) => setStockSel(r.id)}
+                    totalFor={['stockCredit713300']}
+                    emptyText="Aucune ligne de stock."
                   />
-                )}
-                <ErreurMutation erreur={supprimerStock.error} />
-                <DataTable
-                  id="bilan-stock"
-                  columns={COLONNES_STOCK}
-                  data={d.stock}
-                  unite="années"
-                  getRowId={(r) => String(r.id)}
-                  selectedRowId={stockSel != null ? String(stockSel) : null}
-                  onRowClick={(r) => setStockSel(r.id)}
-                  totalFor={['stockCredit713300']}
-                  emptyText="Aucune ligne de stock."
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <p className="text-[13px] font-semibold text-[var(--gold-ink)]">
-                  CA HT
-                </p>
-                {!lectureSeule && (
-                  <BoutonsTable
-                    selection={cahtSel}
-                    onNouveau={() => setCahtModale('creation')}
-                    onModifier={() => {
-                      const l = d.caht.find((x) => x.id === cahtSel)
-                      if (l) setCahtModale(l)
-                    }}
-                    onSupprimer={() => {
-                      if (cahtSel != null) supprimerCaht.mutate(cahtSel)
-                    }}
-                    confirmation="Supprimer cette ligne de CA HT ?"
+                </div>
+              }
+              bas={
+                <div className="flex min-h-0 flex-1 flex-col gap-2">
+                  <p className="shrink-0 text-[13px] font-semibold text-[var(--gold-ink)]">
+                    CA HT
+                  </p>
+                  {!lectureSeule && (
+                    <BoutonsTable
+                      selection={cahtSel}
+                      onNouveau={() => setCahtModale('creation')}
+                      onModifier={() => {
+                        const l = d.caht.find((x) => x.id === cahtSel)
+                        if (l) setCahtModale(l)
+                      }}
+                      onSupprimer={() => {
+                        if (cahtSel != null) supprimerCaht.mutate(cahtSel)
+                      }}
+                      confirmation="Supprimer cette ligne de CA HT ?"
+                    />
+                  )}
+                  <ErreurMutation erreur={supprimerCaht.error} />
+                  <DataTable
+                    id="bilan-caht"
+                    columns={COLONNES_CAHT}
+                    data={d.caht}
+                    unite="années"
+                    getRowId={(r) => String(r.id)}
+                    selectedRowId={cahtSel != null ? String(cahtSel) : null}
+                    onRowClick={(r) => setCahtSel(r.id)}
+                    totalFor={[
+                      'cahtVefa',
+                      'cahtLvPsla',
+                      'cahtLoyers',
+                      'cahtTma',
+                      'cahtTerrain',
+                      'cahtAutres',
+                      'cahtTotal',
+                    ]}
+                    defaultHidden={CAHT_MASQUEES}
+                    emptyText="Aucune ligne de CA HT."
                   />
-                )}
-                <ErreurMutation erreur={supprimerCaht.error} />
-                <DataTable
-                  id="bilan-caht"
-                  columns={COLONNES_CAHT}
-                  data={d.caht}
-                  unite="années"
-                  getRowId={(r) => String(r.id)}
-                  selectedRowId={cahtSel != null ? String(cahtSel) : null}
-                  onRowClick={(r) => setCahtSel(r.id)}
-                  totalFor={[
-                    'cahtVefa',
-                    'cahtLvPsla',
-                    'cahtLoyers',
-                    'cahtTma',
-                    'cahtTerrain',
-                    'cahtAutres',
-                    'cahtTotal',
-                  ]}
-                  defaultHidden={CAHT_MASQUEES}
-                  emptyText="Aucune ligne de CA HT."
-                />
-              </div>
-            </div>
+                </div>
+              }
+            />
           )}
 
           {accordeon === 'Résultats' && (

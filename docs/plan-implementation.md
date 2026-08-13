@@ -64,7 +64,7 @@ Le cœur de l'usage quotidien, ouvert aux 7 services. **Aucune extension ETL** h
     planning et export Excel (phase 9), colonne « Num Facture » des stades (phase 7),
     déblocages de subventions (phase 6).
 
-## Phase 2 — Écriture commerciale
+## Phase 2 — Écriture commerciale ✅ (2026-08-13)
 
 - CRUD : Réserver / Modifier / Annuler la réservation, dépôts de garantie, TMA,
   propagation adresse/date livraison de la tranche vers les lots. Testables
@@ -73,6 +73,20 @@ Le cœur de l'usage quotidien, ouvert aux 7 services. **Aucune extension ETL** h
   en table `droit` + hook composants.
 - À trancher avec le client : motif d'annulation (liste paramétrable dans FEN_Param
   vs texte libre dans `tCommercialisation.MotifAnnulation`).
+- **Livré 2026-08-13** (migration 0018) : table `droit` (235 restrictions,
+  IDService → slug par l'ordre FEN_Login) + garde serveur `requireDroit`
+  (fenêtre + contrôle WinDev) et hook client `useDroitsComm` ;
+  `commercialisation.prestataire_comm1_id/2_id` repris (2 819/95 lignes).
+  Écran : modale Réserver/Modifier (fiche complète — réservation, prix,
+  agrément, courtage, souscription capital, revente, clause particulière),
+  modale Annuler (date/motif/commentaire, l'historique est conservé), CRUD
+  versements de dépôt de garantie, propagation adresse (remplacer tout ou
+  seulement les vides) et date de livraison (dates déjà saisies conservées)
+  aux lots non investisseurs — natures 2/9/10 exclues iso-WinDev. Motif
+  d'annulation en texte libre (aucune valeur dans le legacy ; liste
+  paramétrable à trancher avec le client). TMA : contrôles commentés dans le
+  WinDev actuel (fonction neutralisée à la source) — données `tma` déjà
+  reprises, pas d'écran tant que le client n'a pas réactivé le besoin.
 
 ## Phase 3 — Suivi de production (module Opérations complet)
 
@@ -194,7 +208,7 @@ Réservé Comptabilité/Administrateur. Le plus gros morceau ETL :
 | ----- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 0     | Socle (ETL, auth, charte, menu, tableau de bord)  | ✅ 2026-07-05                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | 1     | Consultation commerciale + composants transverses | ✅ 2026-08-12 — Commercialisation et Acquéreurs livrés le 2026-07-05 (panneau maître, sélecteur de tranche, table unique `DataTable` avec pagination, détail lot 7 onglets, filtre en arbre par opération, lot courant calculé) ; fiche Opérations partielle (identité, adresse, tranches, lots) le 2026-08-12                                                                                                                                                                                                                            |
-| 2     | Écriture commerciale + droits fins                | à faire                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 2     | Écriture commerciale + droits fins                | ✅ 2026-08-13 — table `droit` (235 restrictions legacy) + `requireDroit` serveur + `useDroitsComm` client ; modales Réserver/Modifier (fiche complète) et Annuler (historique conservé), CRUD versements DG, propagations adresse/date livraison (lots investisseurs exclus, dates saisies conservées) ; `prestataire_comm1/2` repris. TMA neutralisé dans le WinDev source ; motif d'annulation en texte libre (à trancher client)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 3     | Suivi de production (Opérations)                  | à faire                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 4     | SCCV et associés                                  | ✅ 2026-08-12 — ETL (13 tables/extensions), liste (88) + fiche 4 onglets, CRUD complet ; validations réactivées à signaler au client (RS obligatoire, SIRET, total % ≠ 100)                                                                                                                                                                                                                                                                                                                                                               |
 | 5     | SAV Promotion                                     | ✅ 2026-08-13 — ETL `reserve`/`reserve_type`/`reserve_piece`/`reserve_entreprise` (13 992/6/0/281, index par lot) ; écran `/sav` (volet masquage promo, dates Livraison/Réception jalons 35/39, lots partagés Commercialisation, CRUD réserves avec code auto NextCodeReserve et verrou Air-Bat). Mails/impression/import Air-Bat → phase 9                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |

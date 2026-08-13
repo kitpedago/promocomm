@@ -127,6 +127,13 @@
       "when": 1786627800156,
       "tag": "0017_useful_skreet",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1786628892241,
+      "tag": "0018_lethal_thaddeus_ross",
+      "breakpoints": true
     }
   ]
 }
