@@ -10,6 +10,7 @@ import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import Champ from '#/components/Champ'
 import { BoutonsTable, ErreurMutation } from '#/components/ChampsModale'
 import DataTable from '#/components/DataTable'
+import Scindeur from '#/components/Scindeur'
 import ModaleFiche from '#/components/ModaleFiche'
 import Onglets from '#/components/Onglets'
 import PanneauOperations from '#/components/PanneauOperations'
@@ -246,8 +247,8 @@ function Bloc({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-3">
-      <p className="border-b border-[var(--line-soft)] pb-1 text-[13px] font-semibold text-[var(--gold-ink)]">
+    <div className="flex min-h-0 flex-col gap-3">
+      <p className="shrink-0 border-b border-[var(--line-soft)] pb-1 text-[13px] font-semibold text-[var(--gold-ink)]">
         {titre}
       </p>
       {children}
@@ -1397,8 +1398,8 @@ function OngletFinancements({
     enabled: avecMouvements && financementId != null,
   })
 
-  return (
-    <div className="flex flex-col gap-6">
+  const tableFinancements = (
+    <>
       <ZoneCrud
         lignes={financements.data ?? []}
         selectionId={financementId}
@@ -1430,15 +1431,28 @@ function OngletFinancements({
             : 'Aucun financement sur cette tranche.'
         }
       />
+    </>
+  )
 
-      {avecMouvements &&
-        (financementId == null ? (
+  if (!avecMouvements)
+    return <div className="flex flex-col gap-6">{tableFinancements}</div>
+
+  return (
+    <Scindeur
+      id={`compta-financements-${vue}`}
+      haut={
+        <div className="flex min-h-0 flex-1 flex-col gap-6">
+          {tableFinancements}
+        </div>
+      }
+      bas={
+        financementId == null ? (
           <p className="text-[13px] text-[var(--muted)]">
             Sélectionnez un financement pour afficher ses déblocages et
             remboursements anticipés.
           </p>
         ) : (
-          <div className="grid gap-6 xl:grid-cols-2">
+          <div className="grid h-full min-h-0 gap-6 overflow-auto xl:grid-cols-2">
             <Bloc titre="Déblocages du financement">
               <div className="mb-2">
                 <ZoneCrud
@@ -1514,8 +1528,9 @@ function OngletFinancements({
               />
             </Bloc>
           </div>
-        ))}
-    </div>
+        )
+      }
+    />
   )
 }
 
