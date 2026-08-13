@@ -743,6 +743,14 @@ const copies: Array<Copy> = [
       FROM legacy."tHonoCommHFNatureAchat" s`,
   },
   {
+    target: 'facture',
+    cols: `(id, stade_avancement_id, type_mission_id, num_facture, date_facture,
+            partiel, montant_ht, nb_mois, commentaire)`,
+    select: `SELECT s."IDFacture", s."IDStadeAvancement", ${fk('IDTypeMission')},
+        s."NumFacture", s."DateFacture", s."Partiel", s."MontantHT", s."NbMois", s."Commentaire"
+      FROM legacy."tFacture" s`,
+  },
+  {
     // colonnes *_old exclues ; IDPrestataire/IDBaremeHonoComm absents du .bak
     target: 'hono_comm_facture',
     cols: `(id, tranche_id, num_facture, date_facture, nb_cla, montant_cla,

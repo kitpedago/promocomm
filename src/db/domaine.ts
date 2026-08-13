@@ -1475,6 +1475,23 @@ export const honoCommNatureAchat = pgTable('hono_comm_nature_achat', {
   commentaires: text(),
 })
 
+// tFacture — factures de missions par jalon réel (tStadeAvancement, le bon
+// contrairement à la grille) ; écran porteur FEN_Promotion (suivi de
+// production, sans capture) à venir — ETL repris dès la phase 7
+export const facture = pgTable('facture', {
+  id: id(),
+  stadeAvancementId: integer('stade_avancement_id')
+    .notNull()
+    .references(() => stadeAvancement.id),
+  typeMissionId: integer('type_mission_id').references(() => typeMission.id),
+  numFacture: integer('num_facture'),
+  dateFacture: timestamp('date_facture'),
+  partiel: boolean(),
+  montantHt: montant('montant_ht'),
+  nbMois: integer('nb_mois'),
+  commentaire: text(),
+})
+
 // tHonoCommHFFacture — factures d'honoraires de commercialisation par
 // tranche (colonnes *_old exclues ; IDPrestataire et IDBaremeHonoComm de
 // l'analyse WinDev actuelle absents du .bak importé)
