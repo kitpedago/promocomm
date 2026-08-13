@@ -233,6 +233,9 @@ Réservé Comptabilité/Administrateur. Le plus gros morceau ETL :
   synchro dates) — intégrations à cadrer avec le client (SMTP, format
   Air-Bat, modèles d'impression).
 
+> **Synthèse des restes** (décisions client, .bak attendu, transverses,
+> bascule) : [reste-a-faire.md](reste-a-faire.md).
+
 ## Bascule (fin de parcours)
 
 1. Dernier import `.bak`, gel de WinDev.
