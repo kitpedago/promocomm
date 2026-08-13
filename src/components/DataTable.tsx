@@ -395,14 +395,13 @@ export default function DataTable<T>({
                     {i === 0 ? (
                       'Total'
                     ) : col.id in totaux ? (
-                      // groupé fr-FR et arrondi : les sommes de flottants
-                      // (surfaces) sortaient sinon en 2154.6899999999996
-                      // — aligné à droite comme les cellules numériques
-                      <span className="block text-right tabular-nums">
-                        {totaux[col.id].toLocaleString('fr-FR', {
-                          maximumFractionDigits: 2,
-                        })}
-                      </span>
+                      // la somme passe par le formateur de cellule de la
+                      // colonne (fmtEuro, %…) pour garder unité et nombre de
+                      // décimales identiques aux lignes ; les renderers du
+                      // dépôt ne lisent que getValue()
+                      flexRender(col.columnDef.cell, {
+                        getValue: () => totaux[col.id],
+                      } as never)
                     ) : (
                       ''
                     )}
