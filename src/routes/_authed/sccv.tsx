@@ -528,10 +528,6 @@ function ModaleFicheSccv({
   const [valeurs, setValeurs] = useState<EntreeFicheSccv>(() =>
     fiche ? versEntreeFiche(fiche) : FICHE_VIDE,
   )
-  useEffect(() => {
-    if (open) setValeurs(fiche ? versEntreeFiche(fiche) : FICHE_VIDE)
-  }, [open, fiche])
-
   const enregistrer = useMutation({
     mutationFn: (d: EntreeFicheSccv) => saveSccvFn({ data: d }),
     onSuccess: (res) => {
@@ -541,6 +537,12 @@ function ModaleFicheSccv({
       onOpenChange(false)
     },
   })
+  useEffect(() => {
+    if (open) {
+      setValeurs(fiche ? versEntreeFiche(fiche) : FICHE_VIDE)
+      enregistrer.reset()
+    }
+  }, [open, fiche])
 
   const set =
     <TCle extends keyof EntreeFicheSccv>(k: TCle) =>
@@ -1035,14 +1037,6 @@ function ModaleParticipation({
   const [valeurs, setValeurs] = useState<EntreeParticipation>(() =>
     participation ? versEntreeParticipation(sccvId, participation) : videParticipation,
   )
-  useEffect(() => {
-    if (open) {
-      setValeurs(
-        participation ? versEntreeParticipation(sccvId, participation) : videParticipation,
-      )
-    }
-  }, [open, participation, sccvId])
-
   const enregistrer = useMutation({
     mutationFn: (d: EntreeParticipation) => saveParticipationFn({ data: d }),
     onSuccess: () => {
@@ -1050,6 +1044,14 @@ function ModaleParticipation({
       onOpenChange(false)
     },
   })
+  useEffect(() => {
+    if (open) {
+      setValeurs(
+        participation ? versEntreeParticipation(sccvId, participation) : videParticipation,
+      )
+      enregistrer.reset()
+    }
+  }, [open, participation, sccvId])
 
   const set =
     <TCle extends keyof EntreeParticipation>(k: TCle) =>
@@ -1231,10 +1233,6 @@ function ModaleCompteBanque({
   const [valeurs, setValeurs] = useState<EntreeCompteBanque>(() =>
     compte ? depuisLigne(compte) : videCompte,
   )
-  useEffect(() => {
-    if (open) setValeurs(compte ? depuisLigne(compte) : videCompte)
-  }, [open, compte, sccvId])
-
   const enregistrer = useMutation({
     mutationFn: (d: EntreeCompteBanque) => saveCompteBanqueFn({ data: d }),
     onSuccess: () => {
@@ -1242,6 +1240,12 @@ function ModaleCompteBanque({
       onOpenChange(false)
     },
   })
+  useEffect(() => {
+    if (open) {
+      setValeurs(compte ? depuisLigne(compte) : videCompte)
+      enregistrer.reset()
+    }
+  }, [open, compte, sccvId])
 
   const set =
     <TCle extends keyof EntreeCompteBanque>(k: TCle) =>
@@ -1347,13 +1351,6 @@ function ModaleCentreImpots({
     dateMandatSie: versInputDate(f.dateMandatSie) ?? '',
   })
   const [valeurs, setValeurs] = useState(() => volet(fiche))
-  useEffect(() => {
-    // dépendance sur fiche.id (pas fiche) : l'objet fiche change d'identité à
-    // chaque refetch (staleTime 0, refetchOnWindowFocus) sans que la modale
-    // rouvre — ne pas réinitialiser le formulaire en pleine saisie
-    if (open) setValeurs(volet(fiche))
-  }, [open, fiche.id])
-
   const enregistrer = useMutation({
     mutationFn: () =>
       saveSccvFn({ data: { ...versEntreeFiche(fiche), ...valeurs, id: fiche.id } }),
@@ -1366,6 +1363,15 @@ function ModaleCentreImpots({
       onOpenChange(false)
     },
   })
+  useEffect(() => {
+    // dépendance sur fiche.id (pas fiche) : l'objet fiche change d'identité à
+    // chaque refetch (staleTime 0, refetchOnWindowFocus) sans que la modale
+    // rouvre — ne pas réinitialiser le formulaire en pleine saisie
+    if (open) {
+      setValeurs(volet(fiche))
+      enregistrer.reset()
+    }
+  }, [open, fiche.id])
 
   const set =
     <TCle extends keyof typeof valeurs>(k: TCle) =>
@@ -1575,6 +1581,7 @@ function DetailSccv({
                 </Button>
               </div>
             )}
+            <ErreurMutation erreur={supprimerParticipation.error} />
             <DataTable
               id="sccv-participations"
               columns={COLONNES_PARTICIPATIONS}
@@ -1636,6 +1643,7 @@ function DetailSccv({
                 </Button>
               </div>
             )}
+            <ErreurMutation erreur={supprimerCompte.error} />
             <DataTable
               id="sccv-comptes"
               columns={COLONNES_COMPTES_SCCV}
