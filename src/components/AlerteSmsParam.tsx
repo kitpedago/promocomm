@@ -47,9 +47,13 @@ function Carte({ children }: { children: React.ReactNode }) {
 }
 
 export function AlerteSmsParam() {
+  // gcTime 0 : pas de cache entre deux ouvertures de l'écran — l'état local
+  // est initialisé UNE fois (flag loaded), un cache périmé montrerait
+  // d'anciennes valeurs comme fraîches
   const q = useQuery({
     queryKey: ['alerte-sms-config'],
     queryFn: () => getAlerteSmsConfigFn(),
+    gcTime: 0,
   })
   const [loaded, setLoaded] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
