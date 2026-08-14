@@ -216,10 +216,10 @@ function PageOperations() {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  <p className="text-[13px] font-semibold text-[var(--gold-ink)]">
+                  <SousTitre>
                     Architectes de la tranche
                     {t ? ` ${libelleTranche(t)}` : ''}
-                  </p>
+                  </SousTitre>
                   <Champ libelle="Architecte mandataire">
                     {t?.architecteMandataire}
                   </Champ>
@@ -637,9 +637,7 @@ function Bloc({
 }) {
   return (
     <div className="flex flex-col gap-3">
-      <p className="border-b border-[var(--line-soft)] pb-1 text-[13px] font-semibold text-[var(--gold-ink)]">
-        {titre}
-      </p>
+      <SousTitre>{titre}</SousTitre>
       {children}
     </div>
   )

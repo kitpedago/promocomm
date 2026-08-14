@@ -1334,9 +1334,7 @@ function BilanSccv({ sccvId }: { sccvId: number }) {
               id="bilan-stock-caht"
               haut={
                 <div className="flex min-h-0 flex-1 flex-col gap-2">
-                  <p className="shrink-0 text-[13px] font-semibold text-[var(--gold-ink)]">
-                    Stock
-                  </p>
+                  <SousTitre>Stock</SousTitre>
                   {!lectureSeule && (
                     <BoutonsTable
                       selection={stockSel}
@@ -1367,9 +1365,7 @@ function BilanSccv({ sccvId }: { sccvId: number }) {
               }
               bas={
                 <div className="flex min-h-0 flex-1 flex-col gap-2">
-                  <p className="shrink-0 text-[13px] font-semibold text-[var(--gold-ink)]">
-                    CA HT
-                  </p>
+                  <SousTitre>CA HT</SousTitre>
                   {!lectureSeule && (
                     <BoutonsTable
                       selection={cahtSel}

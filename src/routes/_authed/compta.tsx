@@ -8,7 +8,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 
 import Champ from '#/components/Champ'
-import { BoutonsTable, ErreurMutation } from '#/components/ChampsModale'
+import {
+  BoutonsTable,
+  ErreurMutation,
+  SousTitre,
+} from '#/components/ChampsModale'
 import DataTable from '#/components/DataTable'
 import Scindeur from '#/components/Scindeur'
 import ModaleFiche from '#/components/ModaleFiche'
@@ -248,9 +252,7 @@ function Bloc({
 }) {
   return (
     <div className="flex min-h-0 flex-col gap-3">
-      <p className="shrink-0 border-b border-[var(--line-soft)] pb-1 text-[13px] font-semibold text-[var(--gold-ink)]">
-        {titre}
-      </p>
+      <SousTitre>{titre}</SousTitre>
       {children}
     </div>
   )
