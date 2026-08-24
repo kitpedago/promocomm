@@ -17,6 +17,7 @@ import {
   moyenPaiement,
   natureAchat,
   operation,
+  operationVisuel,
   prestataire,
   structureJuridique,
   tranche,
@@ -44,12 +45,14 @@ export const getOperationsCommFn = createServerFn({ method: 'GET' }).handler(
         masquerCommercial: operation.masquerCommercial,
         masquerComptable: operation.masquerComptable,
         masquerPromo: operation.masquerPromo,
+        miniature: operationVisuel.miniature,
       })
       .from(operation)
       .leftJoin(
         structureJuridique,
         eq(operation.structureJuridiqueId, structureJuridique.id),
       )
+      .leftJoin(operationVisuel, eq(operation.id, operationVisuel.operationId))
       .orderBy(asc(operation.libelle))
   },
 )

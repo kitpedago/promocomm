@@ -4,7 +4,7 @@
 // (commercial par défaut, comptable pour Compta & Finances).
 import { useEffect, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronsLeft, ChevronsRight } from 'lucide-react'
+import { Building2, ChevronsLeft, ChevronsRight } from 'lucide-react'
 
 import { Switch } from '#/components/ui/switch'
 import { getOperationsCommFn } from '#/lib/commercialisation.ts'
@@ -129,23 +129,39 @@ export default function PanneauOperations({
             key={o.id}
             ref={o.id === selectedId ? refSelection : undefined}
             onClick={() => onSelect(o.id)}
-            className={`flex w-full cursor-pointer flex-col px-3 py-1.5 text-left transition-colors ${
+            className={`flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left transition-colors ${
               o.id === selectedId
                 ? 'bg-[var(--gold-tint)]'
                 : 'hover:bg-[var(--cream-hover)]'
             }`}
           >
-            <span
-              className={`truncate text-[13px] ${
-                o.id === selectedId
-                  ? 'font-semibold text-[var(--ink)]'
-                  : 'font-medium text-[var(--ink-soft)]'
-              }`}
-            >
-              {o.libelle}
-            </span>
-            <span className="truncate text-[11px] text-[var(--muted)]">
-              {o.commune ?? '—'}
+            {o.miniature ? (
+              <img
+                src={o.miniature}
+                alt=""
+                className="h-8 w-8 flex-shrink-0 rounded-md object-cover"
+              />
+            ) : (
+              <span
+                aria-hidden
+                className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-[var(--cream-hover)]"
+              >
+                <Building2 className="h-4 w-4 text-[var(--muted)]" />
+              </span>
+            )}
+            <span className="flex min-w-0 flex-col">
+              <span
+                className={`truncate text-[13px] ${
+                  o.id === selectedId
+                    ? 'font-semibold text-[var(--ink)]'
+                    : 'font-medium text-[var(--ink-soft)]'
+                }`}
+              >
+                {o.libelle}
+              </span>
+              <span className="truncate text-[11px] text-[var(--muted)]">
+                {o.commune ?? '—'}
+              </span>
             </span>
           </button>
         ))}
