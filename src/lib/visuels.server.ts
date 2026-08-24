@@ -64,7 +64,10 @@ export async function telechargerImage(
   const u = new URL(url)
   if (u.hostname !== 'keredes.coop' && u.hostname !== 'www.keredes.coop')
     throw new Error('URL hors keredes.coop refusée.')
-  const rep = await fetch(u, { signal: AbortSignal.timeout(15_000) })
+  const rep = await fetch(u, {
+    redirect: 'error',
+    signal: AbortSignal.timeout(15_000),
+  })
   if (!rep.ok)
     throw new Error(`Téléchargement impossible (HTTP ${rep.status}).`)
   const mime = (rep.headers.get('content-type') ?? '').split(';')[0].trim()

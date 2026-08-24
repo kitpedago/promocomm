@@ -17,13 +17,13 @@ import {
   moyenPaiement,
   natureAchat,
   operation,
-  operationVisuel,
   prestataire,
   structureJuridique,
   tranche,
   typeAcquereur,
   versementDepotGarantie,
 } from '#/db/domaine.ts'
+import { operationVisuel } from '#/db/schema.ts'
 import { alias } from 'drizzle-orm/pg-core'
 
 import { db } from '#/db/index.ts'
