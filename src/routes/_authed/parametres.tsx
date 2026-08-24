@@ -17,6 +17,7 @@ import { AlerteSmsParam } from '#/components/AlerteSmsParam'
 import { BoutonsTable, ErreurMutation } from '#/components/ChampsModale'
 import DataTable from '#/components/DataTable'
 import ModaleFiche from '#/components/ModaleFiche'
+import VisuelOperation from '#/components/VisuelOperation'
 import {
   deleteNomenclatureFn,
   getNomenclatureFn,
@@ -41,6 +42,7 @@ import { fmtDate } from '#/lib/utils.ts'
 import type { DescChamp, ValeursFiche } from '#/components/ModaleFiche'
 import type { SlugNomenclature } from '#/lib/parametres.ts'
 import type { ColumnDef } from '@tanstack/react-table'
+import type { ReactNode } from 'react'
 
 export const Route = createFileRoute('/_authed/parametres')({
   // `?liste=` : arrivée directe sur une liste (boutons Notaires/Architectes
@@ -876,6 +878,7 @@ function NiveauOtl({
   confirmation,
   unite,
   tableId,
+  enTete,
 }: {
   titre: string
   lignes: Array<Record<string, unknown> & { id: number }>
@@ -890,6 +893,7 @@ function NiveauOtl({
   confirmation: string
   unite: string
   tableId: string
+  enTete?: (id: number | null) => ReactNode
 }) {
   const [modale, setModale] = useState<'creation' | number | null>(null)
   const ligne =
@@ -960,6 +964,7 @@ function NiveauOtl({
         erreur={enregistrer.error}
         enCours={enregistrer.isPending}
         large={champs.length > 10}
+        enTete={enTete?.(typeof modale === 'number' ? modale : null)}
       />
     </div>
   )
@@ -1233,6 +1238,7 @@ function VueOtl() {
           confirmation="Supprimer cette opération ? (refusé si elle a des tranches)"
           unite="opérations"
           tableId="otl-operations"
+          enTete={(id) => (id != null ? <VisuelOperation operationId={id} /> : null)}
         />
 
         {operationId != null && (

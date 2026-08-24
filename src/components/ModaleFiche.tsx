@@ -2,6 +2,7 @@
 // modules à nombreuses fiches (Compta & Finances, Paramètres). Les modules
 // aux fiches singulières gardent leurs modales explicites (ChampsModale).
 import { useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 
 import {
   ChampBascule,
@@ -64,6 +65,7 @@ export default function ModaleFiche({
   erreur,
   enCours,
   large,
+  enTete,
 }: {
   titre: string
   champs: Array<DescChamp>
@@ -75,6 +77,7 @@ export default function ModaleFiche({
   erreur: unknown
   enCours: boolean
   large?: boolean
+  enTete?: ReactNode
 }) {
   const [valeurs, setValeurs] = useState<ValeursFiche>(() =>
     depuisLigne(champs, ligne),
@@ -94,6 +97,7 @@ export default function ModaleFiche({
         <DialogHeader>
           <DialogTitle>{titre}</DialogTitle>
         </DialogHeader>
+        {enTete}
         <form
           onSubmit={(e) => {
             e.preventDefault()

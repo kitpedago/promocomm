@@ -14,7 +14,7 @@ export interface CaptureDraft {
  * côté du blob (colonne miniature) pour un affichage instantané sans charger
  * l'image complète. Vide si la génération échoue (repli icône).
  */
-async function makeMiniature(dataUrl: string): Promise<string> {
+export async function makeMiniature(dataUrl: string): Promise<string> {
   try {
     const img = await new Promise<HTMLImageElement>((resolve, reject) => {
       const i = new Image()
