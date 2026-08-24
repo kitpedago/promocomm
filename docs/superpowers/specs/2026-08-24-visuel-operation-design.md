@@ -19,7 +19,7 @@ réimport .bak qui TRUNCATE CASCADE les tables du domaine) :
 | operation_id | integer UNIQUE **sans FK** | FK provoquerait le truncate en cascade ; IDs legacy stables entre réimports |
 | contenu | bytea | image originale, plafond 3 Mo |
 | mime | text | image/jpeg, image/png, image/webp |
-| miniature | text | data-URL ~220 px (pattern `ticket_capture`) |
+| miniature | text | data-URL ~220 px, `''` = à régénérer (pattern `ticket_capture`) |
 | source | text | URL d'origine keredes.coop ou `upload` |
 | cree_le | timestamp | |
 
@@ -70,7 +70,9 @@ Limite connue : les programmes livrés sont retirés du site (redirect 301 vers
 - `uploadVisuelFn` (POST, écriture) : data-URL + miniature → stocke (pattern
   `insertCaptures`).
 - `retirerVisuelFn` (POST, écriture) : delete par operationId.
-- `backfillVisuelsFn` (POST, écriture) : boucle serveur, renvoie le rapport.
+- `backfillVisuelsFn` (POST, écriture) : par paquets de 10 pilotés par le
+  client (évite une requête HTTP de plusieurs minutes), renvoie
+  `{ traites, trouves, restants }` — le client rappelle tant que restants > 0.
 - `getVisuelFn` (GET) : original en data-URL pour le bandeau de la fiche.
 
 ## Erreurs
@@ -84,6 +86,7 @@ Limite connue : les programmes livrés sont retirés du site (redirect 301 vers
 
 - Slugification + matching (unitaires purs).
 - Extraction des images depuis un HTML fixture (page programme sauvegardée).
-- decode/refus taille et mime sur `choisirVisuelFn`/`uploadVisuelFn` (réutilise
-  les patterns de tests tickets).
-- Pas de test d'intégration réseau contre le site réel.
+- Refus taille/mime de l'upload : déjà couvert par les tests existants de
+  `decodeCapture` (tickets.helpers.test.ts), réutilisé tel quel.
+- Pas de test d'intégration réseau contre le site réel (garde-fous de
+  `telechargerImage` vérifiés manuellement).
