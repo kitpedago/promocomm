@@ -12,11 +12,22 @@ export function slugifier(libelle: string): string {
     .replace(/^-+|-+$/g, '')
 }
 
-/** Slugs `bien-neuf/<slug>/` d'une page liste, dédupliqués, ordre d'apparition. */
-export function extraireSlugs(html: string): Array<string> {
+/** URLs `<loc>` d'un sitemap XML WordPress. */
+export function extraireLocs(xml: string): Array<string> {
+  return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1])
+}
+
+/** Slugs `…/section/<slug>/` parmi des URLs de sitemap (racine exclue). */
+export function slugsDeSection(
+  urls: Array<string>,
+  section: string,
+): Array<string> {
+  const re = new RegExp(`/${section}/([a-z0-9-]+)/?$`)
   return [
     ...new Set(
-      [...html.matchAll(/bien-neuf\/([a-z0-9-]+)\//g)].map((m) => m[1]),
+      urls
+        .map((u) => re.exec(u)?.[1])
+        .filter((s): s is string => !!s),
     ),
   ]
 }
@@ -58,12 +69,19 @@ function meilleureVariante(tag: string): string | null {
   return choix?.url ?? src
 }
 
-/** URLs de la galerie d'une page programme (class estateImages__image). */
-export function extraireImagesProgramme(html: string): Array<string> {
-  const urls = [...html.matchAll(/<img[^>]*>/g)]
-    .map((m) => m[0])
-    .filter((tag) => /class="[^"]*estateImages__image[^"]*"/.test(tag))
-    .map(meilleureVariante)
-    .filter((u): u is string => !!u)
+/** URLs des images d'une page, filtrées par classes CSS — l'ordre des
+ *  classes donne la priorité (hero avant galerie), dédupliqué. */
+export function extraireImagesProgramme(
+  html: string,
+  classes: Array<string> = ['estateImages__image'],
+): Array<string> {
+  const tags = [...html.matchAll(/<img[^>]*>/g)].map((m) => m[0])
+  const urls: Array<string> = []
+  for (const classe of classes)
+    for (const tag of tags) {
+      if (!new RegExp(`class="[^"]*${classe}[^"]*"`).test(tag)) continue
+      const u = meilleureVariante(tag)
+      if (u) urls.push(u)
+    }
   return [...new Set(urls)]
 }

@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import {
   extraireImagesProgramme,
-  extraireSlugs,
+  extraireLocs,
   slugifier,
+  slugsDeSection,
   trouverSlug,
 } from '#/lib/visuels.helpers.ts'
 
@@ -18,12 +19,22 @@ describe('slugifier', () => {
   })
 })
 
-describe('extraireSlugs', () => {
-  it('déduplique les slugs bien-neuf', () => {
-    const html = `<a href="https://keredes.coop/bien-neuf/switch/">x</a>
-      <a href="/bien-neuf/switch/">y</a>
-      <a href="https://keredes.coop/bien-neuf/les-partitions/">z</a>`
-    expect(extraireSlugs(html)).toEqual(['switch', 'les-partitions'])
+describe('extraireLocs / slugsDeSection', () => {
+  const xml = `<?xml version="1.0"?><urlset>
+    <url><loc>https://keredes.coop/actualites/</loc></url>
+    <url><loc>https://keredes.coop/actualites/la-residence-aldea-a-cesson-sevigne-est-livree/</loc></url>
+    <url><loc>https://keredes.coop/actualites/club-agir-keredes/</loc></url>
+    <url><loc>https://keredes.coop/bien-neuf/switch/</loc></url>
+  </urlset>`
+  it('extrait les <loc>', () => {
+    expect(extraireLocs(xml)).toHaveLength(4)
+  })
+  it('slugs d\'une section, racine exclue', () => {
+    expect(slugsDeSection(extraireLocs(xml), 'actualites')).toEqual([
+      'la-residence-aldea-a-cesson-sevigne-est-livree',
+      'club-agir-keredes',
+    ])
+    expect(slugsDeSection(extraireLocs(xml), 'bien-neuf')).toEqual(['switch'])
   })
 })
 
@@ -39,6 +50,11 @@ describe('trouverSlug', () => {
   it('null si aucun candidat', () => {
     expect(trouverSlug('ALBATROS', slugs)).toBeNull()
     expect(trouverSlug('', slugs)).toBeNull()
+  })
+  it('matche un slug d\'actualité contenant le libellé', () => {
+    expect(
+      trouverSlug('ALDEA', ['club-agir-keredes', 'la-residence-aldea-a-cesson-sevigne-est-livree']),
+    ).toBe('la-residence-aldea-a-cesson-sevigne-est-livree')
   })
 })
 
@@ -61,5 +77,17 @@ describe('extraireImagesProgramme', () => {
   })
   it('vide si structure absente', () => {
     expect(extraireImagesProgramme('<html></html>')).toEqual([])
+  })
+  it('classes par ordre de priorité (hero avant galerie), dédupliqué', () => {
+    const actu = `
+      <img src="https://keredes.coop/app/uploads/g1.jpg" class="baseGallery__image" />
+      <img src="https://keredes.coop/app/uploads/hero.jpg" class="newsHero__image" />
+      <img src="https://keredes.coop/app/uploads/hero.jpg" class="baseGallery__image" />`
+    expect(
+      extraireImagesProgramme(actu, ['newsHero__image', 'baseGallery__image']),
+    ).toEqual([
+      'https://keredes.coop/app/uploads/hero.jpg',
+      'https://keredes.coop/app/uploads/g1.jpg',
+    ])
   })
 })

@@ -28,19 +28,25 @@ Réutilise le type custom `bytea` et les helpers `decodeCapture` /
 
 ## Recherche keredes.coop (pas d'API, pas de clé)
 
-Le site est un WordPress dont l'API REST est bloquée (401) → scraping HTML :
+Le site est un WordPress dont l'API REST est bloquée (401) → scraping HTML.
+Les slugs viennent des sitemaps (seule énumération publique), cache ~1 h.
+Trois sources, essayées dans l'ordre :
 
-1. Liste des programmes : `https://keredes.coop/achat/biens/?type[]=bien-neuf`
-   → extraire les slugs `bien-neuf/<slug>/`. Cache mémoire serveur ~1 h.
-2. Match : libellé de l'opération slugifié (minuscules, sans accents) « contenu
-   dans » le slug ou inversement.
-3. Page programme : extraire les `src` des `<img class="estateImages__image">`,
-   dédupliqués → candidats.
-4. Téléchargement de l'image choisie côté serveur (fetch, plafond 3 Mo,
-   Content-Type image/* exigé).
+1. `bien-neuf-sitemap.xml` → pages `bien-neuf/<slug>/`, images
+   `estateImages__image` (programmes en vente, rendus 3D).
+2. `realisations-sitemap.xml` → pages `realisations/<slug>/`, images
+   `realisationsHero__picture__image` puis `baseGallery__image`.
+3. `news-sitemap.xml` → pages `actualites/<slug>/`, images `newsHero__image`
+   puis `baseGallery__image` — couvre les opérations livrées dont la page
+   bien-neuf est retirée (ex. ALDEA via l'article de livraison).
 
-Limite connue : les programmes livrés sont retirés du site (redirect 301 vers
-`/achat/neuf/`) → introuvables, fallback upload manuel.
+Match : libellé slugifié (minuscules, sans accents) — exact, « contient »
+sans tirets, sinon tous les mots ≥ 3 lettres présents dans le slug.
+Téléchargement de l'image choisie côté serveur (fetch `redirect:'error'`,
+plafond 3 Mo, Content-Type image/* exigé).
+
+Limite connue : opération absente des trois sources (ex. ALBATROS) →
+introuvable, fallback upload manuel.
 
 ## Flux
 
