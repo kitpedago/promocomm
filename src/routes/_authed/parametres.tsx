@@ -37,7 +37,13 @@ import {
   saveTrancheOtlFn,
 } from '#/lib/parametres.otl.ts'
 import { usePref } from '#/lib/preferences.ts'
-import { backfillVisuelsFn } from '#/lib/visuels.ts'
+import {
+  backfillVisuelsFn,
+  getVisuelFn,
+  saveMiniatureVisuelFn,
+  visuelsSansMiniatureFn,
+} from '#/lib/visuels.ts'
+import { makeMiniature } from '#/lib/tickets.captures.ts'
 import { getService, MODULE_LABELS, MODULES, SERVICES } from '#/lib/services'
 import { fmtDate } from '#/lib/utils.ts'
 
@@ -1006,25 +1012,42 @@ function VueOtl() {
     enCours: boolean
     trouves: number
     traites: number
+    vignettes: number
   } | null>(null)
 
   const lancerBackfill = async () => {
-    setBackfill({ enCours: true, trouves: 0, traites: 0 })
+    setBackfill({ enCours: true, trouves: 0, traites: 0, vignettes: 0 })
     let trouves = 0
     let traites = 0
+    let vignettes = 0
     let apresId = 0
     try {
       for (;;) {
         const r = await backfillVisuelsFn({ data: { limite: 10, apresId } })
         trouves += r.trouves
         traites += r.traites
-        setBackfill({ enCours: true, trouves, traites })
+        setBackfill({ enCours: true, trouves, traites, vignettes })
         if (r.restants === 0 || r.traites === 0 || r.dernierId == null) break
         apresId = r.dernierId
       }
+      // Phase 2 : vignettes des visuels stockés côté serveur (le serveur n'a
+      // pas de canvas) — sans elles, colonne Photo et volet restent vides.
+      for (const sansVignette of await visuelsSansMiniatureFn()) {
+        const opId = sansVignette.operationId
+        const v = await getVisuelFn({ data: { operationId: opId } }).catch(
+          () => null,
+        )
+        if (!v || v.miniature !== '') continue
+        const m = await makeMiniature(v.dataUrl)
+        if (!m) continue
+        await saveMiniatureVisuelFn({ data: { operationId: opId, miniature: m } })
+        vignettes++
+        setBackfill({ enCours: true, trouves, traites, vignettes })
+      }
     } finally {
-      setBackfill({ enCours: false, trouves, traites })
+      setBackfill({ enCours: false, trouves, traites, vignettes })
       queryClient.invalidateQueries({ queryKey: ['operations-comm'] })
+      queryClient.invalidateQueries({ queryKey: ['otl-operations'] })
     }
   }
 
@@ -1253,8 +1276,10 @@ function VueOtl() {
           {backfill && (
             <span className="text-[12px] text-[var(--muted)]">
               {backfill.trouves} trouvé{backfill.trouves > 1 ? 's' : ''} /{' '}
-              {backfill.traites} sans visuel
-              {backfill.enCours ? '…' : ' — les programmes livrés ne sont plus sur le site.'}
+              {backfill.traites} examinée{backfill.traites > 1 ? 's' : ''}
+              {backfill.vignettes > 0 &&
+                ` · ${backfill.vignettes} vignette${backfill.vignettes > 1 ? 's' : ''}`}
+              {backfill.enCours ? '…' : ' — introuvables : ajouter le visuel depuis la fiche.'}
             </span>
           )}
         </div>

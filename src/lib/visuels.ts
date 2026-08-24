@@ -166,3 +166,17 @@ export const backfillVisuelsFn = createServerFn({ method: 'POST' })
       dernierId: paquet.at(-1)?.id ?? null,
     }
   })
+
+// Visuels stockés sans vignette (auto/backfill : pas de canvas côté serveur).
+// Le client les régénère après le backfill — sans quoi la colonne Photo et le
+// volet restent vides jusqu'à l'ouverture de chaque fiche.
+export const visuelsSansMiniatureFn = createServerFn({ method: 'GET' }).handler(
+  async () => {
+    await requireSession()
+    return db
+      .select({ operationId: operationVisuel.operationId })
+      .from(operationVisuel)
+      .where(eq(operationVisuel.miniature, ''))
+      .orderBy(asc(operationVisuel.operationId))
+  },
+)

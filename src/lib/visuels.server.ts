@@ -125,21 +125,24 @@ export async function telechargerImage(
   return { contenu, mime, taille: contenu.byteLength }
 }
 
-/** Auto/backfill : 1ᵉʳ candidat stocké, silencieux. true si stocké. */
+/** Auto/backfill : premier candidat téléchargeable stocké (les suivants en
+ *  secours si le 1ᵉʳ dépasse 3 Mo), silencieux. true si stocké. */
 export async function chercherEtStockerVisuel(
   operationId: number,
   libelle: string,
 ): Promise<boolean> {
   const candidats = await chercherCandidats(libelle)
-  if (candidats.length === 0) return false
-  try {
-    const { contenu, mime, taille } = await telechargerImage(candidats[0])
-    await db
-      .insert(operationVisuel)
-      .values({ operationId, contenu, mime, taille, source: candidats[0] })
-      .onConflictDoNothing()
-    return true
-  } catch {
-    return false
+  for (const url of candidats.slice(0, 3)) {
+    try {
+      const { contenu, mime, taille } = await telechargerImage(url)
+      await db
+        .insert(operationVisuel)
+        .values({ operationId, contenu, mime, taille, source: url })
+        .onConflictDoNothing()
+      return true
+    } catch {
+      // candidat suivant
+    }
   }
+  return false
 }
