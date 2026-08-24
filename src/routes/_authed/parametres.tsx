@@ -1262,6 +1262,23 @@ function VueOtl() {
           titre="Opérations"
           lignes={operations.data ?? []}
           colonnes={[
+            {
+              accessorKey: 'miniature',
+              header: 'Photo',
+              size: 64,
+              cell: (c) => {
+                const m = c.getValue() as string | null
+                return m ? (
+                  <img
+                    src={m}
+                    alt=""
+                    className="h-8 w-12 rounded object-cover"
+                  />
+                ) : (
+                  '—'
+                )
+              },
+            },
             colT('sccv', 'Structure juridique', 220),
             colT('libelle', 'Opération', 220),
             colT('cp', 'CP', 80),

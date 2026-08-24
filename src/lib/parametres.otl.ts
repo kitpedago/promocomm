@@ -26,6 +26,7 @@ import {
   tranche,
 } from '#/db/domaine.ts'
 import { db } from '#/db/index.ts'
+import { operationVisuel } from '#/db/schema.ts'
 import { chercherEtStockerVisuel } from '#/lib/visuels.server.ts'
 import { requireEcriture, requireSession } from '#/lib/session.server.ts'
 
@@ -142,12 +143,15 @@ export const getOperationsOtlFn = createServerFn({ method: 'GET' }).handler(
         masquerComptable: operation.masquerComptable,
         masquerPromo: operation.masquerPromo,
         commentaire: operation.commentaire,
+        // vignette du visuel (data-URL ~220 px), jamais le blob
+        miniature: operationVisuel.miniature,
       })
       .from(operation)
       .leftJoin(
         structureJuridique,
         eq(operation.structureJuridiqueId, structureJuridique.id),
       )
+      .leftJoin(operationVisuel, eq(operation.id, operationVisuel.operationId))
       .orderBy(asc(operation.libelle))
   },
 )

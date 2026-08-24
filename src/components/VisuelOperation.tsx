@@ -33,6 +33,7 @@ export default function VisuelOperation({
   const invalider = () => {
     queryClient.invalidateQueries({ queryKey: ['operation-visuel', operationId] })
     queryClient.invalidateQueries({ queryKey: ['operations-comm'] })
+    queryClient.invalidateQueries({ queryKey: ['otl-operations'] })
     setCandidats(null)
     setErreur(null)
   }
@@ -44,7 +45,10 @@ export default function VisuelOperation({
     void makeMiniature(v.dataUrl).then((m) => {
       if (m)
         saveMiniatureVisuelFn({ data: { operationId, miniature: m } }).then(
-          () => queryClient.invalidateQueries({ queryKey: ['operations-comm'] }),
+          () => {
+            queryClient.invalidateQueries({ queryKey: ['operations-comm'] })
+            queryClient.invalidateQueries({ queryKey: ['otl-operations'] })
+          },
           () => {},
         )
     })
