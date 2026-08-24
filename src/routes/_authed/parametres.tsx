@@ -13,6 +13,7 @@ import {
 } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 
+import { Button } from '#/components/ui/button'
 import { AlerteSmsParam } from '#/components/AlerteSmsParam'
 import { BoutonsTable, ErreurMutation } from '#/components/ChampsModale'
 import DataTable from '#/components/DataTable'
@@ -36,6 +37,7 @@ import {
   saveTrancheOtlFn,
 } from '#/lib/parametres.otl.ts'
 import { usePref } from '#/lib/preferences.ts'
+import { backfillVisuelsFn } from '#/lib/visuels.ts'
 import { getService, MODULE_LABELS, MODULES, SERVICES } from '#/lib/services'
 import { fmtDate } from '#/lib/utils.ts'
 
@@ -1000,6 +1002,31 @@ function VueOtl() {
   const [operationId, setOperationId] = useState<number | null>(null)
   const [trancheId, setTrancheId] = useState<number | null>(null)
   const [lotId, setLotId] = useState<number | null>(null)
+  const [backfill, setBackfill] = useState<{
+    enCours: boolean
+    trouves: number
+    traites: number
+  } | null>(null)
+
+  const lancerBackfill = async () => {
+    setBackfill({ enCours: true, trouves: 0, traites: 0 })
+    let trouves = 0
+    let traites = 0
+    let apresId = 0
+    try {
+      for (;;) {
+        const r = await backfillVisuelsFn({ data: { limite: 10, apresId } })
+        trouves += r.trouves
+        traites += r.traites
+        setBackfill({ enCours: true, trouves, traites })
+        if (r.restants === 0 || r.traites === 0 || r.dernierId == null) break
+        apresId = r.dernierId
+      }
+    } finally {
+      setBackfill({ enCours: false, trouves, traites })
+      queryClient.invalidateQueries({ queryKey: ['operations-comm'] })
+    }
+  }
 
   const options = useQuery({
     queryKey: ['otl-options'],
@@ -1213,6 +1240,24 @@ function VueOtl() {
   return (
     <section className="island-shell flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
       <div className="flex min-h-0 flex-1 flex-col gap-8 overflow-auto px-[18px] py-4">
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={backfill?.enCours}
+            onClick={() => void lancerBackfill()}
+          >
+            {backfill?.enCours ? 'Recherche des visuels…' : 'Rechercher les visuels manquants'}
+          </Button>
+          {backfill && (
+            <span className="text-[12px] text-[var(--muted)]">
+              {backfill.trouves} trouvé{backfill.trouves > 1 ? 's' : ''} /{' '}
+              {backfill.traites} sans visuel
+              {backfill.enCours ? '…' : ' — les programmes livrés ne sont plus sur le site.'}
+            </span>
+          )}
+        </div>
         <NiveauOtl
           titre="Opérations"
           lignes={operations.data ?? []}
