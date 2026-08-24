@@ -32,9 +32,24 @@ export function slugsDeSection(
   ]
 }
 
+/* Mots trop génériques pour porter seuls une correspondance dans un slug
+   d'actualité (« PROJET 1 » ne doit pas matcher « forum-du-projet-urbain »). */
+const MOTS_GENERIQUES = new Set([
+  'les',
+  'des',
+  'sur',
+  'sous',
+  'projet',
+  'programme',
+  'residence',
+  'immobilier',
+  'keredes',
+])
+
 /** Meilleur slug pour un libellé : exact, « contient » sans tirets, sinon
- *  tous les mots (≥ 3 lettres) présents — couvre « COUR LAWRENCE » →
- *  cours-lawrence. */
+ *  tous les mots significatifs (≥ 3 lettres, hors génériques) en début de
+ *  segment — couvre « COUR LAWRENCE » → cours-lawrence sans laisser « MEN »
+ *  matcher n'importe quel slug qui contient la sous-chaîne. */
 export function trouverSlug(
   libelle: string,
   slugs: Array<string>,
@@ -48,10 +63,20 @@ export function trouverSlug(
     return c.includes(compact) || compact.includes(c)
   })
   if (parContenu) return parContenu
-  const mots = s.split('-').filter((m) => m.length >= 3)
-  return mots.length > 0
-    ? (slugs.find((x) => mots.every((m) => x.includes(m))) ?? null)
-    : null
+  const mots = s
+    .split('-')
+    .filter((m) => m.length >= 3 && !MOTS_GENERIQUES.has(m))
+  if (mots.length === 0) return null
+  return (
+    slugs.find((x) => {
+      const segments = x.split('-')
+      // préfixe autorisé dès 4 lettres (« cour » → « cours ») ; en deçà,
+      // segment exact (« men » ne doit pas matcher « menuisiers »)
+      return mots.every((m) =>
+        segments.some((seg) => seg === m || (m.length >= 4 && seg.startsWith(m))),
+      )
+    }) ?? null
+  )
 }
 
 /* Variante srcset la plus large ≤ 1280w (assez grande pour le bandeau,

@@ -56,6 +56,14 @@ describe('trouverSlug', () => {
       trouverSlug('ALDEA', ['club-agir-keredes', 'la-residence-aldea-a-cesson-sevigne-est-livree']),
     ).toBe('la-residence-aldea-a-cesson-sevigne-est-livree')
   })
+  it('pas de faux positif sur mots génériques ou sous-chaînes', () => {
+    const actus = [
+      'keredes-au-forum-du-projet-urbain-de-maurepas',
+      'reunion-des-menuisiers-partenaires',
+    ]
+    expect(trouverSlug('PROJET 1', actus)).toBeNull()
+    expect(trouverSlug('AR MEN', actus)).toBeNull()
+  })
 })
 
 describe('extraireImagesProgramme', () => {
