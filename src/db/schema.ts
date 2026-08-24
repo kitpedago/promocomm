@@ -156,3 +156,21 @@ export const userPref = pgTable(
   },
   (t) => [primaryKey({ columns: [t.userId, t.cle] })],
 )
+
+// Visuel d'une opération (image trouvée sur keredes.coop ou téléversée).
+// Hors domaine.ts : survit aux réimports .bak. PAS de FK vers operation :
+// le TRUNCATE … CASCADE du transform emporterait ces lignes ; les IDs
+// legacy sont stables d'un réimport à l'autre.
+// Cf. docs/superpowers/specs/2026-08-24-visuel-operation-design.md.
+export const operationVisuel = pgTable('operation_visuel', {
+  id: serial().primaryKey(),
+  operationId: integer('operation_id').notNull().unique(),
+  contenu: bytea().notNull(),
+  mime: text().notNull().default('image/jpeg'),
+  taille: integer().notNull().default(0),
+  // Vignette data-URL ~220 px générée côté client ('' = à régénérer)
+  miniature: text().notNull().default(''),
+  // URL d'origine keredes.coop, ou 'upload'
+  source: text().notNull().default(''),
+  creeLe: timestamp('cree_le').defaultNow().notNull(),
+})
