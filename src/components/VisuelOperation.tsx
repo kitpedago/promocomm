@@ -5,7 +5,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { Button } from '#/components/ui/button'
-import { makeMiniature, readCaptureFiles } from '#/lib/tickets.captures.ts'
+import {
+  lireFichierDataUrl,
+  makeMiniature,
+  reduireCaptureDataUrl,
+} from '#/lib/tickets.captures.ts'
+import { CAPTURE_MAX_OCTETS } from '#/lib/tickets.helpers.ts'
 import {
   choisirVisuelFn,
   getVisuelFn,
@@ -72,11 +77,34 @@ export default function VisuelOperation({
     onSuccess: invalider,
   })
 
+  // Contrairement aux captures de tickets, un fichier > 3 Mo n'est pas
+  // refusé : il est réduit ici (canvas — possible car fichier local, pas de
+  // souci CORS) avant l'envoi.
   const televerser = async (files: Array<File>) => {
-    const { captures, erreur: err } = await readCaptureFiles(files, 0)
-    if (err) setErreur(err)
-    const c = captures.at(0)
-    if (!c) return
+    const fichier = files.find((f) => f.type.startsWith('image/'))
+    if (!fichier) {
+      if (files.length > 0) setErreur('Seules les images sont acceptées.')
+      return
+    }
+    let dataUrl: string
+    try {
+      dataUrl = await lireFichierDataUrl(fichier)
+    } catch {
+      setErreur('Lecture impossible.')
+      return
+    }
+    if (fichier.size > CAPTURE_MAX_OCTETS) {
+      dataUrl = await reduireCaptureDataUrl(dataUrl)
+      if (!dataUrl) {
+        setErreur('Image illisible ou irréductible sous 3 Mo.')
+        return
+      }
+    }
+    const c = {
+      nom: fichier.name || 'visuel.jpg',
+      dataUrl,
+      miniature: await makeMiniature(dataUrl),
+    }
     try {
       await uploadVisuelFn({
         data: { operationId, nom: c.nom, dataUrl: c.dataUrl, miniature: c.miniature },
