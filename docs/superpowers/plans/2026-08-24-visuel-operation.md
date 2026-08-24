@@ -387,7 +387,7 @@ git commit -m "feat(operations): scraping serveur des visuels keredes.coop"
   - `uploadVisuelFn` POST `{operationId, nom, dataUrl, miniature?}` → `{ ok: true }`
   - `retirerVisuelFn` POST `{operationId}` → `{ ok: true }`
   - `saveMiniatureVisuelFn` POST `{operationId, miniature}` → `{ ok: true }`
-  - `backfillVisuelsFn` POST `{limite: number}` → `{ traites, trouves, restants }`
+  - `backfillVisuelsFn` POST `{limite: number, apresId?: number}` → `{ traites, trouves, restants, dernierId }` (curseur : le client repasse `dernierId` en `apresId`)
 
 - [ ] **Step 1 : Implémenter**
 
@@ -526,10 +526,11 @@ export const saveMiniatureVisuelFn = createServerFn({ method: 'POST' })
   })
 
 // Backfill par paquets pilotés par le client (pas de requête HTTP de
-// plusieurs minutes) : traite `limite` opérations sans visuel, renvoie le
-// restant — le client rappelle tant que restants > 0.
+// plusieurs minutes). Curseur `apresId` : les opérations introuvables sur le
+// site (livrées) resteraient sinon en tête de file à chaque appel — le
+// curseur garantit la progression et la terminaison de la boucle cliente.
 export const backfillVisuelsFn = createServerFn({ method: 'POST' })
-  .validator((d: { limite: number }) => d)
+  .validator((d: { limite: number; apresId?: number }) => d)
   .handler(async ({ data }) => {
     await requireEcriture()
     const limite = Math.min(Math.max(1, data.limite), 25)
@@ -539,7 +540,12 @@ export const backfillVisuelsFn = createServerFn({ method: 'POST' })
     const sans = await db
       .select({ id: operation.id, libelle: operation.libelle })
       .from(operation)
-      .where(notInArray(operation.id, deja))
+      .where(
+        and(
+          notInArray(operation.id, deja),
+          gt(operation.id, data.apresId ?? 0),
+        ),
+      )
       .orderBy(asc(operation.id))
     const paquet = sans.slice(0, limite)
     let trouves = 0
@@ -553,6 +559,7 @@ export const backfillVisuelsFn = createServerFn({ method: 'POST' })
       traites: paquet.length,
       trouves,
       restants: sans.length - paquet.length,
+      dernierId: paquet.at(-1)?.id ?? null,
     }
   })
 ```
@@ -856,13 +863,15 @@ const lancerBackfill = async () => {
   setBackfill({ enCours: true, trouves: 0, traites: 0 })
   let trouves = 0
   let traites = 0
+  let apresId = 0
   try {
     for (;;) {
-      const r = await backfillVisuelsFn({ data: { limite: 10 } })
+      const r = await backfillVisuelsFn({ data: { limite: 10, apresId } })
       trouves += r.trouves
       traites += r.traites
       setBackfill({ enCours: true, trouves, traites })
-      if (r.restants === 0 || r.traites === 0) break
+      if (r.restants === 0 || r.traites === 0 || r.dernierId == null) break
+      apresId = r.dernierId
     }
   } finally {
     setBackfill({ enCours: false, trouves, traites })

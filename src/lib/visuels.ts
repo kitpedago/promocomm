@@ -1,7 +1,7 @@
 // Server functions du visuel d'opération (bandeau fiche Paramètres OTL,
 // miniature du volet Opérations). Réseau keredes.coop : visuels.server.ts.
 import { createServerFn } from '@tanstack/react-start'
-import { asc, eq, notInArray } from 'drizzle-orm'
+import { and, asc, eq, gt, notInArray } from 'drizzle-orm'
 
 import { db } from '#/db/index.ts'
 import { operation } from '#/db/domaine.ts'
@@ -135,9 +135,11 @@ export const saveMiniatureVisuelFn = createServerFn({ method: 'POST' })
 
 // Backfill par paquets pilotés par le client (pas de requête HTTP de
 // plusieurs minutes) : traite `limite` opérations sans visuel, renvoie le
-// restant — le client rappelle tant que restants > 0.
+// restant — le client rappelle tant que restants > 0. Curseur apresId garantit
+// progression — opérations introuvables (livrées) resteraient sinon en tête de
+// file à chaque appel.
 export const backfillVisuelsFn = createServerFn({ method: 'POST' })
-  .validator((d: { limite: number }) => d)
+  .validator((d: { limite: number; apresId?: number }) => d)
   .handler(async ({ data }) => {
     await requireEcriture()
     const limite = Math.min(Math.max(1, data.limite), 25)
@@ -147,7 +149,7 @@ export const backfillVisuelsFn = createServerFn({ method: 'POST' })
     const sans = await db
       .select({ id: operation.id, libelle: operation.libelle })
       .from(operation)
-      .where(notInArray(operation.id, deja))
+      .where(and(notInArray(operation.id, deja), gt(operation.id, data.apresId ?? 0)))
       .orderBy(asc(operation.id))
     const paquet = sans.slice(0, limite)
     let trouves = 0
@@ -161,5 +163,6 @@ export const backfillVisuelsFn = createServerFn({ method: 'POST' })
       traites: paquet.length,
       trouves,
       restants: sans.length - paquet.length,
+      dernierId: paquet.at(-1)?.id ?? null,
     }
   })
