@@ -26,6 +26,7 @@ import {
   tranche,
 } from '#/db/domaine.ts'
 import { db } from '#/db/index.ts'
+import { chercherEtStockerVisuel } from '#/lib/visuels.server.ts'
 import { requireEcriture, requireSession } from '#/lib/session.server.ts'
 
 const versDate = (s: string | null | undefined) => (s ? new Date(s) : null)
@@ -264,7 +265,8 @@ export const saveOperationOtlFn = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     await requireEcriture()
     if (!data.libelle?.trim()) throw new Error('Le libellé est obligatoire')
-    return upsert(operation, data.id, {
+    const estCreation = data.id == null
+    const res = await upsert(operation, data.id, {
       libelle: data.libelle.trim(),
       structureJuridiqueId: data.structureJuridiqueId ?? null,
       adresse: data.adresse || null,
@@ -291,6 +293,11 @@ export const saveOperationOtlFn = createServerFn({ method: 'POST' })
       masquerPromo: data.masquerPromo ?? null,
       commentaire: data.commentaire || null,
     })
+    // Nouvelle opération : visuel keredes.coop en tâche de fond, jamais
+    // bloquant (échec silencieux — corrigeable depuis la fiche)
+    if (estCreation)
+      void chercherEtStockerVisuel(res.id, data.libelle.trim()).catch(() => {})
+    return res
   })
 
 export const deleteOperationOtlFn = createServerFn({ method: 'POST' })
