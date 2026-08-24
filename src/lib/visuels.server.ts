@@ -4,6 +4,7 @@
 import { db } from '#/db/index.ts'
 import { operationVisuel } from '#/db/schema.ts'
 import { CAPTURE_MAX_OCTETS } from '#/lib/tickets.helpers.ts'
+import { reduireImage } from '#/lib/visuels.image.ts'
 import {
   extraireImagesProgramme,
   extraireLocs,
@@ -100,7 +101,12 @@ export async function chercherCandidats(
   return []
 }
 
-/** Télécharge une image keredes.coop (anti-SSRF : domaine imposé), ≤ 3 Mo. */
+// Au-delà du plafond de stockage (3 Mo) l'image est réduite, pas refusée —
+// mais on ne télécharge quand même pas n'importe quoi.
+const TELECHARGEMENT_MAX_OCTETS = 15 * 1024 * 1024
+
+/** Télécharge une image keredes.coop (anti-SSRF : domaine imposé) ; au-delà
+ *  de 3 Mo, elle est réduite (redimensionnée + recompressée JPEG). */
 export async function telechargerImage(
   url: string,
 ): Promise<{ contenu: Buffer; mime: string; taille: number }> {
@@ -117,12 +123,19 @@ export async function telechargerImage(
   if (!mime.startsWith('image/'))
     throw new Error('Le lien ne pointe pas vers une image.')
   const contentLength = rep.headers.get('content-length')
-  if (contentLength && parseInt(contentLength, 10) > CAPTURE_MAX_OCTETS)
-    throw new Error('Image trop lourde (3 Mo maximum).')
+  if (contentLength && parseInt(contentLength, 10) > TELECHARGEMENT_MAX_OCTETS)
+    throw new Error('Image trop lourde (15 Mo maximum).')
   const contenu = Buffer.from(await rep.arrayBuffer())
-  if (contenu.byteLength > CAPTURE_MAX_OCTETS)
-    throw new Error('Image trop lourde (3 Mo maximum).')
-  return { contenu, mime, taille: contenu.byteLength }
+  if (contenu.byteLength > TELECHARGEMENT_MAX_OCTETS)
+    throw new Error('Image trop lourde (15 Mo maximum).')
+  if (contenu.byteLength <= CAPTURE_MAX_OCTETS)
+    return { contenu, mime, taille: contenu.byteLength }
+  const reduite = await reduireImage(contenu)
+  return {
+    contenu: reduite.contenu,
+    mime: reduite.mime,
+    taille: reduite.contenu.byteLength,
+  }
 }
 
 /** Auto/backfill : premier candidat téléchargeable stocké (les suivants en
