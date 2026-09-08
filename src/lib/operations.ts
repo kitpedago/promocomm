@@ -133,6 +133,7 @@ export const getOperationFicheFn = createServerFn({ method: 'GET' })
         terrainOfsAcptePourcPrevu: tranche.terrainOfsAcptePourcPrevu,
         terrainOfsAcpteMontantVerse: tranche.terrainOfsAcpteMontantVerse,
         terrainOfsSignataire: signataireOfs.libelle,
+        terrainOfsCommentaire: tranche.terrainOfsCommentaire,
         terrainOfsCompromisDatePrevi: tranche.terrainOfsCompromisDatePrevi,
         terrainOfsCompromisDateReelle: tranche.terrainOfsCompromisDateReelle,
         terrainBailOperateurDatePrevi: tranche.terrainBailOperateurDatePrevi,

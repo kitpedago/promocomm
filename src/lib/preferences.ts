@@ -7,7 +7,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { eq } from 'drizzle-orm'
 import { useEffect } from 'react'
 
-import { db } from '#/db/index.ts'
+import { dbLocale } from '#/db/index.ts'
 import { userPref } from '#/db/schema.ts'
 import { requireSession } from '#/lib/session.server.ts'
 
@@ -56,7 +56,7 @@ export const getPrefsFn = createServerFn({
   strict: { output: false },
 }).handler(async (): Promise<Prefs> => {
   const session = await requireSession()
-  const lignes = await db
+  const lignes = await dbLocale
     .select({ cle: userPref.cle, valeur: userPref.valeur })
     .from(userPref)
     .where(eq(userPref.userId, session.user.id))
@@ -70,7 +70,7 @@ export const setPrefFn = createServerFn({ method: 'POST' })
   })
   .handler(async ({ data }) => {
     const session = await requireSession()
-    await db
+    await dbLocale
       .insert(userPref)
       .values({ userId: session.user.id, cle: data.cle, valeur: data.valeur })
       .onConflictDoUpdate({

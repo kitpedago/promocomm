@@ -6,7 +6,7 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "dev": "vite dev --host 10.66.66.1 --port 3021",
+    "dev": "vite dev --port 3021",
     "generate-routes": "tsr generate",
     "build": "vite build",
     "preview": "vite preview",
@@ -19,6 +19,7 @@
     "db:seed": "tsx --env-file=.env scripts/seed-admin.ts",
     "db:import": "tsx --env-file=.env scripts/run-import.ts",
     "db:transform": "tsx --env-file=.env scripts/transform-legacy.ts",
+    "db:miroir": "tsx --env-file=.env scripts/miroir.ts",
     "lint": "eslint",
     "format": "prettier --write . && eslint --fix",
     "check": "prettier --check ."

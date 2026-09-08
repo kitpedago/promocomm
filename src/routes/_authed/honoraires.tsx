@@ -276,6 +276,11 @@ const COLONNES_MISSIONS: Array<ColumnDef<LigneMission, any>> = [
   colCheck('finFacturation', 'Fin facturation', 120),
   colEntier('nbMois', 'Nb mois', 90),
   colEntier('ordre', 'Ordre', 80),
+  colDate(
+    'dateFactCommKpiExtContratOfs',
+    'Date fact. KPI ext. contrat OFS',
+    200,
+  ),
   colTexte('commentaire', 'Commentaire', 220),
 ]
 const MISSIONS_MASQUEES = ['nbMois', 'ordre']
@@ -313,6 +318,8 @@ const COLONNES_NATURES: Array<ColumnDef<LigneNature, any>> = [
 const COLONNES_FACTURES: Array<ColumnDef<LigneFacture, any>> = [
   colEntier('numFacture', 'Numéro de facture', 130),
   colDate('dateFacture', 'Date de facture', 120),
+  colTexte('prestataire', 'Prestataire', 140),
+  colTexte('bareme', 'Barème', 110),
   groupe('Loc accession', T_VERT, [
     colEntier('nbCla', 'Nb CLA', 80),
     colEuro('montantCla', 'Montant CLA', 120),
@@ -377,6 +384,10 @@ function OngletsHonoraires({ trancheId }: { trancheId: number }) {
   const [factureModale, setFactureModale] = useState<
     'creation' | LigneFacture | null
   >(null)
+  // iso-WinDev (REQ_HonoCommHFFacture) : filtre Prestataire des factures
+  const [prestataireFiltre, setPrestataireFiltre] = useState<number | null>(
+    null,
+  )
 
   const d = honoraires.data
   // iso-WinDev : la première mission est sélectionnée à l'arrivée (sa grille
@@ -568,9 +579,22 @@ function OngletsHonoraires({ trancheId }: { trancheId: number }) {
             }
             bas={
               <div className="flex min-h-0 flex-1 flex-col gap-2">
-                <p className="shrink-0 text-[15px] font-bold text-[var(--ink)]">
-                  Factures
-                </p>
+                <div className="flex shrink-0 items-end gap-4">
+                  <p className="text-[15px] font-bold text-[var(--ink)]">
+                    Factures
+                  </p>
+                  <div className="w-64">
+                    <ChampSelectId
+                      libelle="Prestataire"
+                      value={prestataireFiltre}
+                      onChange={(v) => {
+                        setPrestataireFiltre(v)
+                        setFactureSel(null)
+                      }}
+                      options={nomenclatures.data?.tousPrestataires ?? []}
+                    />
+                  </div>
+                </div>
                 {!lectureSeule && (
                   <BoutonsTable
                     selection={factureSel}
@@ -590,7 +614,13 @@ function OngletsHonoraires({ trancheId }: { trancheId: number }) {
                 <DataTable
                   id="honoraires-factures"
                   columns={COLONNES_FACTURES}
-                  data={d.factures}
+                  data={
+                    prestataireFiltre == null
+                      ? d.factures
+                      : d.factures.filter(
+                          (f) => f.prestataireId === prestataireFiltre,
+                        )
+                  }
                   unite="factures"
                   getRowId={(r) => String(r.id)}
                   selectedRowId={factureSel != null ? String(factureSel) : null}
@@ -651,6 +681,7 @@ function OngletsHonoraires({ trancheId }: { trancheId: number }) {
         onOpenChange={(o) => {
           if (!o) setFactureModale(null)
         }}
+        nomenclatures={nomenclatures.data}
       />
     </section>
   )
@@ -672,6 +703,7 @@ interface EntreeMission {
   finFacturation: boolean | null
   ordre: number | null
   nbMois: number | null
+  dateFactCommKpiExtContratOfs: string | null
   commentaire: string | null
 }
 
@@ -701,6 +733,7 @@ function ModaleMission({
     finFacturation: null,
     ordre: null,
     nbMois: null,
+    dateFactCommKpiExtContratOfs: null,
     commentaire: null,
   }
   const depuisLigne = (l: LigneMission): EntreeMission => ({
@@ -714,6 +747,7 @@ function ModaleMission({
     finFacturation: l.finFacturation,
     ordre: l.ordre,
     nbMois: l.nbMois,
+    dateFactCommKpiExtContratOfs: versInputDate(l.dateFactCommKpiExtContratOfs),
     commentaire: l.commentaire,
   })
   const [valeurs, setValeurs] = useState<EntreeMission>(() =>
@@ -799,6 +833,11 @@ function ModaleMission({
               step="1"
               value={valeurs.nbMois}
               onChange={set('nbMois')}
+            />
+            <ChampDate
+              libelle="Date fact. KPI ext. contrat OFS"
+              value={valeurs.dateFactCommKpiExtContratOfs}
+              onChange={set('dateFactCommKpiExtContratOfs')}
             />
             <ChampBascule
               libelle="Fin facturation"
@@ -1125,6 +1164,8 @@ function ModaleNature({
 interface EntreeFacture {
   id?: number
   trancheId: number
+  prestataireId: number | null
+  baremeHonoCommId: number | null
   numFacture: number | null
   dateFacture: string | null
   nbCla: number | null
@@ -1143,16 +1184,20 @@ function ModaleFacture({
   ligne,
   open,
   onOpenChange,
+  nomenclatures,
 }: {
   trancheId: number
   /** null = création */
   ligne: LigneFacture | null
   open: boolean
   onOpenChange: (o: boolean) => void
+  nomenclatures: Nomenclatures | undefined
 }) {
   const queryClient = useQueryClient()
   const vide: EntreeFacture = {
     trancheId,
+    prestataireId: null,
+    baremeHonoCommId: null,
     numFacture: null,
     dateFacture: null,
     nbCla: null,
@@ -1167,6 +1212,8 @@ function ModaleFacture({
   }
   const depuisLigne = (l: LigneFacture): EntreeFacture => ({
     trancheId,
+    prestataireId: l.prestataireId,
+    baremeHonoCommId: l.baremeHonoCommId,
     numFacture: l.numFacture,
     dateFacture: versInputDate(l.dateFacture),
     nbCla: l.nbCla,
@@ -1228,6 +1275,18 @@ function ModaleFacture({
               libelle="Date de facture"
               value={valeurs.dateFacture}
               onChange={set('dateFacture')}
+            />
+            <ChampSelectId
+              libelle="Prestataire"
+              value={valeurs.prestataireId}
+              onChange={set('prestataireId')}
+              options={nomenclatures?.tousPrestataires ?? []}
+            />
+            <ChampSelectId
+              libelle="Barème"
+              value={valeurs.baremeHonoCommId}
+              onChange={set('baremeHonoCommId')}
+              options={nomenclatures?.baremesHonoComm ?? []}
             />
             <SousTitre>Loc. accession</SousTitre>
             <ChampNombre

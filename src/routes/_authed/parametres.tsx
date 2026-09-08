@@ -45,7 +45,7 @@ import {
 } from '#/lib/visuels.ts'
 import { makeMiniature } from '#/lib/tickets.captures.ts'
 import { getService, MODULE_LABELS, MODULES, SERVICES } from '#/lib/services'
-import { fmtDate } from '#/lib/utils.ts'
+import { fmtDate, sansAccents } from '#/lib/utils.ts'
 
 import type { DescChamp, ValeursFiche } from '#/components/ModaleFiche'
 import type { SlugNomenclature } from '#/lib/parametres.ts'
@@ -143,6 +143,12 @@ const LISTES: Array<ConfigListe> = [
       { k: 'pretTel', l: 'Téléphone', t: 'texte' },
       { k: 'pretEmail', l: 'Email', t: 'texte' },
     ],
+  },
+  {
+    slug: 'baremes-hono-comm',
+    titre: 'Barèmes honoraires commercialisation',
+    unite: 'barème',
+    champs: LIBELLE,
   },
   {
     slug: 'categories-frais',
@@ -377,13 +383,15 @@ const STADES: Array<ConfigListe> = [
     titre: "Stades d'avancement",
     unite: 'stade',
     champs: [
-      { k: 'domaine', l: 'Domaine', t: 'texte' },
+      { k: 'domaine', l: 'Domaine', t: 'selectTexte', options: [] },
       { k: 'code', l: 'Code', t: 'texte' },
       { k: 'libelle', l: 'Libellé', t: 'texte' },
       { k: 'ordre', l: 'Ordre', t: 'entier' },
       { k: 'avecHonoGestion', l: 'Avec hono. gestion', t: 'bool' },
       { k: 'pourcentageStandard', l: '% standard', t: 'nombre' },
     ],
+    // liste_avancement.domaine = libellé texte (pas d'id, cf. domaine.ts)
+    selects: { domaine: 'domaines-stade' },
   },
   {
     slug: 'etats-alerte-stade',
@@ -575,23 +583,31 @@ function PageParametres() {
     if (liste) void navigate({ search: {} })
   }
   const config =
-    slugActif === OTL || slugActif === DROITS || (slugActif === ALERTE_SMS && estAdmin)
+    slugActif === OTL ||
+    slugActif === DROITS ||
+    (slugActif === ALERTE_SMS && estAdmin)
       ? null
       : (TOUTES.find((l) => l.slug === slugActif) ?? LISTES[0])
 
-  const boutonNav = (slug: string, titre: string, extra = '') => (
-    <button
-      key={slug}
-      onClick={() => setSlug(slug)}
-      className={`block w-full cursor-pointer px-3 py-1.5 text-left text-[13px] transition-colors ${extra} ${
-        slug === (config?.slug ?? slugActif)
-          ? 'bg-[var(--gold-tint)] font-semibold text-[var(--ink)]'
-          : 'font-medium text-[var(--ink-soft)] hover:bg-[var(--cream-hover)]'
-      }`}
-    >
-      {titre}
-    </button>
-  )
+  // filtre du volet : sans accents ni casse ; vide = tout
+  const [recherche, setRecherche] = useState('')
+  const q = sansAccents(recherche.trim())
+  const visible = (titre: string) => !q || sansAccents(titre).includes(q)
+
+  const boutonNav = (slug: string, titre: string, extra = '') =>
+    !visible(titre) ? null : (
+      <button
+        key={slug}
+        onClick={() => setSlug(slug)}
+        className={`block w-full cursor-pointer px-3 py-1.5 text-left text-[13px] transition-colors ${extra} ${
+          slug === (config?.slug ?? slugActif)
+            ? 'bg-[var(--gold-tint)] font-semibold text-[var(--ink)]'
+            : 'font-medium text-[var(--ink-soft)] hover:bg-[var(--cream-hover)]'
+        }`}
+      >
+        {titre}
+      </button>
+    )
 
   const titre =
     config?.titre ??
@@ -607,20 +623,43 @@ function PageParametres() {
         <h2 className="px-3 pt-3 pb-2 text-[15px] font-bold text-[var(--ink)]">
           Paramètres
         </h2>
+        <input
+          type="search"
+          value={recherche}
+          onChange={(e) => setRecherche(e.target.value)}
+          placeholder="Rechercher un paramètre…"
+          aria-label="Rechercher un paramètre"
+          className="mx-3 mb-3 h-8 rounded-lg border border-[var(--input-border)] bg-[var(--card)] px-2.5 text-[13px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--ink)]"
+        />
         <nav className="min-h-0 flex-1 overflow-y-auto border-t border-[var(--line-soft)] pb-3">
-          {RUBRIQUES.map((r) => (
-            <div key={r.titre}>
-              <p className="island-kicker px-3 pt-3 pb-1">{r.titre}</p>
-              {r.listes.map((l) => boutonNav(l.slug, l.titre))}
-              {/* entrées à écran dédié, à leur place dans l'arbre WinDev */}
-              {r.titre === 'Listes' &&
-                boutonNav(OTL, 'Opérations, tranches et lots')}
-              {r.titre === 'Système' && boutonNav(DROITS, 'Droits')}
-              {r.titre === 'Système' &&
-                estAdmin &&
-                boutonNav(ALERTE_SMS, 'Alerte SMS')}
-            </div>
-          ))}
+          {(() => {
+            const blocs = RUBRIQUES.flatMap((r) => {
+              const entrees = [
+                ...r.listes.map((l) => boutonNav(l.slug, l.titre)),
+                // entrées à écran dédié, à leur place dans l'arbre WinDev
+                r.titre === 'Listes' &&
+                  boutonNav(OTL, 'Opérations, tranches et lots'),
+                r.titre === 'Système' && boutonNav(DROITS, 'Droits'),
+                r.titre === 'Système' &&
+                  estAdmin &&
+                  boutonNav(ALERTE_SMS, 'Alerte SMS'),
+              ].filter(Boolean)
+              if (entrees.length === 0) return []
+              return [
+                <div key={r.titre}>
+                  <p className="island-kicker px-3 pt-3 pb-1">{r.titre}</p>
+                  {entrees}
+                </div>,
+              ]
+            })
+            return blocs.length > 0 ? (
+              blocs
+            ) : (
+              <p className="px-3 pt-3 text-[13px] text-[var(--muted)]">
+                Aucun paramètre ne correspond.
+              </p>
+            )
+          })()}
         </nav>
       </aside>
 
@@ -713,8 +752,17 @@ function ListeNomenclature({ config }: { config: ConfigListe }) {
   )
 
   const champs: Array<DescChamp> = config.champs.map((c) => {
-    const slug = c.t === 'select' ? config.selects?.[c.k] : undefined
-    if (slug) {
+    const slug =
+      c.t === 'select' || c.t === 'selectTexte'
+        ? config.selects?.[c.k]
+        : undefined
+    if (slug && c.t === 'selectTexte') {
+      const opts = (optionsParSlug.get(slug) ?? []).map((o) =>
+        String(o.libelle ?? ''),
+      )
+      return { ...c, options: opts }
+    }
+    if (slug && c.t === 'select') {
       const opts = (optionsParSlug.get(slug) ?? []).map((o) => ({
         id: o.id,
         libelle: String(o.libelle ?? o.rs ?? o.nomEtude ?? o.code ?? o.id),
@@ -1040,7 +1088,9 @@ function VueOtl() {
         if (!v || v.miniature !== '') continue
         const m = await makeMiniature(v.dataUrl)
         if (!m) continue
-        await saveMiniatureVisuelFn({ data: { operationId: opId, miniature: m } })
+        await saveMiniatureVisuelFn({
+          data: { operationId: opId, miniature: m },
+        })
         vignettes++
         setBackfill({ enCours: true, trouves, traites, vignettes })
       }
@@ -1217,6 +1267,7 @@ function VueOtl() {
       t: 'select',
       options: options?.signataires ?? [],
     },
+    { k: 'terrainOfsCommentaire', l: 'Commentaire OFS', t: 'texte' },
     { k: 'commentaire', l: 'Commentaire', t: 'long' },
   ]
 
@@ -1271,7 +1322,9 @@ function VueOtl() {
             disabled={backfill?.enCours}
             onClick={() => void lancerBackfill()}
           >
-            {backfill?.enCours ? 'Recherche des visuels…' : 'Rechercher les visuels manquants'}
+            {backfill?.enCours
+              ? 'Recherche des visuels…'
+              : 'Rechercher les visuels manquants'}
           </Button>
           {backfill && (
             <span className="text-[12px] text-[var(--muted)]">
@@ -1279,7 +1332,9 @@ function VueOtl() {
               {backfill.traites} examinée{backfill.traites > 1 ? 's' : ''}
               {backfill.vignettes > 0 &&
                 ` · ${backfill.vignettes} vignette${backfill.vignettes > 1 ? 's' : ''}`}
-              {backfill.enCours ? '…' : ' — introuvables : ajouter le visuel depuis la fiche.'}
+              {backfill.enCours
+                ? '…'
+                : ' — introuvables : ajouter le visuel depuis la fiche.'}
             </span>
           )}
         </div>
@@ -1325,7 +1380,9 @@ function VueOtl() {
           confirmation="Supprimer cette opération ? (refusé si elle a des tranches)"
           unite="opérations"
           tableId="otl-operations"
-          enTete={(id) => (id != null ? <VisuelOperation operationId={id} /> : null)}
+          enTete={(id) =>
+            id != null ? <VisuelOperation operationId={id} /> : null
+          }
         />
 
         {operationId != null && (

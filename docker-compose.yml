@@ -43,10 +43,14 @@ services:
       BETTER_AUTH_URL: ${APP_URL}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
       MSSQL_URL: ${MSSQL_URL_DOCKER}
+      # Base miroir aux noms SQL Server (/admin/miroir) : nom de la base, vide = désactivé ;
+      # fenêtre horaire de la planification en heure locale
+      MIROIR_DB: ${MIROIR_DB:-}
+      TZ: Europe/Paris
     ports:
-      # Accès interne via WireGuard uniquement (pas de Caddy/DNS pour l'instant,
-      # changement de VPS prévu le 2026-07-05) — convention outils internes : bind 10.66.66.1
-      - "10.66.66.1:3020:3000"
+      # Dev local Windows (rapatrié du VPS le 2026-08-27) : bind loopback.
+      # Sur le VPS c'était "10.66.66.1:3020:3000" (WireGuard, pas de Caddy/DNS).
+      - "127.0.0.1:3020:3000"
     volumes:
       # La page /admin/import liste les .bak depuis $CWD/data/bak
       - ./data/bak:/app/data/bak:ro

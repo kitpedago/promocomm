@@ -19,3 +19,7 @@ migration_windev/PromoComm_WinDev/
 # artefacts de session (Playwright MCP, config Claude locale)
 .playwright-mcp/
 .claude/
+
+# dumps de sauvegarde (scripts/backup-db.ps1)
+data/backups/
+data/*.dump

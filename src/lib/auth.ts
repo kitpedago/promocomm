@@ -2,10 +2,10 @@ import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { tanstackStartCookies } from 'better-auth/tanstack-start'
 
-import { db } from '#/db/index.ts'
+import { dbLocale } from '#/db/index.ts'
 
 export const auth = betterAuth({
-  database: drizzleAdapter(db, { provider: 'pg' }),
+  database: drizzleAdapter(dbLocale, { provider: 'pg' }),
   // Origines acceptées en plus de BETTER_AUTH_URL (dev local éventuel)
   trustedOrigins: ['http://localhost:3021', 'http://127.0.0.1:3021'],
   emailAndPassword: {

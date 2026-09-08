@@ -300,9 +300,10 @@ export const domaineStadeAvancement = pgTable('domaine_stade_avancement', {
   libelle: text().notNull(),
 })
 
-// Motifs d'annulation d'une réservation (arbre FEN_Param ; aucune table dans
-// le .bak — liste vide au départ, tCommercialisation.MotifAnnulation jamais
-// renseigné dans le legacy)
+// Motifs d'annulation d'une réservation (arbre FEN_Param). Depuis le back du
+// 2026-09-08 le legacy a sa propre table MotifAnnulation + tCommercialisation
+// .IDMotifAnnulation : la liste est copiée par l'ETL, commercialisation
+// .motif_annulation reste le libellé texte.
 export const motifAnnulation = pgTable('motif_annulation', {
   id: id(),
   libelle: text().notNull(),
@@ -625,6 +626,7 @@ export const tranche = pgTable('tranche', {
   terrainOfsMontantHt: montant('terrain_ofs_montant_ht'),
   terrainOfsAcptePourcPrevu: real('terrain_ofs_acpte_pourc_prevu'),
   terrainOfsAcpteMontantVerse: real('terrain_ofs_acpte_montant_verse'),
+  terrainOfsCommentaire: text('terrain_ofs_commentaire'),
   terrainOfsSignataireId: integer('terrain_ofs_signataire_id').references(
     () => signataire.id,
   ),
@@ -1585,7 +1587,7 @@ export const prestataire = pgTable('prestataire', {
 
 // tMission — missions facturables par tranche. GrilleSpecifique /
 // PourCoPromotion / PourPromotion non repris : absents de la fiche WinDev
-// (1 ligne à vrai sur 855) ; DateFactCommKPI_Ext_ContratOFS absent du .bak.
+// (1 ligne à vrai sur 855).
 export const mission = pgTable('mission', {
   id: id(),
   trancheId: integer('tranche_id')
@@ -1601,6 +1603,7 @@ export const mission = pgTable('mission', {
   ordre: integer(),
   nbMois: integer('nb_mois'),
   nbLogement: integer('nb_logement'),
+  dateFactCommKpiExtContratOfs: timestamp('date_fact_comm_kpi_ext_contrat_ofs'),
 })
 
 // tGrilleFacturation — grille de facturation par stade d'une mission. Le
@@ -1655,11 +1658,22 @@ export const facture = pgTable('facture', {
 // tHonoCommHFFacture — factures d'honoraires de commercialisation par
 // tranche (colonnes *_old exclues ; IDPrestataire et IDBaremeHonoComm de
 // l'analyse WinDev actuelle absents du .bak importé)
+// BaremeHonoComm — barème appliqué à une facture d'honoraires de
+// commercialisation (arrivé avec le back du 2026-09-08)
+export const baremeHonoComm = pgTable('bareme_hono_comm', {
+  id: id(),
+  libelle: text().notNull(),
+})
+
 export const honoCommFacture = pgTable('hono_comm_facture', {
   id: id(),
   trancheId: integer('tranche_id')
     .notNull()
     .references(() => tranche.id),
+  prestataireId: integer('prestataire_id').references(() => prestataire.id),
+  baremeHonoCommId: integer('bareme_hono_comm_id').references(
+    () => baremeHonoComm.id,
+  ),
   numFacture: integer('num_facture'),
   dateFacture: timestamp('date_facture'),
   nbCla: integer('nb_cla'),

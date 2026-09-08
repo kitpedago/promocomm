@@ -9,6 +9,7 @@ import {
   ChampDate,
   ChampNombre,
   ChampSelectId,
+  ChampSelectTexte,
   ChampTexte,
   ChampTexteLong,
   ErreurMutation,
@@ -37,6 +38,7 @@ export type DescChamp =
       t: 'select'
       options: Array<{ id: number; libelle: string | null }>
     }
+  | { k: string; l: string; t: 'selectTexte'; options: Array<string> }
   | { t: 'titre'; l: string }
 
 export type ValeursFiche = Record<string, unknown>
@@ -113,6 +115,14 @@ export default function ModaleFiche({
                   key={c.k}
                   libelle={c.l}
                   value={valeurs[c.k] as number | null}
+                  onChange={set(c.k)}
+                  options={c.options}
+                />
+              ) : c.t === 'selectTexte' ? (
+                <ChampSelectTexte
+                  key={c.k}
+                  libelle={c.l}
+                  value={valeurs[c.k] as string | null}
                   onChange={set(c.k)}
                   options={c.options}
                 />

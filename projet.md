@@ -8,8 +8,10 @@ Essentiellement des fenêtres avec des listes.
 Base de données SQL Serveur
 
 ## Architecture
-L'application sera développée sur le VPS OVH comme les autres projets. Mais il sera ensuite tranféré sur un serveur Debian, local chez le client. Il faut dockeriser au maximum. Le seul accès au serveur du client sera pas SSH via AnyDesk sur le PC Windows.
-On automatisera le déploiement du docker vers le serveur (on verra quelle orga)
+L'application est développée en local sur le PC Windows (rapatriée du VPS OVH le 2026-08-27).
+La prod est installée sur un PC Windows 11 chez le client (plus de serveur Debian), accès par
+AnyDesk. Déploiement par images Docker pré-construites poussées sur GHCR : jamais de build ni de
+source chez le client, mise à jour = `pull` + `up -d`. Détail de la stratégie : `docs/projet-deploiement.md`.
 
 ## Base de données
 Le client dispose d'un bak de sa base de données. Créer en interne une page qui permet de charger plusieurs fois au long de la phase de dév, les données du bak mise à jour vers la base PostgreSQL.

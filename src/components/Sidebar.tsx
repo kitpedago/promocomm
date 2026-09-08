@@ -4,6 +4,7 @@ import {
   Calculator,
   ChartColumn,
   Database,
+  DatabaseBackup,
   FileText,
   HardHat,
   House,
@@ -64,10 +65,7 @@ function ModuleLink({ module }: { module: Module }) {
   )
   if (module in ROUTES_IMPLEMENTEES) {
     return (
-      <Link
-        to={ROUTES_IMPLEMENTEES[module]}
-        className={itemClass}
-      >
+      <Link to={ROUTES_IMPLEMENTEES[module]} className={itemClass}>
         {contenu}
       </Link>
     )
@@ -145,6 +143,10 @@ export default function Sidebar({ service }: { service?: string | null }) {
           <Link to="/admin/import" className={itemClass}>
             <Database className="h-4 w-4 flex-shrink-0" aria-hidden />
             Import .bak
+          </Link>
+          <Link to="/admin/miroir" className={itemClass}>
+            <DatabaseBackup className="h-4 w-4 flex-shrink-0" aria-hidden />
+            Base miroir
           </Link>
         </nav>
       </div>

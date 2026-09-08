@@ -25,10 +25,11 @@ Le `.bak` importé (2026-07-04) est en retard sur l'analyse WinDev actuelle.
   implémenter l'import (fichier `.xls`, ligne 1 = entêtes, arrêt à « TOTAUX »,
   remplace les lots de la tranche après confirmation — code WinDev documenté
   dans `FEN_Param.wdw`, `BTN_Importer_Lot`).
-- **`tHonoCommHFFacture.IDPrestataire` et `IDBaremeHonoComm`** — colonnes de
-  l'analyse actuelle absentes du .bak : le **filtre Prestataire des factures
-  d'honoraires** (écran Honoraires de commercialisation) reste sans objet
-  tant qu'elles n'arrivent pas.
+- ~~**`tHonoCommHFFacture.IDPrestataire` et `IDBaremeHonoComm`**~~ — arrivées
+  avec le back du 2026-09-08 : migration 0028 (`bareme_hono_comm`, FK sur
+  `hono_comm_facture`), ETL, colonnes + selects + filtre Prestataire sur les
+  factures d'honoraires de commercialisation, liste « Barèmes honoraires
+  commercialisation » dans Paramètres.
 
 ## 3. Transverses à cadrer (intégrations externes)
 
@@ -47,10 +48,10 @@ Le `.bak` importé (2026-07-04) est en retard sur l'analyse WinDev actuelle.
 2. Correction du backlog des défauts source (`docs/` — orphelins, doublons,
    nomenclatures concurrentes) **après** ce dernier import, pas avant.
 3. Gel des saisies WinDev, l'app devient la source de vérité.
-4. Infrastructure : le changement de VPS prévu était conditionné au
-   sous-domaine (accès actuel WireGuard `http://10.66.66.1:3020`) — DNS,
-   Caddy (prudence : valider avant reload de caddy-central), sauvegardes
-   Postgres à mettre en place.
+4. Infrastructure : déploiement Docker sur le PC Windows 11 du client
+   (Docker Desktop + auto-login, images GHCR, `docker-compose.prod.yml`,
+   `update.ps1`, backups `pg_dump` planifiés) — voir `docs/projet-deploiement.md`.
+   Abandonné : VPS, sous-domaine, DNS/Caddy.
 5. Recette utilisateurs par service (la matrice de droits est en place :
    modules par service + droits fins `droit`/`requireDroit`).
 

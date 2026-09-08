@@ -26,6 +26,7 @@ import { Route as AuthedBilanRouteImport } from './routes/_authed/bilan'
 import { Route as AuthedAcquereursRouteImport } from './routes/_authed/acquereurs'
 import { Route as AuthedModuleRouteImport } from './routes/_authed/$module'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as AuthedAdminMiroirRouteImport } from './routes/_authed/admin/miroir'
 import { Route as AuthedAdminImportRouteImport } from './routes/_authed/admin/import'
 
 const LoginRoute = LoginRouteImport.update({
@@ -112,6 +113,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedAdminMiroirRoute = AuthedAdminMiroirRouteImport.update({
+  id: '/admin/miroir',
+  path: '/admin/miroir',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedAdminImportRoute = AuthedAdminImportRouteImport.update({
   id: '/admin/import',
   path: '/admin/import',
@@ -135,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/sccv': typeof AuthedSccvRoute
   '/tickets': typeof AuthedTicketsRoute
   '/admin/import': typeof AuthedAdminImportRoute
+  '/admin/miroir': typeof AuthedAdminMiroirRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
@@ -154,6 +161,7 @@ export interface FileRoutesByTo {
   '/tickets': typeof AuthedTicketsRoute
   '/': typeof AuthedIndexRoute
   '/admin/import': typeof AuthedAdminImportRoute
+  '/admin/miroir': typeof AuthedAdminMiroirRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -175,6 +183,7 @@ export interface FileRoutesById {
   '/_authed/tickets': typeof AuthedTicketsRoute
   '/_authed/': typeof AuthedIndexRoute
   '/_authed/admin/import': typeof AuthedAdminImportRoute
+  '/_authed/admin/miroir': typeof AuthedAdminMiroirRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
@@ -196,6 +205,7 @@ export interface FileRouteTypes {
     | '/sccv'
     | '/tickets'
     | '/admin/import'
+    | '/admin/miroir'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -215,6 +225,7 @@ export interface FileRouteTypes {
     | '/tickets'
     | '/'
     | '/admin/import'
+    | '/admin/miroir'
     | '/api/auth/$'
   id:
     | '__root__'
@@ -235,6 +246,7 @@ export interface FileRouteTypes {
     | '/_authed/tickets'
     | '/_authed/'
     | '/_authed/admin/import'
+    | '/_authed/admin/miroir'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
@@ -365,6 +377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/admin/miroir': {
+      id: '/_authed/admin/miroir'
+      path: '/admin/miroir'
+      fullPath: '/admin/miroir'
+      preLoaderRoute: typeof AuthedAdminMiroirRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/admin/import': {
       id: '/_authed/admin/import'
       path: '/admin/import'
@@ -391,6 +410,7 @@ interface AuthedRouteChildren {
   AuthedTicketsRoute: typeof AuthedTicketsRoute
   AuthedIndexRoute: typeof AuthedIndexRoute
   AuthedAdminImportRoute: typeof AuthedAdminImportRoute
+  AuthedAdminMiroirRoute: typeof AuthedAdminMiroirRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
@@ -409,6 +429,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedTicketsRoute: AuthedTicketsRoute,
   AuthedIndexRoute: AuthedIndexRoute,
   AuthedAdminImportRoute: AuthedAdminImportRoute,
+  AuthedAdminMiroirRoute: AuthedAdminMiroirRoute,
 }
 
 const AuthedRouteWithChildren =

@@ -11,7 +11,7 @@ const fk = (col: string) => `NULLIF(s."${col}", 0)`
 const fkSafe = (col: string, refTable: string, refPk: string) =>
   `(SELECT s."${col}" WHERE EXISTS (SELECT 1 FROM legacy."${refTable}" r WHERE r."${refPk}" = s."${col}"))`
 
-interface Copy {
+export interface Copy {
   target: string
   cols: string // liste des colonnes cibles
   select: string // SELECT ... FROM legacy."..." s
@@ -28,7 +28,7 @@ const nomenclature = (
   select: `SELECT s."${pk}", COALESCE(s."Libelle", '')${extra ? ', ' + extra.split(':')[1] : ''} FROM legacy."${source}" s`,
 })
 
-const copies: Array<Copy> = [
+export const copies: Array<Copy> = [
   // --- nomenclatures ---
   nomenclature(
     'civilite',
@@ -69,12 +69,32 @@ const copies: Array<Copy> = [
   ),
   nomenclature('nature_juridique', 'NatureJuridique', 'IDNatureJuridique'),
   nomenclature('type_acquereur', 'tListeTypeAcquereur', 'IDListeTypeAcquereur'),
-  nomenclature(
-    'fiscalite_acquereur',
-    'tListeFiscaliteAcquereur',
-    'IDFiscaliteAcquereur',
-    'libelle_court:s."LibelleCourt"',
-  ),
+  // Depuis le back du 2026-09-08 la liste vit dans WinDev (commercialisation.motif_annulation
+  // reste le libellé texte, résolu depuis IDMotifAnnulation plus bas)
+  nomenclature('motif_annulation', 'MotifAnnulation', 'IDMotifAnnulation'),
+  {
+    // Le back du 2026-09-08 est arrivé avec tListeFiscaliteAcquereur vide alors que
+    // 1182 commercialisations la référencent : si la table legacy est vide, on
+    // réinjecte les 11 valeurs connues (snapshot du back de juillet 2026).
+    target: 'fiscalite_acquereur',
+    cols: '(id, libelle, libelle_court)',
+    select: `SELECT s."IDFiscaliteAcquereur", COALESCE(s."Libelle", ''), s."LibelleCourt"
+      FROM legacy."tListeFiscaliteAcquereur" s
+      UNION ALL
+      SELECT * FROM (VALUES
+        (1, 'Investisseur', 'Invest.'),
+        (2, 'RP AL revenus > PLI', 'RF > PLI'),
+        (3, 'Personne morale', 'Pers. Morale'),
+        (4, 'Associé non-HLM', 'Associé non-HLM'),
+        (5, 'SCI soumise IS', 'SCI soumise IS'),
+        (6, 'Invest PLS', 'Invest PLS'),
+        (7, 'Invest NP', 'Invest NP'),
+        (8, 'Cellules Commerciales', 'Cellules Comm.'),
+        (9, 'RP AL  revenus < PLS', 'RF < PLS'),
+        (10, 'RP AL entre PLS et PLI', 'PLS < RF <PLI'),
+        (11, '', 'VIDE')) v(id, libelle, libelle_court)
+      WHERE NOT EXISTS (SELECT 1 FROM legacy."tListeFiscaliteAcquereur")`,
+  },
   {
     target: 'nature_achat',
     cols: '(id, libelle, libelle_long, ordre_comm)',
@@ -198,6 +218,7 @@ const copies: Array<Copy> = [
     'IDPrestataire',
     'afficher_mission:s."AfficherMission"',
   ),
+  nomenclature('bareme_hono_comm', 'BaremeHonoComm', 'IDBaremeHonoComm'),
   {
     // codes texte sans id dans le legacy (commune.zonage_abc_revise reste le
     // code texte) : ids générés par ROW_NUMBER
@@ -463,7 +484,7 @@ const copies: Array<Copy> = [
             terrain_montant_ht, terrain_montant_ttc, terrain_pourc_acpte_prevu, terrain_acompte,
             terrain_signataire_id, terrain_commentaire,
             ofs_nom_id, terrain_ofs_montant_ht, terrain_ofs_acpte_pourc_prevu,
-            terrain_ofs_acpte_montant_verse, terrain_ofs_signataire_id,
+            terrain_ofs_acpte_montant_verse, terrain_ofs_signataire_id, terrain_ofs_commentaire,
             terrain_ofs_compromis_date_previ, terrain_ofs_compromis_date_reelle,
             terrain_bail_operateur_date_previ, terrain_bail_operateur_date_reelle,
             autre_montant, autre_commentaire,
@@ -494,9 +515,10 @@ const copies: Array<Copy> = [
         ${fkSafe('TerrainCompromis_IDSignataire', 'Signataire', 'IDSignataire')}, s."TerrainComm",
         ${fkSafe('IDOFSNom', 'OFSNom', 'IDOFSNom')}, s."TerrainOFSMontantHT", s."TerrainOFSAcptePourcPrevu",
         s."TerrainOFSAcpteMontantVerse", ${fkSafe('TerrainOFSCompromis_IDSignataire', 'Signataire', 'IDSignataire')},
-        s."TerrainOFSCompromisDatePrevi", s."TerrainOFSCompromisDateReele",
+        s."TerrainOFSComment",
+        s."old_TerrainOFSCompromisDatePrevi", s."old_TerrainOFSCompromisDateReele",
         s."TerrainBailOperateurDatePrevi", s."TerrainBailOperateurDateReelle",
-        s."DroitAppuiAutreMnt", s."DroitAppuiAutreComment",
+        s."old_DroitAppuiAutreMnt", s."old_DroitAppuiAutreComment",
         ${fkSafe('IDCertification', 'Certification', 'IDCertification')},
         ${fkSafe('IDLabel', 'Label', 'IDLabel')},
         ${fkSafe('IDPerformanceEnergetique', 'PerformanceEnergetique', 'IDPerformanceEnergetique')},
@@ -545,7 +567,7 @@ const copies: Array<Copy> = [
         ${fkSafe('IDOrganismeSubvention', 'OrganismeSubvention', 'IDOrganismeSubvention')},
         s."NumConvention", s."DateConvention", s."DateCaducite",
         s."MontantAgrement", s."MontantProvisoire", s."MontantDefinitif",
-        s."BudgetPreviMontant", s."BudgetPreviCommentaire", s."FinDeSuivi", s."Commentaire"
+        s."BudgetPreviMontant", s."BudgetPreviCommentaire", (s."FinDeSuivi" <> 0), s."Commentaire"
       FROM legacy."tSubvention" s`,
   },
   {
@@ -815,11 +837,12 @@ const copies: Array<Copy> = [
     target: 'mission',
     cols: `(id, tranche_id, date_convention, base_hono_unitaire_ht, base_hono_ht,
             type_mission_id, prestataire_id, fin_facturation, commentaire, ordre,
-            nb_mois, nb_logement)`,
+            nb_mois, nb_logement, date_fact_comm_kpi_ext_contrat_ofs)`,
     select: `SELECT s."IDMission", s."IDTranche", s."DateConvention",
         s."BaseHonoUnitaireHT", s."BaseHonoHT",
         ${fk('IDTypeMission')}, ${fk('IDPrestataire')},
-        s."FinFacturation", s."Commentaire", s."Ordre", s."NbMois", s."NbLogement"
+        s."FinFacturation", s."Commentaire", s."Ordre", s."NbMois", s."NbLogement",
+        s."DateFactCommKPI_Ext_ContratOFS"
       FROM legacy."tMission" s`,
   },
   {
@@ -829,7 +852,9 @@ const copies: Array<Copy> = [
     select: `SELECT s."IDGrilleFacturation", s."IDMission",
         ${fkSafe('IDStadeAvancement', 'tListeAvancement', 'IDListeAvancement')},
         s."Pourcentage", s."Montant"
-      FROM legacy."tGrilleFacturation" s`,
+      FROM legacy."tGrilleFacturation" s
+      -- lignes orphelines (mission supprimée côté WinDev) : ignorées, mission_id NOT NULL
+      WHERE EXISTS (SELECT 1 FROM legacy."tMission" m WHERE m."IDMission" = s."IDMission")`,
   },
   {
     target: 'hono_comm_nature_achat',
@@ -846,15 +871,20 @@ const copies: Array<Copy> = [
             partiel, montant_ht, nb_mois, commentaire)`,
     select: `SELECT s."IDFacture", s."IDStadeAvancement", ${fk('IDTypeMission')},
         s."NumFacture", s."DateFacture", s."Partiel", s."MontantHT", s."NbMois", s."Commentaire"
-      FROM legacy."tFacture" s`,
+      FROM legacy."tFacture" s
+      -- factures orphelines (stade supprimé côté WinDev) : ignorées, stade_avancement_id NOT NULL
+      WHERE EXISTS (SELECT 1 FROM legacy."tStadeAvancement" m WHERE m."IDStadeAvancement" = s."IDStadeAvancement")`,
   },
   {
     // colonnes *_old exclues ; IDPrestataire/IDBaremeHonoComm absents du .bak
     target: 'hono_comm_facture',
-    cols: `(id, tranche_id, num_facture, date_facture, nb_cla, montant_cla,
-            nb_levee_option, montant_levee_option, nb_resa, montant_resa,
+    cols: `(id, tranche_id, prestataire_id, bareme_hono_comm_id, num_facture, date_facture,
+            nb_cla, montant_cla, nb_levee_option, montant_levee_option, nb_resa, montant_resa,
             nb_acte, montant_acte, commentaires)`,
-    select: `SELECT s."IDHonoCommHFFacture", s."IDTranche", s."NumFacture", s."DateFacture",
+    select: `SELECT s."IDHonoCommHFFacture", s."IDTranche",
+        ${fkSafe('IDPrestataire', 'tListePrestataire', 'IDPrestataire')},
+        ${fkSafe('IDBaremeHonoComm', 'BaremeHonoComm', 'IDBaremeHonoComm')},
+        s."NumFacture", s."DateFacture",
         s."NbCLA", s."MontantCLA", s."NbLeveeOption", s."MontantLeveeOption",
         s."NbResa", s."MontantResa", s."NbActe", s."MontantActe", s."Commentaires"
       FROM legacy."tHonoCommHFFacture" s`,
@@ -960,7 +990,9 @@ const copies: Array<Copy> = [
         ${fk('IDFiscaliteAcquereur')}, ${fk('IDMoyenDePaiement')}, ${fk('IDBanqueCourtage')},
         s."DateResa", s."DatePrevueSignatureActe", s."DateSignatureActeVEFA", s."DateSignatureContratLoc",
         s."DateResiliationContratLoc", s."DateLeveeOption", s."DateLivraison", s."DateAnnulation",
-        s."MotifAnnulation", s."AnnulationCommentaire", s."DatePreviActabilite", s."DateSignatureComm",
+        COALESCE(NULLIF(s."MotifAnnulation", ''),
+          (SELECT m."Libelle" FROM legacy."MotifAnnulation" m WHERE m."IDMotifAnnulation" = s."IDMotifAnnulation")),
+        s."AnnulationCommentaire", s."DatePreviActabilite", s."DateSignatureComm",
         s."PrixDeVenteReelTTC", s."PrixDeVenteReelHT", s."TauxTVAReel", s."RemiseClientTTC", s."MontantDepotGarantie",
         s."TauxCommResa", s."TauxCommActe", s."CommVendeurAVerserResa", s."CommVendeurAVerserActe",
         s."EstFiscalite", s."CommFisca", s."EstJustifFiscal", s."Loyer", s."Epargne", s."PasAideRM",

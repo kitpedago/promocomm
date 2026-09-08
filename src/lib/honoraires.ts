@@ -6,6 +6,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { asc, eq, inArray } from 'drizzle-orm'
 
 import {
+  baremeHonoComm,
   grilleFacturation,
   honoCommFacture,
   honoCommNatureAchat,
@@ -41,6 +42,7 @@ export const getHonorairesFn = createServerFn({ method: 'GET' })
           commentaire: mission.commentaire,
           ordre: mission.ordre,
           nbMois: mission.nbMois,
+          dateFactCommKpiExtContratOfs: mission.dateFactCommKpiExtContratOfs,
         })
         .from(mission)
         .leftJoin(typeMission, eq(typeMission.id, mission.typeMissionId))
@@ -69,8 +71,34 @@ export const getHonorairesFn = createServerFn({ method: 'GET' })
         .where(eq(honoCommNatureAchat.trancheId, data.trancheId))
         .orderBy(asc(natureAchat.ordreComm)),
       db
-        .select()
+        .select({
+          id: honoCommFacture.id,
+          trancheId: honoCommFacture.trancheId,
+          prestataireId: honoCommFacture.prestataireId,
+          prestataire: prestataire.libelle,
+          baremeHonoCommId: honoCommFacture.baremeHonoCommId,
+          bareme: baremeHonoComm.libelle,
+          numFacture: honoCommFacture.numFacture,
+          dateFacture: honoCommFacture.dateFacture,
+          nbCla: honoCommFacture.nbCla,
+          montantCla: honoCommFacture.montantCla,
+          nbLeveeOption: honoCommFacture.nbLeveeOption,
+          montantLeveeOption: honoCommFacture.montantLeveeOption,
+          nbResa: honoCommFacture.nbResa,
+          montantResa: honoCommFacture.montantResa,
+          nbActe: honoCommFacture.nbActe,
+          montantActe: honoCommFacture.montantActe,
+          commentaires: honoCommFacture.commentaires,
+        })
         .from(honoCommFacture)
+        .leftJoin(
+          prestataire,
+          eq(prestataire.id, honoCommFacture.prestataireId),
+        )
+        .leftJoin(
+          baremeHonoComm,
+          eq(baremeHonoComm.id, honoCommFacture.baremeHonoCommId),
+        )
         .where(eq(honoCommFacture.trancheId, data.trancheId))
         .orderBy(asc(honoCommFacture.dateFacture), asc(honoCommFacture.id)),
     ])
@@ -110,7 +138,14 @@ export const getHonorairesNomenclaturesFn = createServerFn({
   method: 'GET',
 }).handler(async () => {
   await requireSession()
-  const [typesMission, prestataires, stades, naturesAchat] = await Promise.all([
+  const [
+    typesMission,
+    prestataires,
+    stades,
+    naturesAchat,
+    tousPrestataires,
+    baremesHonoComm,
+  ] = await Promise.all([
     db.select().from(typeMission).orderBy(asc(typeMission.libelle)),
     // iso-WinDev (REQ_PrestataireMission) : seuls les prestataires
     // « AfficherMission » sont proposés sur la fiche mission
@@ -131,8 +166,21 @@ export const getHonorairesNomenclaturesFn = createServerFn({
       .select({ id: natureAchat.id, libelle: natureAchat.libelle })
       .from(natureAchat)
       .orderBy(asc(natureAchat.libelle)),
+    // factures d'honoraires de commercialisation : tous les prestataires
+    db
+      .select({ id: prestataire.id, libelle: prestataire.libelle })
+      .from(prestataire)
+      .orderBy(asc(prestataire.libelle)),
+    db.select().from(baremeHonoComm).orderBy(asc(baremeHonoComm.libelle)),
   ])
-  return { typesMission, prestataires, stades, naturesAchat }
+  return {
+    typesMission,
+    prestataires,
+    stades,
+    naturesAchat,
+    tousPrestataires,
+    baremesHonoComm,
+  }
 })
 
 // --- Missions suivant convention ---
@@ -150,6 +198,7 @@ interface FicheMission {
   commentaire?: string | null
   ordre?: number | null
   nbMois?: number | null
+  dateFactCommKpiExtContratOfs?: string | null
 }
 
 export const saveMissionFn = createServerFn({ method: 'POST' })
@@ -171,6 +220,7 @@ export const saveMissionFn = createServerFn({ method: 'POST' })
       commentaire: data.commentaire || null,
       ordre: data.ordre ?? null,
       nbMois: data.nbMois ?? null,
+      dateFactCommKpiExtContratOfs: versDate(data.dateFactCommKpiExtContratOfs),
     }
     if (data.id) {
       const touchees = await db
@@ -329,6 +379,8 @@ export const deleteNatureFn = createServerFn({ method: 'POST' })
 interface FicheFacture {
   id?: number
   trancheId: number
+  prestataireId?: number | null
+  baremeHonoCommId?: number | null
   numFacture?: number | null
   dateFacture?: string | null
   nbCla?: number | null
@@ -348,6 +400,8 @@ export const saveFactureFn = createServerFn({ method: 'POST' })
     await requireEcriture()
     const valeurs = {
       trancheId: data.trancheId,
+      prestataireId: data.prestataireId ?? null,
+      baremeHonoCommId: data.baremeHonoCommId ?? null,
       numFacture: data.numFacture ?? null,
       dateFacture: versDate(data.dateFacture),
       nbCla: data.nbCla ?? null,

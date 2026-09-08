@@ -14,6 +14,7 @@ import {
   archiveStadeAvancement,
   associe,
   banque,
+  baremeHonoComm,
   categorieFrais,
   categorieSubvention,
   certification,
@@ -210,6 +211,7 @@ const REGISTRE = {
   'types-missions': { table: typeMission, champs: ['libelle'] },
   'domaines-stade': { table: domaineStadeAvancement, champs: ['libelle'] },
   'motifs-annulation': { table: motifAnnulation, champs: ['libelle'] },
+  'baremes-hono-comm': { table: baremeHonoComm, champs: ['libelle'] },
   'zonages-abc': { table: zonageAbc, champs: ['libelle'] },
   // rubrique Stades d'avancement
   'stades-avancement': {

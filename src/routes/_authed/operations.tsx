@@ -761,6 +761,7 @@ function OngletsTranche({
                 <Champ libelle="Date réelle">
                   {fmtDate(t.terrainOfsCompromisDateReelle)}
                 </Champ>
+                <Champ libelle="Commentaire">{t.terrainOfsCommentaire}</Champ>
               </div>
             </Bloc>
 

@@ -2,6 +2,7 @@ import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
 
 import Header from '#/components/Header'
 import Sidebar from '#/components/Sidebar'
+import { getDbModeFn } from '#/lib/dbmode.ts'
 import { CLE_PREFS, getPrefsFn } from '#/lib/preferences.ts'
 import { getSessionFn } from '#/lib/session.ts'
 
@@ -32,7 +33,9 @@ export const Route = createFileRoute('/_authed')({
     // même raisonnement que le strict:{output:false} de getPrefsFn — attesté ici
     // via TsrSerializable plutôt que délargi en `any`, pour que context.prefs
     // garde son vrai type chez les consommateurs.
-    return { session, prefs: prefs as Prefs & TsrSerializable }
+    // Bandeau dev/prod : lecture de cookie, pas de requête base
+    const dbMode = await getDbModeFn()
+    return { session, dbMode, prefs: prefs as Prefs & TsrSerializable }
   },
   component: AuthedLayout,
 })

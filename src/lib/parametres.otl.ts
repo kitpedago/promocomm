@@ -191,6 +191,7 @@ export const getTranchesOtlFn = createServerFn({ method: 'GET' })
         terrainAcompte: tranche.terrainAcompte,
         terrainSignataireId: tranche.terrainSignataireId,
         terrainCommentaire: tranche.terrainCommentaire,
+        terrainOfsCommentaire: tranche.terrainOfsCommentaire,
         ofsNomId: tranche.ofsNomId,
         terrainOfsMontantHt: tranche.terrainOfsMontantHt,
         terrainOfsSignataireId: tranche.terrainOfsSignataireId,
@@ -344,6 +345,7 @@ interface FicheTranche {
   terrainAcompte?: number | null
   terrainSignataireId?: number | null
   terrainCommentaire?: string | null
+  terrainOfsCommentaire?: string | null
   ofsNomId?: number | null
   terrainOfsMontantHt?: number | null
   terrainOfsSignataireId?: number | null
@@ -384,6 +386,7 @@ export const saveTrancheOtlFn = createServerFn({ method: 'POST' })
       terrainAcompte: data.terrainAcompte ?? null,
       terrainSignataireId: data.terrainSignataireId ?? null,
       terrainCommentaire: data.terrainCommentaire || null,
+      terrainOfsCommentaire: data.terrainOfsCommentaire || null,
       ofsNomId: data.ofsNomId ?? null,
       terrainOfsMontantHt: data.terrainOfsMontantHt ?? null,
       terrainOfsSignataireId: data.terrainOfsSignataireId ?? null,

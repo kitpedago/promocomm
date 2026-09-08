@@ -262,7 +262,9 @@ Réservé Comptabilité/Administrateur. Le plus gros morceau ETL :
 3. Passage des services/mots de passe en table ; les saisies deviennent les données
    de production (plus de réimport destructif).
 4. Le transform devient un outil d'archive ; `legacy` est conservé en lecture pour audit.
-5. Infra : changement de VPS prévu, sous-domaine à créer à ce moment-là.
+5. Infra : installation prod sur le PC Windows 11 du client (Docker Desktop, images
+   GHCR, `docker-compose.prod.yml`) — voir `docs/projet-deploiement.md`. Plus de VPS
+   ni de sous-domaine.
 
 ## Suivi
 
