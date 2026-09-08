@@ -1,0 +1,48 @@
+# PromoComm — production chez le client (Debian + Docker).
+# Emplacement : /opt/docker/promocomm/ avec un .env rempli depuis .env.example.
+#
+#   docker compose up -d        # démarrer / appliquer les changements
+#   ./update.sh                 # mettre à jour l'image et redémarrer
+#
+# Aucun build ici : l'image est construite sur le PC de dev (scripts/release.ps1)
+# et publiée sur le registry Gitea git.gd.solutions.
+services:
+  promocomm-db:
+    image: postgres:16-alpine
+    container_name: promocomm-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      # LAN : outils lisant la base miroir + copie prod → dev (/admin/import)
+      - "5443:5432"
+    volumes:
+      - promocomm-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  promocomm-app:
+    image: git.gd.solutions/gducos/promocomm:${PROMOCOMM_TAG:-latest}
+    container_name: promocomm-app
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@promocomm-db:5432/${POSTGRES_DB}
+      BETTER_AUTH_URL: ${APP_URL}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      MIROIR_DB: ${MIROIR_DB:-}
+      TZ: Europe/Paris
+    ports:
+      - "3020:3000"
+    depends_on:
+      promocomm-db:
+        condition: service_healthy
+
+volumes:
+  promocomm-db-data:
+    # Nom explicite (pas de préfixe projet) : /var/lib/docker/volumes/promocomm-db-data
+    name: promocomm-db-data
