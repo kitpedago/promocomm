@@ -26,7 +26,9 @@ if (git -C $root status --porcelain) {
 }
 $sha = (git -C $root rev-parse --short HEAD).Trim()
 
-docker build -t "${Image}:latest" -t "${Image}:$sha" $root
+# --provenance=false : sans ça buildx pousse un index OCI avec attestations,
+# que le registry Gitea refuse (404 sur le PUT du manifeste).
+docker build --provenance=false -t "${Image}:latest" -t "${Image}:$sha" $root
 if ($LASTEXITCODE -ne 0) { throw "docker build a échoué (code $LASTEXITCODE)" }
 
 if ($NoPush) { Write-Host "Image construite : ${Image}:$sha (pas de push)"; exit 0 }
