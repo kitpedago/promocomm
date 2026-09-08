@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useEffect, useRef, useState } from 'react'
 
 import { getDashboardFn } from '#/lib/dashboard.ts'
 
@@ -43,23 +44,43 @@ function Widget({
   title,
   cols,
   rows,
+  onMove,
+  onDragStart,
 }: {
   title: string
   cols: Array<Col>
   rows: Array<Record<string, Cell>>
+  onMove: () => void
+  onDragStart: () => void
 }) {
   const total = rows.reduce(
     (s, r) => s + (typeof r.nbLogt === 'number' ? r.nbLogt : 0),
     0,
   )
   return (
-    <section className="island-shell overflow-hidden rounded-xl">
-      <header className="flex items-baseline justify-between gap-3 border-b border-[var(--line-soft)] px-[18px] py-[14px]">
+    <section
+      className="island-shell overflow-hidden rounded-xl"
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.effectAllowed = 'move'
+        onDragStart()
+      }}
+    >
+      <header className="flex cursor-grab items-baseline justify-between gap-3 border-b border-[var(--line-soft)] px-[18px] py-[14px] active:cursor-grabbing">
         <h2 className="text-[15.5px] font-bold text-[var(--ink)]">{title}</h2>
-        <span className="text-xs whitespace-nowrap text-[var(--muted)]">
+        <span className="flex items-baseline gap-2 text-xs whitespace-nowrap text-[var(--muted)]">
           {rows.length === 0
             ? 'aucune ligne'
             : `${rows.length} ligne${rows.length > 1 ? 's' : ''}`}
+          <button
+            type="button"
+            onClick={onMove}
+            title="Déplacer dans l'autre colonne"
+            aria-label="Déplacer dans l'autre colonne"
+            className="hidden rounded px-1 text-sm leading-none hover:bg-[var(--cream-hover)] hover:text-[var(--ink)] xl:inline"
+          >
+            ⇄
+          </button>
         </span>
       </header>
       {rows.length === 0 ? (
@@ -117,8 +138,88 @@ function Widget({
   )
 }
 
+type Data = Awaited<ReturnType<typeof getDashboardFn>>
+
+const WIDGETS: Array<{ id: keyof Data; title: string; cols: Array<Col> }> = [
+  {
+    id: 'lancementsCom',
+    title: 'Lancements commercialisation depuis les 90 derniers jours',
+    cols: COLS_TRANCHE,
+  },
+  {
+    id: 'livraisons',
+    title: 'Livraisons depuis les 90 derniers jours',
+    cols: COLS_TRANCHE,
+  },
+  {
+    id: 'enTravaux',
+    title: 'En travaux depuis les 90 derniers jours',
+    cols: COLS_TRANCHE,
+  },
+  { id: 'sccvCreees', title: 'SCCV créées depuis 1 an', cols: COLS_SCCV },
+  { id: 'sccvLiquidees', title: 'SCCV liquidées depuis 1 an', cols: COLS_SCCV },
+]
+
+// Répartition des widgets entre les 2 colonnes, mémoire navigateur (pas la
+// pref serveur : choix explicite, propre au poste). Lue après montage pour ne
+// pas diverger du rendu SSR.
+const CLE_COLONNES = 'accueil.colonnes'
+const DEFAUT_DROITE: Array<keyof Data> = ['sccvCreees', 'sccvLiquidees']
+
+function useColonnes() {
+  const [droite, setDroite] = useState<Array<keyof Data>>(DEFAUT_DROITE)
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem(CLE_COLONNES)
+      if (v) setDroite(JSON.parse(v))
+    } catch {
+      /* stockage indisponible : on garde le défaut */
+    }
+  }, [])
+  const placer = (id: keyof Data, aDroite: boolean) =>
+    setDroite((prec) => {
+      if (prec.includes(id) === aDroite) return prec
+      const suivant = aDroite ? [...prec, id] : prec.filter((x) => x !== id)
+      try {
+        localStorage.setItem(CLE_COLONNES, JSON.stringify(suivant))
+      } catch {
+        /* idem */
+      }
+      return suivant
+    })
+  return { droite, placer }
+}
+
 function Home() {
   const data = Route.useLoaderData()
+  const { droite, placer } = useColonnes()
+  // id en cours de glisser : ref plutôt que dataTransfer (Firefox n'expose pas
+  // les données pendant dragover), pas d'état pour ne pas re-rendre.
+  const glisse = useRef<keyof Data | null>(null)
+  const colonne = (aDroite: boolean) => (
+    <div
+      className="flex min-h-24 flex-col gap-6"
+      onDragOver={(e) => {
+        if (glisse.current) e.preventDefault()
+      }}
+      onDrop={(e) => {
+        e.preventDefault()
+        if (glisse.current) placer(glisse.current, aDroite)
+        glisse.current = null
+      }}
+    >
+      {WIDGETS.filter((w) => droite.includes(w.id) === aDroite).map((w) => (
+        <Widget
+          key={w.id}
+          title={w.title}
+          cols={w.cols}
+          rows={data[w.id]}
+          onMove={() => placer(w.id, !aDroite)}
+          onDragStart={() => (glisse.current = w.id)}
+        />
+      ))}
+    </div>
+  )
   return (
     <main className="page-wrap flex flex-col gap-6 px-4 pt-10 pb-10">
       <div className="rise-in">
@@ -128,31 +229,8 @@ function Home() {
         </h1>
       </div>
       <div className="grid items-start gap-6 xl:grid-cols-2">
-        <Widget
-          title="Lancements commercialisation depuis les 90 derniers jours"
-          cols={COLS_TRANCHE}
-          rows={data.lancementsCom}
-        />
-        <Widget
-          title="Livraisons depuis les 90 derniers jours"
-          cols={COLS_TRANCHE}
-          rows={data.livraisons}
-        />
-        <Widget
-          title="En travaux depuis les 90 derniers jours"
-          cols={COLS_TRANCHE}
-          rows={data.enTravaux}
-        />
-        <Widget
-          title="SCCV créées depuis 1 an"
-          cols={COLS_SCCV}
-          rows={data.sccvCreees}
-        />
-        <Widget
-          title="SCCV liquidées depuis 1 an"
-          cols={COLS_SCCV}
-          rows={data.sccvLiquidees}
-        />
+        {colonne(false)}
+        {colonne(true)}
       </div>
     </main>
   )
