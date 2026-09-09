@@ -30,6 +30,8 @@ export interface EtlStatus {
   bakDir: string
   bakFiles: Array<BakFile>
   mssql: {
+    // MSSQL_URL défini : l'ETL existe sur ce serveur (dev, ou override client)
+    installe: boolean
     up: boolean
     error: string | null
     sourceDbExists: boolean
@@ -52,6 +54,7 @@ export async function getStatus(): Promise<EtlStatus> {
   }
 
   const mssql: EtlStatus['mssql'] = {
+    installe: !!process.env.MSSQL_URL,
     up: false,
     error: null,
     sourceDbExists: false,

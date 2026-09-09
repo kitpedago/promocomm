@@ -54,16 +54,41 @@ installation antérieure à ce script, où l'application se connectait en
 superutilisateur, le créer à la main puis renseigner `APP_DB_*` dans `.env` :
 
 ```sh
-docker exec -i promocomm-db psql -U "$POSTGRES_USER" -d promocomm <<'EOF'
+docker exec -i promocomm-db psql -v ON_ERROR_STOP=1 -1 -U "$POSTGRES_USER" -d promocomm <<'EOF'
 CREATE ROLE promocomm_app LOGIN NOSUPERUSER CREATEDB CREATEROLE PASSWORD '<mot de passe>';
 ALTER DATABASE promocomm OWNER TO promocomm_app;
-ALTER SCHEMA public OWNER TO promocomm_app;
-REASSIGN OWNED BY <ancien rôle> TO promocomm_app;
+-- Pas de REASSIGN OWNED : refusé quand l'ancien propriétaire est le
+-- superutilisateur d'amorçage (« required by the database system »).
+-- Objet par objet ; les séquences liées à une colonne suivent leur table.
+DO $$
+DECLARE r record;
+BEGIN
+  FOR r IN SELECT nspname FROM pg_namespace WHERE nspname IN ('public', 'drizzle', 'legacy') LOOP
+    EXECUTE format('ALTER SCHEMA %I OWNER TO promocomm_app', r.nspname);
+  END LOOP;
+  FOR r IN
+    SELECT n.nspname, c.relname, c.relkind
+      FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+     WHERE n.nspname IN ('public', 'drizzle', 'legacy')
+       AND c.relkind IN ('r', 'p', 'v', 'm', 'S')
+       AND NOT EXISTS (SELECT 1 FROM pg_depend d
+                        WHERE d.objid = c.oid AND d.deptype IN ('a', 'i') AND c.relkind = 'S')
+  LOOP
+    EXECUTE format('ALTER %s %I.%I OWNER TO promocomm_app',
+      CASE r.relkind WHEN 'S' THEN 'SEQUENCE' WHEN 'v' THEN 'VIEW'
+                     WHEN 'm' THEN 'MATERIALIZED VIEW' ELSE 'TABLE' END,
+      r.nspname, r.relname);
+  END LOOP;
+END $$;
 -- si les rôles miroir existent déjà :
 GRANT miroir_ecrivain TO promocomm_app WITH ADMIN OPTION;
 GRANT miroir_lecteur TO promocomm_app WITH ADMIN OPTION;
 EOF
 ```
+
+`-1` : tout ou rien. Vérifier ensuite : `\dt` doit afficher `promocomm_app` en
+propriétaire de chaque table. Les `GRANT miroir_*` échouent si ces rôles
+n'existent pas encore : les retirer dans ce cas.
 
 ## Mise à jour
 

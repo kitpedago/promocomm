@@ -61,6 +61,12 @@ function ImportPage() {
                   ? `Base restaurée présente (${data.mssql.tableCount} tables).`
                   : 'Aucune base restaurée pour le moment.'}
               </p>
+            ) : !data.mssql.installe ? (
+              <p className="text-sm text-[var(--sea-ink-soft)]">
+                ETL non installé sur ce serveur (<code>MSSQL_URL</code> absent).
+                L'import des .bak se fait sur le poste de développement ; la
+                base est ensuite livrée par dump.
+              </p>
             ) : (
               <div className="text-sm text-[var(--sea-ink-soft)]">
                 <p className="mb-2">
