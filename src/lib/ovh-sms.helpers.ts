@@ -14,9 +14,8 @@ export const SMS_KEYS = {
   portee: 'OVH_SMS_Portee', // tous | grave | bugfeature
 } as const
 
-/** Clé `app_param` de l'URL publique (liens des SMS). */
+/** Clé `app_param` de l'URL publique (liens des SMS). Vide = BETTER_AUTH_URL. */
 export const URL_BASE_KEY = 'URLBasePublique'
-export const BASE_URL_DEFAUT = 'http://10.66.66.1:3020'
 
 /** Portées possibles du déclencheur (quels tickets envoient un SMS). */
 export type SmsPortee = 'tous' | 'grave' | 'bugfeature'
@@ -34,7 +33,7 @@ export interface SmsConfig {
   expediteur: string
   destinataires: Array<string> // normalisés +33…
   portee: SmsPortee
-  baseUrl: string // URL publique (sans slash final), pour le lien du ticket
+  baseUrl: string // URL publique (sans slash final), pour le lien du ticket ; '' = repli BETTER_AUTH_URL
 }
 
 /** Normalise un numéro FR en format international OVH (+33…). "" si invalide. */
@@ -62,6 +61,19 @@ export function configComplete(c: SmsConfig): boolean {
   return Boolean(
     c.applicationKey && c.applicationSecret && c.consumerKey && c.serviceName,
   )
+}
+
+/**
+ * Lien vers la fiche du ticket : URL publique configurée, sinon `repli`
+ * (BETTER_AUTH_URL), sinon '' — jamais de lien mort dans un SMS.
+ */
+export function lienTicket(
+  baseUrl: string,
+  repli: string | undefined,
+  id: number,
+): string {
+  const base = (baseUrl || repli || '').replace(/\/+$/, '')
+  return base ? `${base}/tickets?ticket=${id}` : ''
 }
 
 /** Un ticket doit-il déclencher un SMS pour cette portée ? */

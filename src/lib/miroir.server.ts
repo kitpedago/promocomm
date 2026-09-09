@@ -9,8 +9,9 @@
 // retiré à PUBLIC) : un job buggé ne peut pas la toucher. Les mots de passe
 // vivent chiffrés dans app_param (secrets.server.ts).
 import { randomBytes } from 'node:crypto'
-import { readFile, writeFile } from 'node:fs/promises'
+import { access, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { eq } from 'drizzle-orm'
 import { Client } from 'pg'
@@ -29,7 +30,27 @@ import { decryptSecret, encryptSecret } from '#/lib/secrets.server.ts'
 
 import type { Planif } from '#/lib/miroir.helpers.ts'
 
-const DDL = path.resolve(process.cwd(), 'src/lib/miroir.schema.sql')
+// Lu au runtime (tsx ne connaît pas `?raw`, donc pas d'inclusion au bundle).
+// À côté du code (dev, scripts tsx), sinon relatif au répertoire de lancement
+// (/app dans l'image, où le Dockerfile copie le fichier). Erreur explicite
+// si absent des deux : pas de panne silencieuse.
+const DDL_CANDIDATS = [
+  fileURLToPath(new URL('./miroir.schema.sql', import.meta.url)),
+  path.resolve(process.cwd(), 'src/lib/miroir.schema.sql'),
+]
+async function cheminDdl(): Promise<string> {
+  for (const p of DDL_CANDIDATS) {
+    try {
+      await access(p)
+      return p
+    } catch {
+      /* candidat suivant */
+    }
+  }
+  throw new Error(
+    `miroir.schema.sql introuvable (cherché : ${DDL_CANDIDATS.join(', ')})`,
+  )
+}
 
 export const ROLE_ECRIVAIN = 'miroir_ecrivain'
 export const ROLE_LECTEUR = 'miroir_lecteur'
@@ -140,8 +161,8 @@ export async function preparerMiroir(): Promise<string> {
   const c = new Client({ connectionString: u.toString() })
   await c.connect()
   try {
-    // REASSIGN OWNED impossible : le rôle de l'application est celui du
-    // serveur (« required by the database system »), d'où table par table.
+    // REASSIGN OWNED impossible quand le rôle de l'application est le
+    // superutilisateur (« required by the database system »), d'où table par table.
     const autres = await c.query<{ t: string }>(
       `SELECT tablename AS t FROM pg_tables
         WHERE schemaname = 'public' AND tableowner <> $1`,
@@ -239,7 +260,7 @@ export async function rafraichirMiroir(
   }
 
   try {
-    await miroir.query(await readFile(DDL, 'utf8'))
+    await miroir.query(await readFile(await cheminDdl(), 'utf8'))
     const lecteur = await accorderLecture(miroir)
     let lignes = 0
     const echecs: ResultatMiroir['echecs'] = []
@@ -304,7 +325,8 @@ export async function genererDdl(url: string): Promise<number> {
           `DROP TABLE IF EXISTS "${t}";\nCREATE TABLE "${t}" (\n  ${cols.join(',\n  ')}\n);`,
       ),
     ].join('\n')
-    await writeFile(DDL, ddl + '\n')
+    // écrit à côté du code (source du dépôt), jamais dans l'image
+    await writeFile(DDL_CANDIDATS[0], ddl + '\n')
     return tables.size
   } finally {
     await client.end().catch(() => {})

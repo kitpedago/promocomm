@@ -13,10 +13,10 @@ import { inArray } from 'drizzle-orm'
 import { db } from '#/db/index.ts'
 import { appParam } from '#/db/schema.ts'
 import {
-  BASE_URL_DEFAUT,
   SMS_KEYS,
   URL_BASE_KEY,
   configComplete,
+  lienTicket,
   normPortee,
   parseDestinataires,
   ticketDeclencheSms,
@@ -37,7 +37,9 @@ export async function readSmsConfig(): Promise<SmsConfig> {
     .where(inArray(appParam.param, keys))
   const m = new Map(rows.map((r) => [r.param, r.valeur]))
   const get = (k: string) => m.get(k) ?? ''
-  const baseUrl = (get(URL_BASE_KEY) || BASE_URL_DEFAUT).replace(/\/+$/, '')
+  // Valeur enregistrée telle quelle (vide = repli sur BETTER_AUTH_URL à
+  // l'envoi, cf. lienTicket) : pas de défaut figé qui finirait en base.
+  const baseUrl = get(URL_BASE_KEY).replace(/\/+$/, '')
   return {
     active: get(SMS_KEYS.active) === '1',
     applicationKey: get(SMS_KEYS.applicationKey),
@@ -63,7 +65,6 @@ export async function writeSmsParam(param: string, valeur: string): Promise<void
 function errMsg(e: unknown): string {
   return e instanceof Error ? e.message : String(e)
 }
-
 /**
  * Envoie UN SMS aux `receivers` via l'API OVH SMS (requête signée). Ne lève
  * pas : toute erreur est capturée et renvoyée.
@@ -224,8 +225,10 @@ export async function notifierTicketSms(t: {
     const par = t.auteur ? ` — ${t.auteur}` : ''
     const titre = t.titre.length > 90 ? t.titre.slice(0, 87) + '…' : t.titre
     // Lien direct : ouvre la fiche du ticket (deep-link ?ticket= de /tickets).
-    const lien = `${c.baseUrl}/tickets?ticket=${t.id}`
-    const message = `PromoComm : ${label}${grav} #${t.id}${par}\n${titre}\n${lien}`
+    const lien = lienTicket(c.baseUrl, process.env.BETTER_AUTH_URL, t.id)
+    const message =
+      `PromoComm : ${label}${grav} #${t.id}${par}\n${titre}` +
+      (lien ? `\n${lien}` : '')
 
     const r = await envoyerSms(c, message, c.destinataires)
     if (!r.ok) console.error('[ovh-sms] envoi alerte:', r.error)

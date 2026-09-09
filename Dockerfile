@@ -19,6 +19,8 @@ RUN npm ci --omit=dev
 COPY drizzle.config.ts ./
 COPY drizzle ./drizzle
 COPY src/db ./src/db
+# DDL du miroir, lu au runtime par miroir.server.ts (process.cwd() = /app)
+COPY src/lib/miroir.schema.sql ./src/lib/
 COPY --from=build /app/dist ./dist
 EXPOSE 3000
 # --static est résolu par srvx relativement au dossier de l'entrée, d'où ../client

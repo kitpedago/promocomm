@@ -276,7 +276,7 @@ export function AlerteSmsParam() {
             <Input
               value={baseUrl}
               onChange={(e) => setBaseUrl(e.target.value)}
-              placeholder="http://10.66.66.1:3020"
+              placeholder="Vide : URL du serveur (APP_URL)"
               autoComplete="off"
               className="h-9 text-[13px]"
             />

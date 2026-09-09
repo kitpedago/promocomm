@@ -1,12 +1,21 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  lienTicket,
   normPortee,
   normReceiver,
   parseDestinataires,
   ticketDeclencheSms,
 } from './ovh-sms.helpers.ts'
 import { decryptSecret, encryptSecret, isSecretParam } from './secrets.server.ts'
+
+describe('lienTicket', () => {
+  it('préfère la valeur configurée, puis le repli, sinon aucun lien', () => {
+    expect(lienTicket('https://a.b/', 'http://c', 7)).toBe('https://a.b/tickets?ticket=7')
+    expect(lienTicket('', 'http://c/', 7)).toBe('http://c/tickets?ticket=7')
+    expect(lienTicket('', undefined, 7)).toBe('')
+  })
+})
 
 describe('normReceiver', () => {
   it('normalise les formats FR courants en +33…', () => {

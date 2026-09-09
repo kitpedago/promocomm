@@ -42,6 +42,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@promocomm-db:5432/${POSTGRES_DB}
       BETTER_AUTH_URL: ${APP_URL}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      TRUSTED_ORIGINS: ${TRUSTED_ORIGINS:-}
       MSSQL_URL: ${MSSQL_URL_DOCKER}
       # Base miroir aux noms SQL Server (/admin/miroir) : nom de la base, vide = désactivé ;
       # fenêtre horaire de la planification en heure locale
