@@ -1,7 +1,8 @@
 // Panneau maître « Opérations » (pattern WinDev : liste à gauche, recherche
 // « Contient » ≥ 3 caractères sans accent, case « Inclure les Masquer … »,
 // compteur, repliable). Le flag de masquage filtré dépend du module
-// (commercial par défaut, comptable pour Compta & Finances).
+// (commercial par défaut, comptable pour Compta & Finances, promo pour
+// Opérations et SAV).
 import { useEffect, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Building2, ChevronsLeft, ChevronsRight } from 'lucide-react'
@@ -16,6 +17,8 @@ const LIBELLES_MASQUER = {
   masquerComptable: 'Masquer comptable',
   masquerPromo: 'Masquer promo',
 } as const
+
+const TRI_FR = new Intl.Collator('fr', { sensitivity: 'base' })
 
 export default function PanneauOperations({
   selectedId,
@@ -51,8 +54,15 @@ export default function PanneauOperations({
         ),
       )
     }
-    return liste
-  }, [operations.data, recherche, inclureMasques])
+    // classement par commune puis nom, comme la liste WinDev (tri français :
+    // BRÉCÉ avant BRETEIL) ; opérations sans commune en fin de liste
+    return [...liste].sort(
+      (a, b) =>
+        Number(!a.commune) - Number(!b.commune) ||
+        TRI_FR.compare(a.commune ?? '', b.commune ?? '') ||
+        TRI_FR.compare(a.libelle, b.libelle),
+    )
+  }, [operations.data, recherche, inclureMasques, masquerFlag])
 
   // la ligne restaurée peut être hors écran dans une liste longue. `replie` en
   // dépendance : au dépliage la ref vient d'être rattachée, l'effet rejoué fait

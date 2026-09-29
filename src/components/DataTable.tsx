@@ -36,6 +36,7 @@ import {
 import { Switch } from '#/components/ui/switch'
 import { construireCsv, telechargerCsv } from '#/lib/csv.ts'
 import { usePref } from '#/lib/preferences.ts'
+import { sansAccents } from '#/lib/utils.ts'
 
 import type {
   ColumnDef,
@@ -91,6 +92,8 @@ export interface DataTableProps<T> {
   onRowClick?: (row: T) => void
   /** ids des colonnes numériques à sommer dans la ligne Total */
   totalFor?: Array<string>
+  /** ids des colonnes dont la ligne de pied compte les valeurs renseignées */
+  countFor?: Array<string>
   /** colonnes masquées par défaut (réactivables via le menu Affichage) */
   defaultHidden?: Array<string>
   emptyText?: string
@@ -105,6 +108,7 @@ export default function DataTable<T>({
   selectedRowId,
   onRowClick,
   totalFor,
+  countFor,
   defaultHidden,
   emptyText = 'Aucun élément.',
 }: DataTableProps<T>) {
@@ -152,7 +156,18 @@ export default function DataTable<T>({
       setPageIndex(suivant.pageSize !== pageSize ? 0 : suivant.pageIndex)
       if (suivant.pageSize !== pageSize) set('pageSize')(suivant.pageSize)
     },
-    globalFilterFn: 'includesString',
+    // sans accents ni casse, comme les recherches « Contient » des volets
+    // (dates cherchées telles qu'affichées : « 31/08/2022 »)
+    globalFilterFn: (row, colId, q) => {
+      const v = row.getValue(colId)
+      const texte =
+        v instanceof Date ? v.toLocaleDateString('fr-FR') : String(v ?? '')
+      return sansAccents(texte).includes(sansAccents(String(q)))
+    },
+    // par défaut TanStack n'inclut une colonne que si la 1ʳᵉ ligne y porte un
+    // texte ou un nombre : un premier lot sans acquéreur rendait la colonne
+    // Acquéreur infiltrable
+    getColumnCanGlobalFilter: () => true,
     columnResizeMode: 'onChange',
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -184,6 +199,15 @@ export default function DataTable<T>({
     }
     return t
   }, [lignesFiltrees, totalFor])
+
+  // ligne « Nb » des tables WinDev : nombre de valeurs renseignées
+  const comptes = useMemo(() => {
+    if (!countFor?.length) return null
+    const t: Record<string, number> = {}
+    for (const col of countFor)
+      t[col] = lignesFiltrees.filter((r) => r.getValue(col) != null).length
+    return t
+  }, [lignesFiltrees, countFor])
 
   // Export CSV des lignes filtrées/triées (colonnes visibles, séparateur
   // « ; » et BOM UTF-8 pour Excel français) — remplace l'export Excel WinDev
@@ -453,7 +477,7 @@ export default function DataTable<T>({
               </tr>
             ))}
           </tbody>
-          {totaux && rows.length > 0 && (
+          {(totaux || comptes) && rows.length > 0 && (
             <tfoot>
               <tr className="bg-[var(--cream)]">
                 {table.getVisibleLeafColumns().map((col, i) => (
@@ -462,16 +486,20 @@ export default function DataTable<T>({
                     className={`sticky bottom-0 z-10 border-t border-[var(--line)] bg-[var(--cream)] ${padCell} font-semibold text-[var(--ink)]`}
                   >
                     {i === 0
-                      ? 'Total'
-                      : col.id in totaux
-                        ? // la somme passe par le formateur de cellule de la
-                          // colonne (fmtEuro, %…) pour garder unité et nombre de
-                          // décimales identiques aux lignes ; les renderers du
-                          // dépôt ne lisent que getValue()
-                          flexRender(col.columnDef.cell, {
-                            getValue: () => totaux[col.id],
-                          } as never)
-                        : ''}
+                      ? totaux
+                        ? 'Total'
+                        : 'Nb'
+                      : comptes && col.id in comptes
+                        ? comptes[col.id]
+                        : totaux && col.id in totaux
+                          ? // la somme passe par le formateur de cellule de la
+                            // colonne (fmtEuro, %…) pour garder unité et nombre de
+                            // décimales identiques aux lignes ; les renderers du
+                            // dépôt ne lisent que getValue()
+                            flexRender(col.columnDef.cell, {
+                              getValue: () => totaux[col.id],
+                            } as never)
+                          : ''}
                   </td>
                 ))}
               </tr>

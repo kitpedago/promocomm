@@ -124,6 +124,11 @@ export const getLotsCommFn = createServerFn({ method: 'GET' })
         acquereurId: commercialisation.acquereurId,
         natureAchatId: commercialisation.natureAchatId,
         dateResa: commercialisation.dateResa,
+        dateSignatureActeVefa: commercialisation.dateSignatureActeVefa,
+        dateLeveeOption: commercialisation.dateLeveeOption,
+        dateLivraison: commercialisation.dateLivraison,
+        prixVenteReelTtc: commercialisation.prixVenteReelTtc,
+        prixVenteReelHt: commercialisation.prixVenteReelHt,
       })
       .from(commercialisation)
       .where(isNull(commercialisation.dateAnnulation))
@@ -148,6 +153,11 @@ export const getLotsCommFn = createServerFn({ method: 'GET' })
         destination: destination.libelle,
         natureAchat: natureAchat.libelle,
         dateResa: commCourante.dateResa,
+        dateSignatureActeVefa: commCourante.dateSignatureActeVefa,
+        dateLeveeOption: commCourante.dateLeveeOption,
+        dateLivraison: commCourante.dateLivraison,
+        prixVenteReelTtc: commCourante.prixVenteReelTtc,
+        prixVenteReelHt: commCourante.prixVenteReelHt,
         familleDeBien: lot.familleDeBien,
         typeDeBien: lot.typeDeBien,
         surfHabitable: lot.surfHabitable,

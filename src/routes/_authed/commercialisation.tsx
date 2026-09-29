@@ -58,6 +58,12 @@ import {
   updateDateLivraisonFn,
   updateTrancheAdresseFn,
 } from '#/lib/commercialisation.ts'
+import {
+  TAUX_TVA,
+  calculerMontantHt,
+  calculerRemise,
+  tauxDepuisTexte,
+} from '#/lib/commercialisation.helpers.ts'
 import { telechargerCsv } from '#/lib/csv.ts'
 import { enFraction, enPourcent } from '#/lib/sccv.helpers.ts'
 import {
@@ -140,6 +146,35 @@ const COLONNES_LOTS: Array<ColumnDef<LigneLot, any>> = [
     size: 130,
     cell: (c) => <span className="tabular-nums">{fmtDate(c.getValue())}</span>,
   },
+  // réservation courante du lot : dates d'acte / levée d'option / livraison
+  // et prix réel (colonnes de la grille WinDev)
+  ...(
+    [
+      ['dateSignatureActeVefa', 'Date acte VEFA'],
+      ['dateLeveeOption', 'Date levée d’option'],
+      ['dateLivraison', 'Date livraison'],
+    ] as const
+  ).map(([id, header]): ColumnDef<LigneLot, any> => ({
+    accessorKey: id,
+    header,
+    size: 130,
+    cell: (c) => <span className="tabular-nums">{fmtDate(c.getValue())}</span>,
+  })),
+  ...(
+    [
+      ['prixVenteReelTtc', 'Prix de vente réel TTC'],
+      ['prixVenteReelHt', 'Prix de vente réel HT'],
+    ] as const
+  ).map(([id, header]): ColumnDef<LigneLot, any> => ({
+    accessorKey: id,
+    header,
+    size: 150,
+    cell: (c) => (
+      <span className="block text-right tabular-nums">
+        {fmtEuro(c.getValue())}
+      </span>
+    ),
+  })),
   { accessorKey: 'familleDeBien', header: 'Famille de bien', size: 140 },
   { accessorKey: 'typeDeBien', header: 'Type de bien', size: 110 },
   {
@@ -163,6 +198,15 @@ const COLONNES_LOTS: Array<ColumnDef<LigneLot, any>> = [
     ),
   },
 ]
+
+// constantes de module : DataTable les garde en dépendances de useMemo
+const COMPTES_LOTS = [
+  'dateResa',
+  'dateSignatureActeVefa',
+  'dateLeveeOption',
+  'dateLivraison',
+]
+const MASQUEES_LOTS = ['prixVenteReelHt']
 
 function PageCommercialisation() {
   const { op, tranche, lot } = Route.useSearch()
@@ -195,6 +239,10 @@ function PageCommercialisation() {
       columns={COLONNES_LOTS}
       data={lots.data ?? []}
       unite="lots"
+      // ligne « Nb » : nombre de réservations, d'actes, de levées d'option
+      // et de livraisons
+      countFor={COMPTES_LOTS}
+      defaultHidden={MASQUEES_LOTS}
       getRowId={(l) => String(l.id)}
       selectedRowId={lot != null ? String(lot) : null}
       onRowClick={(l) =>
@@ -378,7 +426,10 @@ const COLONNES: Record<
         size: 110,
         cell: (c) => (
           <span className="block text-right tabular-nums">
-            {c.getValue() != null ? `${c.getValue()} %` : '—'}
+            {/* stocké en fraction (0,055), affiché « 5,5 % » */}
+            {c.getValue() != null
+              ? `${enPourcent(c.getValue())!.toLocaleString('fr-FR')} %`
+              : '—'}
           </span>
         ),
       },
@@ -684,6 +735,8 @@ function DetailLot({ lotId }: { lotId: number }) {
         }}
         nomenclatures={nomenclatures.data}
         ongletActif={onglet}
+        prixGrilleTtc={d.fiche.prixVenteTtc}
+        tvaLot={d.fiche.tva}
         onDone={invalider}
       />
       <ModaleAnnulation
@@ -781,9 +834,9 @@ function OngletLivraison({
           <Button
             size="sm"
             variant="outline"
-            disabled={
-              !adresseLot || !selection.adresseActuelle || appliquer.isPending
-            }
+            // un acquéreur sans adresse actuelle doit pouvoir recevoir celle
+            // du lot (WinDev ne le bloquait pas)
+            disabled={!adresseLot || appliquer.isPending}
             onClick={() => {
               // confirmation iso-WinDev (BTN_Appliquer_l_adresse)
               confirmer({
@@ -1279,6 +1332,8 @@ function ModaleCommercialisation({
   onOpenChange,
   nomenclatures,
   ongletActif,
+  prixGrilleTtc,
+  tvaLot,
   onDone,
 }: {
   lotId: number
@@ -1289,6 +1344,9 @@ function ModaleCommercialisation({
   nomenclatures: Nomenclatures | undefined
   /** onglet du détail actif à l'ouverture — met en évidence la section homonyme */
   ongletActif?: Onglet
+  /** rappels du lot (prix de la grille, TVA texte) pour les calculs auto */
+  prixGrilleTtc: number | null
+  tvaLot: string | null
   onDone: () => void
 }) {
   const vide: EntreeComm = {
@@ -1302,7 +1360,8 @@ function ModaleCommercialisation({
     prestataireComm2Id: null,
     moyenPaiementId: null,
     prixVenteReelTtc: null,
-    tauxTvaReel: null,
+    // nouvelle réservation : taux du lot proposé par défaut
+    tauxTvaReel: tauxDepuisTexte(tvaLot),
     prixVenteReelHt: null,
     remiseClientTtc: null,
     dateDemandeAgrement: null,
@@ -1410,6 +1469,31 @@ function ModaleCommercialisation({
     (v: EntreeComm[TCle]) =>
       setValeurs((s) => ({ ...s, [k]: v }))
 
+  // calculs auto de FEN_Fiche_Commercialisation : le HT suit le prix TTC et
+  // le taux, la remise suit le prix TTC (les deux restent corrigeables)
+  const setPrixTtc = (ttc: number | null) =>
+    setValeurs((s) => ({
+      ...s,
+      prixVenteReelTtc: ttc,
+      prixVenteReelHt: calculerMontantHt(ttc, s.tauxTvaReel),
+      remiseClientTtc: calculerRemise(prixGrilleTtc, ttc) ?? s.remiseClientTtc,
+    }))
+  const setTauxTva = (taux: number | null) =>
+    setValeurs((s) => ({
+      ...s,
+      tauxTvaReel: taux,
+      prixVenteReelHt: calculerMontantHt(s.prixVenteReelTtc, taux),
+    }))
+  // taux hors liste déjà enregistré (7 % legacy…) : gardé sélectionnable
+  const tauxTva = [
+    ...new Set([
+      ...TAUX_TVA,
+      ...(valeurs.tauxTvaReel != null ? [valeurs.tauxTvaReel] : []),
+    ]),
+  ]
+    .sort((a, b) => a - b)
+    .map((t) => ({ id: t, libelle: `${t.toLocaleString('fr-FR')} %` }))
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
@@ -1496,18 +1580,23 @@ function ModaleCommercialisation({
               options={nomenclatures?.prestataires ?? []}
             />
             <SousTitre>Prix</SousTitre>
+            <p className="text-[12px] text-[var(--muted)] sm:col-span-2">
+              Rappel du lot : prix de vente TTC {fmtEuro(prixGrilleTtc)} · TVA{' '}
+              {tvaLot || '—'}
+            </p>
             <ChampNombre
               libelle="Prix de vente réel TTC"
               value={valeurs.prixVenteReelTtc}
-              onChange={set('prixVenteReelTtc')}
+              onChange={setPrixTtc}
             />
-            <ChampNombre
-              libelle="Taux TVA réel (%)"
+            <ChampSelectId
+              libelle="Taux TVA réel"
               value={valeurs.tauxTvaReel}
-              onChange={set('tauxTvaReel')}
+              onChange={setTauxTva}
+              options={tauxTva}
             />
             <ChampNombre
-              libelle="Prix de vente réel HT"
+              libelle="Prix de vente réel HT (calculé)"
               value={valeurs.prixVenteReelHt}
               onChange={set('prixVenteReelHt')}
             />

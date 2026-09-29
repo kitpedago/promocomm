@@ -28,6 +28,8 @@ import {
   calculerAge,
   calculerMenage,
   construireNomComplet,
+  normaliserEmail,
+  normaliserTelephone,
   trancheAgePourAges,
 } from '#/lib/acquereurs.helpers.ts'
 import { requireEcriture, requireSession } from '#/lib/session.server.ts'
@@ -315,10 +317,10 @@ export const saveAcquereurFn = createServerFn({ method: 'POST' })
       communeActuelle: data.communeActuelle || null,
       communeOrigine: data.communeOrigine || null,
       dateModifAdresse: versDate(data.dateModifAdresse),
-      telephone: data.telephone || null,
-      portable: data.portable || null,
-      email: data.email || null,
-      email2: data.email2 || null,
+      telephone: normaliserTelephone(data.telephone),
+      portable: normaliserTelephone(data.portable),
+      email: normaliserEmail(data.email),
+      email2: normaliserEmail(data.email2),
       nombreAdultes: data.nombreAdultes ?? null,
       nombreEnfants: data.nombreEnfants ?? null,
       enfantAVenir: data.enfantAVenir ?? null,

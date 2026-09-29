@@ -16,6 +16,7 @@ import {
   SousTitre,
   versInputDate,
 } from '#/components/ChampsModale'
+import ChampsCpCommune from '#/components/ChampsCpCommune'
 import Onglets from '#/components/Onglets'
 import { Button } from '#/components/ui/button'
 import {
@@ -42,6 +43,8 @@ export type DescChamp =
       options: Array<{ id: number; libelle: string | null }>
     }
   | { k: string; l: string; t: 'selectTexte'; options: Array<string> }
+  // CP (k) et commune (kCommune) liés, cf. ChampsCpCommune
+  | { k: string; kCommune: string; l: string; t: 'cpCommune' }
   | { t: 'titre'; l: string }
   // les champs qui suivent se rangent sous cet onglet ; ceux qui précèdent
   // le premier marqueur restent visibles quel que soit l'onglet
@@ -64,6 +67,7 @@ export function depuisLigne(
         : c.t === 'pourcent'
           ? enPourcent(brut as number | null)
           : brut
+    if (c.t === 'cpCommune') v[c.kCommune] = ligne?.[c.kCommune] ?? null
   }
   return v
 }
@@ -148,6 +152,20 @@ export default function ModaleFiche({
             value={valeurs[c.k] as string | null}
             onChange={set(c.k)}
             options={c.options}
+          />
+        ) : c.t === 'cpCommune' ? (
+          <ChampsCpCommune
+            key={c.k}
+            libelleCp={c.l}
+            cp={(valeurs[c.k] as string | null) ?? ''}
+            commune={(valeurs[c.kCommune] as string | null) ?? ''}
+            onChange={(v) =>
+              setValeurs((s) => ({
+                ...s,
+                [c.k]: v.cp || null,
+                [c.kCommune]: v.commune || null,
+              }))
+            }
           />
         ) : c.t === 'bool' ? (
           <ChampBascule

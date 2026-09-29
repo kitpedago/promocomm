@@ -390,6 +390,11 @@ const STADES: Array<ConfigListe> = [
       { k: 'avecHonoGestion', l: 'Avec hono. gestion', t: 'bool' },
       { k: 'pourcentageStandard', l: '% standard', t: 'nombre' },
       { k: 'avecSynchroEntreTranche', l: 'Synchro entre tranches', t: 'bool' },
+      {
+        k: 'inclureQuandCreationTranche',
+        l: 'Inclure à la création d’une tranche',
+        t: 'bool',
+      },
     ],
     // liste_avancement.domaine = libellé texte (pas d'id, cf. domaine.ts)
     selects: { domaine: 'domaines-stade' },
@@ -1134,8 +1139,7 @@ function VueOtl() {
       options: options?.structures ?? [],
     },
     { k: 'adresse', l: 'Adresse', t: 'texte' },
-    { k: 'cp', l: 'CP', t: 'texte' },
-    { k: 'commune', l: 'Commune', t: 'texte' },
+    { k: 'cp', kCommune: 'commune', l: 'CP', t: 'cpCommune' },
     { k: 'nomZac', l: 'Nom ZAC', t: 'texte' },
     {
       k: 'secteurGeographiqueId',

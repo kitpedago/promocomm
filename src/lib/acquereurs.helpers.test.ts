@@ -4,6 +4,8 @@ import {
   calculerAge,
   calculerMenage,
   construireNomComplet,
+  normaliserEmail,
+  normaliserTelephone,
   trancheAgePourAges,
 } from './acquereurs.helpers.ts'
 
@@ -115,4 +117,31 @@ test('tranche d’âge : première borne couvrant l’âge moyen', () => {
   expect(trancheAgePourAges(24, 0, TRANCHES)).toBe(1) // âge 2 nul ignoré
   expect(trancheAgePourAges(null, null, TRANCHES)).toBe(1) // 0 → première tranche
   expect(trancheAgePourAges(120, null, TRANCHES)).toBeNull()
+})
+
+test('téléphone : remet le 0 perdu par le legacy', () => {
+  expect(normaliserTelephone('783023520')).toBe('0783023520')
+  expect(normaliserTelephone('0783023520')).toBe('0783023520')
+})
+
+test('téléphone : retire les séparateurs et le préfixe +33', () => {
+  expect(normaliserTelephone('06 12 34 56 78')).toBe('0612345678')
+  expect(normaliserTelephone('06.12.34.56.78')).toBe('0612345678')
+  expect(normaliserTelephone('+33 6 12 34 56 78')).toBe('0612345678')
+  expect(normaliserTelephone('0033612345678')).toBe('0612345678')
+})
+
+test('téléphone : vide les « 0 », garde ce qui n’est pas reconnu', () => {
+  expect(normaliserTelephone('0')).toBeNull()
+  expect(normaliserTelephone('  ')).toBeNull()
+  expect(normaliserTelephone(null)).toBeNull()
+  expect(normaliserTelephone('0612345678 (père)')).toBe('0612345678 (père)')
+  expect(normaliserTelephone('+44 20 7946 0958')).toBe('+44 20 7946 0958')
+})
+
+test('email : minuscules, sans espaces', () => {
+  expect(normaliserEmail(' Boiden@Hotmail.fr ')).toBe('boiden@hotmail.fr')
+  expect(normaliserEmail('jean dupont@free.fr')).toBe('jeandupont@free.fr')
+  expect(normaliserEmail('')).toBeNull()
+  expect(normaliserEmail('1111')).toBe('1111')
 })

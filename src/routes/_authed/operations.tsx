@@ -158,6 +158,7 @@ function PageOperations() {
         selectedId={op ?? null}
         // nouvelle opération → la tranche mémorisée ne s'applique plus
         onSelect={(id) => void navigate({ search: { op: id } })}
+        masquerFlag="masquerPromo"
       />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden px-5 py-5 sm:px-7">

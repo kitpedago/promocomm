@@ -224,6 +224,7 @@ const REGISTRE = {
       'avecHonoGestion',
       'pourcentageStandard',
       'avecSynchroEntreTranche',
+      'inclureQuandCreationTranche',
     ],
   },
   'archives-stades': {

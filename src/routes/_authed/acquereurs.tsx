@@ -24,6 +24,7 @@ import {
   SousTitre,
   versInputDate,
 } from '#/components/ChampsModale'
+import ChampsCpCommune from '#/components/ChampsCpCommune'
 import DataTable from '#/components/DataTable'
 import Onglets from '#/components/Onglets'
 import PanneauOperations from '#/components/PanneauOperations'
@@ -350,15 +351,18 @@ function ModaleAcquereur({
                     onChange={(v) => set('adresseActuelle')(v || null)}
                   />
                 </div>
-                <ChampTexte
-                  libelle="CP actuel"
-                  value={valeurs.cpActuel ?? ''}
-                  onChange={(v) => set('cpActuel')(v || null)}
-                />
-                <ChampTexte
-                  libelle="Commune actuelle"
-                  value={valeurs.communeActuelle ?? ''}
-                  onChange={(v) => set('communeActuelle')(v || null)}
+                <ChampsCpCommune
+                  libelleCp="CP actuel"
+                  libelleCommune="Commune actuelle"
+                  cp={valeurs.cpActuel ?? ''}
+                  commune={valeurs.communeActuelle ?? ''}
+                  onChange={(v) =>
+                    setValeurs((s) => ({
+                      ...s,
+                      cpActuel: v.cp || null,
+                      communeActuelle: v.commune || null,
+                    }))
+                  }
                 />
                 <ChampTexte
                   libelle="Commune d’origine"
@@ -616,12 +620,12 @@ function PageAcquereurs() {
     'selection',
     SELECTION_VIDE,
   )
-  // filtre pré-positionné sur l'opération mémorisée (fil conducteur WinDev) ;
-  // null = toutes les opérations ; re-clic = désélection, filtre local
-  // seulement — la dernière opération reste mémorisée pour les autres pages
-  const [opId, setOpId] = useState<number | null>(() =>
-    Number.isInteger(selection.op) && selection.op! > 0 ? selection.op! : null,
-  )
+  // null = toutes les opérations, état à l'ouverture comme l'arbre de filtre
+  // WinDev : pré-positionné sur l'opération mémorisée, le filtre empêchait de
+  // chercher un nom sur l'ensemble des acquéreurs. Re-clic = désélection,
+  // filtre local seulement — la dernière opération reste mémorisée pour les
+  // autres pages
+  const [opId, setOpId] = useState<number | null>(null)
   const [recherche, setRecherche] = useState('')
   const [acquereurId, setAcquereurId] = useState<number | null>(null)
   const [modale, setModale] = useState<'creation' | FicheBrute | null>(null)
@@ -720,6 +724,11 @@ function PageAcquereurs() {
               />
             </span>
           </label>
+          {opId != null && (
+            <Button size="sm" variant="outline" onClick={() => setOpId(null)}>
+              Toutes les opérations
+            </Button>
+          )}
 
           {!lectureSeule && (
             <BoutonsTable

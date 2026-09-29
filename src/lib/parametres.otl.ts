@@ -3,8 +3,7 @@
 // colonne vertébrale. Les suppressions s'appuient sur les FK Postgres : une
 // opération avec tranches, une tranche avec lots ou un lot déjà commercialisé
 // sont refusés avec le message de contrainte (pas de cascade silencieuse).
-// L'import Excel de lots WinDev repose sur la table ChampImportLot, absente
-// du .bak importé — reporté (voir docs/plan-implementation.md).
+// L'import Excel des lots d'une tranche vit dans importlots.ts.
 import { createServerFn } from '@tanstack/react-start'
 import { asc, eq } from 'drizzle-orm'
 
@@ -30,6 +29,7 @@ import { db } from '#/db/index.ts'
 import { operationVisuel } from '#/db/schema.ts'
 import { chercherEtStockerVisuel } from '#/lib/visuels.server.ts'
 import { requireEcriture, requireSession } from '#/lib/session.server.ts'
+import { initialiserTranche, supprimerTranche } from '#/lib/tranche.server.ts'
 
 const versDate = (s: string | null | undefined) => (s ? new Date(s) : null)
 
@@ -385,7 +385,7 @@ export const saveTrancheOtlFn = createServerFn({ method: 'POST' })
   .validator((d: FicheTranche) => d)
   .handler(async ({ data }) => {
     await requireEcriture()
-    return upsert(tranche, data.id, {
+    const res = await upsert(tranche, data.id, {
       operationId: data.operationId,
       libelle: data.libelle || null,
       adresse: data.adresse || null,
@@ -439,13 +439,16 @@ export const saveTrancheOtlFn = createServerFn({ method: 'POST' })
       ),
       commentaire: data.commentaire || null,
     })
+    // nouvelle tranche : stades d'avancement et suivi des frais créés d'office
+    if (data.id == null) await initialiserTranche(res.id)
+    return res
   })
 
 export const deleteTrancheOtlFn = createServerFn({ method: 'POST' })
   .validator((d: { id: number }) => d)
   .handler(async ({ data }) => {
     await requireEcriture()
-    await db.delete(tranche).where(eq(tranche.id, data.id))
+    await supprimerTranche(data.id)
   })
 
 // --- Lot ---

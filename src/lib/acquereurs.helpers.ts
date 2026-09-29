@@ -88,3 +88,28 @@ export function trancheAgePourAges(
   )
   return triees.find((t) => (t.borneMax ?? 0) >= moyen)?.id ?? null
 }
+
+// Téléphone français sur 10 chiffres sans séparateur. Le legacy a perdu le 0
+// initial de ~860 numéros (saisis comme des nombres) et stocke « 0 » pour
+// « pas de numéro ». Ce qui ne ressemble pas à un numéro français (étranger,
+// numéro suivi d'un commentaire) est gardé tel quel.
+export function normaliserTelephone(
+  s: string | null | undefined,
+): string | null {
+  const brut = (s ?? '').trim()
+  const chiffres = brut
+    .replaceAll(/[\s.\-/]/g, '')
+    .replace(/^(\+|00)33\(?0?\)?/, '0')
+  if (chiffres === '' || /^0+$/.test(chiffres)) return null
+  if (/^[1-9]\d{8}$/.test(chiffres)) return `0${chiffres}`
+  if (/^0\d{9}$/.test(chiffres)) return chiffres
+  return brut
+}
+
+// Minuscules, sans espaces. Les valeurs de remplissage du legacy (« 1111 »,
+// « / ») ne sont pas des adresses mais sont conservées : les vider est une
+// décision métier.
+export function normaliserEmail(s: string | null | undefined): string | null {
+  const net = (s ?? '').replaceAll(/\s+/g, '').toLowerCase()
+  return net === '' ? null : net
+}
