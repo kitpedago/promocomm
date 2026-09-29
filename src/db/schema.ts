@@ -19,7 +19,7 @@ import type { AnyPgColumn } from 'drizzle-orm/pg-core'
 export * from './auth-schema.ts'
 export * from './domaine.ts'
 
-// Suivi des chargements .bak → PostgreSQL (page interne /admin/import)
+// Historique des chargements .bak → PostgreSQL (import désactivé, table conservée)
 export const importRuns = pgTable('import_runs', {
   id: serial().primaryKey(),
   status: text().notNull().default('running'), // running | done | error

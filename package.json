@@ -17,8 +17,6 @@
     "db:pull": "drizzle-kit pull",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx --env-file=.env scripts/seed-admin.ts",
-    "db:import": "tsx --env-file=.env scripts/run-import.ts",
-    "db:transform": "tsx --env-file=.env scripts/transform-legacy.ts",
     "db:miroir": "tsx --env-file=.env scripts/miroir.ts",
     "lint": "eslint",
     "format": "prettier --write . && eslint --fix",

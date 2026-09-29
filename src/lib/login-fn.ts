@@ -1,5 +1,5 @@
 // Server function de connexion par service — seul point d'entrée du login.
-// Module séparé (comme etl/fns.ts) pour que le client ne reçoive que le stub RPC :
+// Module séparé (comme importprod.ts) pour que le client ne reçoive que le stub RPC :
 // les mots de passe de services.server.ts ne quittent jamais le serveur.
 import { createServerFn } from '@tanstack/react-start'
 import { getRequest } from '@tanstack/react-start/server'

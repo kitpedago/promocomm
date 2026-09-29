@@ -1,8 +1,8 @@
 // Schéma métier cible (tranche 1 : colonne vertébrale + dimension commerciale).
 // Mapping depuis le schéma "legacy" documenté dans docs/schema-cible.md :
 // préfixe "t" abandonné, colonnes caches (cur*, Nb* recalculables), imports
-// (Import*, *_orig, PromoGes*) et *_old exclues. IDs legacy préservés par
-// scripts/transform-legacy.ts (identity BY DEFAULT → l'app génère les suivants).
+// (Import*, *_orig, PromoGes*) et *_old exclues. IDs legacy préservés à la
+// reprise (identity BY DEFAULT → l'app génère les suivants).
 import {
   boolean,
   index,

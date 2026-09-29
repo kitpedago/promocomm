@@ -2,8 +2,8 @@
 
 Créé le 2026-07-04. Périmètre : colonne vertébrale (structure juridique > opération >
 tranche > lot) + dimension commerciale. Définition Drizzle : [src/db/domaine.ts](../src/db/domaine.ts).
-Alimentation : `npm run db:transform` (ou automatiquement en fin d'import .bak) recopie
-`legacy` → `public` en préservant les IDs. Modèle source : [modele-legacy.md](modele-legacy.md).
+Alimentation d'origine : recopie `legacy` → `public` en préservant les IDs, à chaque import
+`.bak`. Import désactivé depuis le 2026-09-30 : la base vit dans l'application. Modèle source : [modele-legacy.md](modele-legacy.md).
 
 ## Principes de mapping
 
@@ -166,7 +166,7 @@ pas. Chargées une fois au beforeLoad des pages authentifiées, lues/écrites pa
 
 **`import_runs`** (suivi des imports `.bak`) — Enregistrement du statut (running / done /
 error), étape courante, log, et compteurs de tables traitées pour chaque chargement.
-Utilisée par la page interne `/admin/import`.
+Historique conservé ; l'import `.bak` est désactivé.
 - `id` : entier, clé primaire ;
 - `status` : texte, valeurs running | done | error ;
 - `step` : texte, étape courante affichée ;

@@ -134,7 +134,7 @@ export default function Sidebar({ service }: { service?: string | null }) {
         </Link>
       </nav>
 
-      {/* Import .bak (/admin/import) : hors menu, joignable par son adresse */}
+      {/* Copie prod → local (/admin/import) : hors menu, joignable par son adresse */}
       {modules.includes('parametres') && (
         <div className="mt-auto pt-6">
           <p className="island-kicker px-3 pb-2">Administration</p>

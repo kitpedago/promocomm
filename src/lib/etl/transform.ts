@@ -1,7 +1,7 @@
-// Transformation legacy → public (tranche 1 : backbone + dimension commerciale).
-// Relançable après chaque import .bak : vide les tables du domaine puis recopie
-// depuis le schéma "legacy" en préservant les IDs (les séquences sont recalées).
-// Appelée par le pipeline d'import (/admin/import) et par npm run db:transform.
+// Correspondance legacy → public (tranche 1 : backbone + dimension commerciale).
+// L'import .bak est désactivé : plus rien n'appelle runTransform, qui vide les
+// tables du domaine avant de les recopier depuis le schéma "legacy". `copies`
+// reste la référence de la base miroir, qui l'inverse (miroir.helpers.ts).
 import { db } from '#/db/index.ts'
 
 // NULLIF(col,0) : WinDev encode « pas de référence » par 0
