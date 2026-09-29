@@ -18,6 +18,7 @@ import { AlerteMailParam } from '#/components/AlerteMailParam'
 import { BoutonsTable, ErreurMutation } from '#/components/ChampsModale'
 import DataTable from '#/components/DataTable'
 import ImportLots from '#/components/ImportLots'
+import { MiroirParam } from '#/components/MiroirParam'
 import ModaleFiche from '#/components/ModaleFiche'
 import VisuelOperation from '#/components/VisuelOperation'
 import {
@@ -561,6 +562,7 @@ const NOTAIRES: Array<ConfigListe> = [
 const OTL = 'operations-tranches-lots'
 const DROITS = 'droits'
 const ALERTE_MAIL = 'alerte-mail'
+const BASE_MIROIR = 'base-miroir'
 
 const RUBRIQUES: Array<{ titre: string; listes: Array<ConfigListe> }> = [
   { titre: 'Listes', listes: LISTES },
@@ -576,7 +578,8 @@ const TOUTES = RUBRIQUES.flatMap((r) => r.listes)
 function PageParametres() {
   const { liste } = Route.useSearch()
   const { session } = Route.useRouteContext()
-  // Alerte mail : écran réservé au service Administrateur (comme isfectuteurs)
+  // Alerte mail, Base miroir : écrans réservés au service Administrateur
+  // (comme isfectuteurs)
   const estAdmin = session.user.service === 'admin'
   const navigate = useNavigate({ from: Route.fullPath })
   const [slugStocke, setSlugStocke] = usePref<string>(
@@ -592,7 +595,7 @@ function PageParametres() {
   const config =
     slugActif === OTL ||
     slugActif === DROITS ||
-    (slugActif === ALERTE_MAIL && estAdmin)
+    ((slugActif === ALERTE_MAIL || slugActif === BASE_MIROIR) && estAdmin)
       ? null
       : (TOUTES.find((l) => l.slug === slugActif) ?? LISTES[0])
 
@@ -622,7 +625,9 @@ function PageParametres() {
       ? 'Droits'
       : slugActif === ALERTE_MAIL
         ? 'Alerte mail'
-        : 'Opérations, Tranches et Lots')
+        : slugActif === BASE_MIROIR
+          ? 'Base miroir (noms SQL Server)'
+          : 'Opérations, Tranches et Lots')
 
   return (
     <div className="flex h-[calc(100vh-61px)] items-stretch">
@@ -650,6 +655,9 @@ function PageParametres() {
                 r.titre === 'Système' &&
                   estAdmin &&
                   boutonNav(ALERTE_MAIL, 'Alerte mail'),
+                r.titre === 'Système' &&
+                  estAdmin &&
+                  boutonNav(BASE_MIROIR, 'Base miroir'),
               ].filter(Boolean)
               if (entrees.length === 0) return []
               return [
@@ -680,6 +688,8 @@ function PageParametres() {
           <VueDroits />
         ) : slugActif === ALERTE_MAIL ? (
           <AlerteMailParam />
+        ) : slugActif === BASE_MIROIR ? (
+          <MiroirParam />
         ) : (
           <VueOtl />
         )}

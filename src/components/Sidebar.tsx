@@ -3,8 +3,6 @@ import { Link } from '@tanstack/react-router'
 import {
   Calculator,
   ChartColumn,
-  Database,
-  DatabaseBackup,
   FileText,
   HardHat,
   House,
@@ -136,20 +134,15 @@ export default function Sidebar({ service }: { service?: string | null }) {
         </Link>
       </nav>
 
-      <div className="mt-auto pt-6">
-        <p className="island-kicker px-3 pb-2">Administration</p>
-        <nav className="flex flex-col gap-0.5">
-          {modules.includes('parametres') && <ModuleLink module="parametres" />}
-          <Link to="/admin/import" className={itemClass}>
-            <Database className="h-4 w-4 flex-shrink-0" aria-hidden />
-            Import .bak
-          </Link>
-          <Link to="/admin/miroir" className={itemClass}>
-            <DatabaseBackup className="h-4 w-4 flex-shrink-0" aria-hidden />
-            Base miroir
-          </Link>
-        </nav>
-      </div>
+      {/* Import .bak (/admin/import) : hors menu, joignable par son adresse */}
+      {modules.includes('parametres') && (
+        <div className="mt-auto pt-6">
+          <p className="island-kicker px-3 pb-2">Administration</p>
+          <nav className="flex flex-col gap-0.5">
+            <ModuleLink module="parametres" />
+          </nav>
+        </div>
+      )}
     </aside>
   )
 }
