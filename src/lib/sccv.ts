@@ -23,7 +23,17 @@ import {
 } from '#/db/domaine.ts'
 import { db } from '#/db/index.ts'
 import { enFraction, enPourcent, normaliserSiret } from '#/lib/sccv.helpers.ts'
-import { requireEcriture, requireSession } from '#/lib/session.server.ts'
+import {
+  estRestreint,
+  requireDroit,
+  requireSession,
+} from '#/lib/session.server.ts'
+
+// Droits fins de la fenêtre WinDev (table droit) : hors Comptabilité et
+// Administrateur, pas de création ni de modification de SCCV, associés en
+// lecture seule, onglets Comptes bancaires [3] et Centre des impôts [4]
+// masqués
+const FEN_SCCV = 'FEN_TABLE_StructureJuridique'
 
 // Transpose REQ_StructureJuridique : liste filtrée. Défaut iso-WinDev :
 // seules les non-liquidées (liquidee=false). Tri RS (le legacy n'a aucun
@@ -97,7 +107,7 @@ export const getSccvListeFn = createServerFn({ method: 'GET' })
 export const getSccvDetailFn = createServerFn({ method: 'GET' })
   .validator((d: { sccvId: number }) => d)
   .handler(async ({ data }) => {
-    await requireSession()
+    const session = await requireSession()
     const fiche = (
       await db
         .select()
@@ -105,6 +115,13 @@ export const getSccvDetailFn = createServerFn({ method: 'GET' })
         .where(eq(structureJuridique.id, data.sccvId))
     ).at(0)
     if (!fiche) return null
+    // onglet masqué = RIB non transmis, pas seulement cachés à l'écran
+    const sansComptes = await estRestreint(
+      session.user.service,
+      FEN_SCCV,
+      'ONG_Choix',
+      3,
+    )
     const [participations, operations, comptes] = await Promise.all([
       db
         .select({
@@ -190,7 +207,7 @@ export const getSccvDetailFn = createServerFn({ method: 'GET' })
         pourcentage: enPourcent(p.pourcentage),
       })),
       operations,
-      comptes,
+      comptes: sansComptes ? [] : comptes,
     }
   })
 
@@ -310,7 +327,7 @@ const versDate = (s: string | null | undefined) => (s ? new Date(s) : null)
 export const saveSccvFn = createServerFn({ method: 'POST' })
   .validator((d: FicheSccv) => d)
   .handler(async ({ data }) => {
-    await requireEcriture()
+    await requireDroit(FEN_SCCV, data.id ? 'BTN_Modifier' : 'BTN_Nouveau')
     if (!data.rs.trim()) throw new Error('La raison sociale est obligatoire')
     const valeurs = {
       rs: data.rs.trim(),
@@ -377,7 +394,7 @@ interface FicheParticipation {
 export const saveParticipationFn = createServerFn({ method: 'POST' })
   .validator((d: FicheParticipation) => d)
   .handler(async ({ data }) => {
-    await requireEcriture()
+    await requireDroit(FEN_SCCV, 'TABLE_REQ_Participation')
     // iso-WinDev : une ligne sans associé ni pourcentage est ignorée
     if (data.associeId == null && !data.pourcentage)
       throw new Error('Associé ou pourcentage requis')
@@ -414,7 +431,7 @@ export const saveParticipationFn = createServerFn({ method: 'POST' })
 export const deleteParticipationFn = createServerFn({ method: 'POST' })
   .validator((d: { id: number }) => d)
   .handler(async ({ data }) => {
-    await requireEcriture()
+    await requireDroit(FEN_SCCV, 'BTN_Supprimer_Participation')
     await db.delete(participation).where(eq(participation.id, data.id))
   })
 
@@ -434,7 +451,7 @@ interface FicheCompteBanque {
 export const saveCompteBanqueFn = createServerFn({ method: 'POST' })
   .validator((d: FicheCompteBanque) => d)
   .handler(async ({ data }) => {
-    await requireEcriture()
+    await requireDroit(FEN_SCCV, 'ONG_Choix', 3)
     const valeurs = {
       structureJuridiqueId: data.structureJuridiqueId,
       banqueId: data.banqueId ?? null,
@@ -465,6 +482,6 @@ export const saveCompteBanqueFn = createServerFn({ method: 'POST' })
 export const deleteCompteBanqueFn = createServerFn({ method: 'POST' })
   .validator((d: { id: number }) => d)
   .handler(async ({ data }) => {
-    await requireEcriture()
+    await requireDroit(FEN_SCCV, 'ONG_Choix', 3)
     await db.delete(compteBanque).where(eq(compteBanque.id, data.id))
   })

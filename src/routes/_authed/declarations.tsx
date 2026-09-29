@@ -48,7 +48,7 @@ import {
   useMemoriserSelection,
   usePref,
 } from '#/lib/preferences.ts'
-import { getService } from '#/lib/services'
+import { getService, peutSgaEt940 } from '#/lib/services'
 import { fmtDate, fmtEuro } from '#/lib/utils.ts'
 
 import type { ColumnDef } from '@tanstack/react-table'
@@ -70,7 +70,11 @@ export const Route = createFileRoute('/_authed/declarations')({
     // selectionARejouer pour la garde contre la boucle de redirection.
     const selection = selectionARejouer(context.prefs, search.op)
     if (selection) throw redirect({ to: '/declarations', search: selection })
-    return { lectureSeule: context.session.user.service === 'consultation' }
+    return {
+      lectureSeule: context.session.user.service === 'consultation',
+      // SGA et Déclaration 940 & LASM masquées hors Comptabilité / Admin
+      avecSgaEt940: peutSgaEt940(context.session.user.service),
+    }
   },
   component: PageDeclarations,
 })
@@ -290,14 +294,16 @@ const COLONNES_940: Array<ColumnDef<Ligne940, any>> = [
 ]
 
 function OngletsDeclarations({ trancheId }: { trancheId: number }) {
-  const { lectureSeule } = Route.useRouteContext()
+  const { lectureSeule, avecSgaEt940 } = Route.useRouteContext()
   const queryClient = useQueryClient()
   const [accordeonStocke, setAccordeon] = usePref<Accordeon>(
     'onglet:declarations',
     ACCORDEONS[0],
   )
-  // un onglet renommé depuis l'enregistrement ne doit pas laisser la page vide
-  const accordeon = ACCORDEONS.includes(accordeonStocke)
+  const accordeons = avecSgaEt940 ? ACCORDEONS : ACCORDEONS.slice(0, 1)
+  // un onglet renommé ou masqué depuis l'enregistrement ne doit pas laisser
+  // la page vide
+  const accordeon = accordeons.includes(accordeonStocke)
     ? accordeonStocke
     : ACCORDEONS[0]
 
@@ -355,7 +361,7 @@ function OngletsDeclarations({ trancheId }: { trancheId: number }) {
 
   return (
     <section className="island-shell flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
-      <Onglets onglets={ACCORDEONS} actif={accordeon} onChange={setAccordeon} />
+      <Onglets onglets={accordeons} actif={accordeon} onChange={setAccordeon} />
 
       <div className="min-h-0 flex-1 overflow-auto px-[18px] py-4">
         {accordeon === 'Assurance DO/MRH' && (

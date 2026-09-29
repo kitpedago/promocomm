@@ -35,8 +35,13 @@ export async function requireAdmin() {
 // Droits fins (table legacy Droit) : la présence d'une restriction — lecture
 // seule (1) ou masqué (2) — sur le contrôle WinDev interdit la mutation pour
 // le service courant. Aucune ligne = autorisé (admin n'en a aucune).
-export async function requireDroit(fenetre: string, controle: string) {
-  const session = await requireEcriture()
+// `indice` vise un volet d'un contrôle à onglets (ONG_Choix[3]).
+export async function estRestreint(
+  service: string | null | undefined,
+  fenetre: string,
+  controle: string,
+  indice?: number,
+) {
   const restrictions = await db
     .select({ id: droit.id })
     .from(droit)
@@ -44,10 +49,29 @@ export async function requireDroit(fenetre: string, controle: string) {
       and(
         eq(droit.fenetre, fenetre),
         eq(droit.controle, controle),
-        eq(droit.service, session.user.service ?? ''),
+        eq(droit.service, service ?? ''),
+        indice != null ? eq(droit.indice, indice) : undefined,
       ),
     )
-  if (restrictions.length > 0)
+  return restrictions.length > 0
+}
+
+export async function requireDroit(
+  fenetre: string,
+  controle: string,
+  indice?: number,
+) {
+  const session = await requireEcriture()
+  if (await estRestreint(session.user.service, fenetre, controle, indice))
+    throw new Error('Droits insuffisants pour cette action')
+  return session
+}
+
+// Mutations réservées à quelques services (règles codées en dur dans les
+// fenêtres WinDev, hors table Droit)
+export async function requireServices(services: ReadonlyArray<string>) {
+  const session = await requireEcriture()
+  if (!services.includes(session.user.service ?? ''))
     throw new Error('Droits insuffisants pour cette action')
   return session
 }

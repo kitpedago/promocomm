@@ -3,7 +3,7 @@
 // Le volet Opérations et le sélecteur de tranche réutilisent le module
 // Commercialisation (pattern compta.tsx).
 import { createServerFn } from '@tanstack/react-start'
-import { asc, eq } from 'drizzle-orm'
+import { asc, eq, sql } from 'drizzle-orm'
 
 import {
   accordCadreAssurance,
@@ -13,14 +13,21 @@ import {
   sga,
 } from '#/db/domaine.ts'
 import { db } from '#/db/index.ts'
-import { requireEcriture, requireSession } from '#/lib/session.server.ts'
+import { SERVICES_SGA_940, peutSgaEt940 } from '#/lib/services.ts'
+import {
+  requireEcriture,
+  requireServices,
+  requireSession,
+} from '#/lib/session.server.ts'
 
 const versDate = (s: string | null | undefined) => (s ? new Date(s) : null)
 
 export const getDeclarationsFn = createServerFn({ method: 'GET' })
   .validator((d: { trancheId: number }) => d)
   .handler(async ({ data }) => {
-    await requireSession()
+    const session = await requireSession()
+    // sections masquées = données non transmises, pas seulement cachées
+    const avecSgaEt940 = peutSgaEt940(session.user.service)
     const [assurances, sgas, declarations940] = await Promise.all([
       db
         .select()
@@ -46,12 +53,16 @@ export const getDeclarationsFn = createServerFn({ method: 'GET' })
         })
         .from(sga)
         .leftJoin(listeBudget, eq(listeBudget.id, sga.listeBudgetId))
-        .where(eq(sga.trancheId, data.trancheId))
+        .where(avecSgaEt940 ? eq(sga.trancheId, data.trancheId) : sql`false`)
         .orderBy(asc(sga.numFiche)),
       db
         .select()
         .from(declaration940)
-        .where(eq(declaration940.trancheId, data.trancheId))
+        .where(
+          avecSgaEt940
+            ? eq(declaration940.trancheId, data.trancheId)
+            : sql`false`,
+        )
         .orderBy(asc(declaration940.date940)),
     ])
     return { assurances, sgas, declarations940 }
@@ -152,7 +163,7 @@ interface FicheSga {
 export const saveSgaFn = createServerFn({ method: 'POST' })
   .validator((d: FicheSga) => d)
   .handler(async ({ data }) => {
-    await requireEcriture()
+    await requireServices(SERVICES_SGA_940)
     const valeurs = {
       trancheId: data.trancheId,
       numFiche: data.numFiche ?? null,
@@ -186,7 +197,7 @@ export const saveSgaFn = createServerFn({ method: 'POST' })
 export const deleteSgaFn = createServerFn({ method: 'POST' })
   .validator((d: { id: number }) => d)
   .handler(async ({ data }) => {
-    await requireEcriture()
+    await requireServices(SERVICES_SGA_940)
     await db.delete(sga).where(eq(sga.id, data.id))
   })
 
@@ -206,7 +217,7 @@ interface FicheDeclaration940 {
 export const saveDeclaration940Fn = createServerFn({ method: 'POST' })
   .validator((d: FicheDeclaration940) => d)
   .handler(async ({ data }) => {
-    await requireEcriture()
+    await requireServices(SERVICES_SGA_940)
     const valeurs = {
       trancheId: data.trancheId,
       date940: versDate(data.date940),
@@ -235,6 +246,6 @@ export const saveDeclaration940Fn = createServerFn({ method: 'POST' })
 export const deleteDeclaration940Fn = createServerFn({ method: 'POST' })
   .validator((d: { id: number }) => d)
   .handler(async ({ data }) => {
-    await requireEcriture()
+    await requireServices(SERVICES_SGA_940)
     await db.delete(declaration940).where(eq(declaration940.id, data.id))
   })

@@ -34,6 +34,24 @@ Le gabarit `FENMOD_Master` applique en plus, à l'ouverture de chaque fenêtre, 
 IDTypeDroit 1 = lecture seule, 2 = masqué. À transposer quand les écrans existeront
 (probablement en table `droit` + hook côté composants). `TypeDroit` = nomenclature (2 lignes).
 
+**`IDService` suit l'énumération `ENomService` du projet WinDev**, pas l'ordre de la liste de
+connexion : COMPTA = 1, PROMO = 2, CONSULTATION = 3, DCIAL = 4, ADMIN = 5, JURIDIQUE = 6,
+DIRECTION_PROMO = 7. Jusqu'à la recette de septembre 2026 l'ETL lisait 1 = Promotion et
+2 = Comptabilité : les restrictions des deux services étaient interverties (corrigé dans
+`src/lib/etl/transform.ts` et par la migration 0035 pour les bases déjà importées).
+
+Appliqué (recette 2026-09) — le serveur refuse l'écriture (`requireDroit`) et ne transmet pas
+les données d'une zone masquée, l'écran masque boutons et onglets (`useDroits`) :
+
+| Écran             | Règle                                                                                                                                                              | Source                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
+| Commercialisation | restrictions par contrôle                                                                                                                                          | table `droit`, `FEN_TABLE_Commercialisation`  |
+| SCCV              | hors Comptabilité et Administrateur : ni création ni modification de SCCV, associés en lecture seule, onglets Comptes bancaires (RIB) et Centre des impôts masqués | table `droit`, `FEN_TABLE_StructureJuridique` |
+| Déclarations      | SGA et Déclaration 940 & LASM masquées hors Comptabilité et Administrateur (WinDev le codait en dur pour SGA ; étendu à 940 & LASM à la demande du client)         | `SERVICES_SGA_940` dans `src/lib/services.ts` |
+
+Pas encore appliqué : `FEN_TABLE_Operation`, `FEN_SAV_Promotion`, `FEN_Table_Acquereur`,
+`FEN_Param` (ces écrans ne connaissent que la lecture seule du service Consultation).
+
 ## Tableau de bord (FEN_Menu)
 
 La page d'accueil cible (capture `TableauDeBord.png`) : tuiles des modules autorisés +

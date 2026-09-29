@@ -97,6 +97,14 @@ export const SERVICES: ReadonlyArray<Service> = [
   },
 ]
 
+// Déclarations : SGA et Déclaration 940 & LASM sont réservées à la
+// Comptabilité et à l'Administrateur — masquées pour les autres services.
+// WinDev le codait en dur pour SGA (BAO_Default[2] de FEN_Declaration) ;
+// étendu à 940 & LASM à la demande du client (recette 2026-09).
+export const SERVICES_SGA_940: ReadonlyArray<string> = ['compta', 'admin']
+export const peutSgaEt940 = (slug: string | null | undefined) =>
+  SERVICES_SGA_940.includes(slug ?? '')
+
 // Comptes Better Auth techniques : un utilisateur par service
 export const serviceEmail = (slug: string) => `${slug}@promocomm.local`
 

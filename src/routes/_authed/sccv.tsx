@@ -39,6 +39,7 @@ import {
 } from '#/components/ui/select'
 import { Switch } from '#/components/ui/switch'
 import { Textarea } from '#/components/ui/textarea'
+import { useDroits } from '#/lib/droits.ts'
 import { sccvARejouer, useMemoriserSccv, usePref } from '#/lib/preferences.ts'
 import {
   deleteCompteBanqueFn,
@@ -770,6 +771,7 @@ function PageSccv() {
   // l'URL fait foi : un lien partagé `?sccv=99` devient la SCCV mémorisée
   useMemoriserSccv(sccv)
   const { lectureSeule } = Route.useRouteContext()
+  const restreint = useDroits(FEN_SCCV)
   const navigate = useNavigate({ from: Route.fullPath })
   const queryClient = useQueryClient()
 
@@ -816,7 +818,7 @@ function PageSccv() {
       ? { id: -1, t: 0 }
       : { id: r.id, t: maintenant }
     void navigate({ search: { sccv: r.id } })
-    if (estDoubleClic && !lectureSeule) {
+    if (estDoubleClic && !lectureSeule && !restreint('BTN_Modifier')) {
       void queryClient
         .fetchQuery({
           queryKey: ['sccv-detail', r.id],
@@ -902,7 +904,7 @@ function PageSccv() {
           )}
         </label>
 
-        {!lectureSeule && (
+        {!lectureSeule && !restreint('BTN_Nouveau') && (
           <Button
             size="sm"
             className="ml-auto"
@@ -952,6 +954,8 @@ function PageSccv() {
 // Détail : fiche + 4 onglets (Associés / Opérations / Comptes bancaires /
 // Centre des impôts)
 // ---------------------------------------------------------------------------
+
+const FEN_SCCV = 'FEN_TABLE_StructureJuridique'
 
 const ONGLETS_SCCV = [
   'Associés',
@@ -1549,15 +1553,20 @@ function DetailSccv({
   onModifierFiche: (fiche: FicheSccvBrute) => void
 }) {
   const { lectureSeule } = Route.useRouteContext()
+  const restreint = useDroits(FEN_SCCV)
   const queryClient = useQueryClient()
   const [ongletStocke, setOnglet] = usePref<OngletSccv>(
     'onglet:sccv',
     ONGLETS_SCCV[0],
   )
-  // un onglet renommé depuis l'enregistrement ne doit pas laisser la page vide
-  const onglet = ONGLETS_SCCV.includes(ongletStocke)
+  // onglets masqués au service courant (ONG_Choix[3] Comptes bancaires,
+  // ONG_Choix[4] Centre des impôts dans la fenêtre WinDev)
+  const onglets = ONGLETS_SCCV.filter((_, i) => !restreint('ONG_Choix', i + 1))
+  // un onglet renommé ou masqué depuis l'enregistrement ne doit pas laisser
+  // la page vide (ni le temps de chargement des droits, où tout est masqué)
+  const onglet = onglets.includes(ongletStocke)
     ? ongletStocke
-    : ONGLETS_SCCV[0]
+    : (onglets.at(0) ?? ONGLETS_SCCV[0])
   const detail = useQuery({
     queryKey: ['sccv-detail', sccvId],
     queryFn: () => getSccvDetailFn({ data: { sccvId } }),
@@ -1635,7 +1644,7 @@ function DetailSccv({
             Liquidée le {fmtDate(f.dateLiquidation)}
           </span>
         )}
-        {!lectureSeule && (
+        {!lectureSeule && !restreint('BTN_Modifier') && (
           <Button
             size="sm"
             variant="outline"
@@ -1647,12 +1656,12 @@ function DetailSccv({
         )}
       </header>
 
-      <Onglets onglets={ONGLETS_SCCV} actif={onglet} onChange={setOnglet} />
+      <Onglets onglets={onglets} actif={onglet} onChange={setOnglet} />
 
       <div className="min-h-0 flex-1 overflow-auto px-[18px] py-4">
         {onglet === 'Associés' && (
           <div className="flex h-full min-h-0 flex-col gap-2">
-            {!lectureSeule && (
+            {!lectureSeule && !restreint('TABLE_REQ_Participation') && (
               <div className="flex shrink-0 gap-2">
                 <Button
                   size="sm"
