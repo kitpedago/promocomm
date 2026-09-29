@@ -591,7 +591,7 @@ function OngletsHonoraires({ trancheId }: { trancheId: number }) {
                         setPrestataireFiltre(v)
                         setFactureSel(null)
                       }}
-                      options={nomenclatures.data?.tousPrestataires ?? []}
+                      options={nomenclatures.data?.prestataires ?? []}
                     />
                   </div>
                 </div>
@@ -1280,7 +1280,7 @@ function ModaleFacture({
               libelle="Prestataire"
               value={valeurs.prestataireId}
               onChange={set('prestataireId')}
-              options={nomenclatures?.tousPrestataires ?? []}
+              options={nomenclatures?.prestataires ?? []}
             />
             <ChampSelectId
               libelle="Barème"

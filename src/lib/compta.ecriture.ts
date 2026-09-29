@@ -21,7 +21,9 @@ import {
   garantieEmpruntActionType,
   gfa,
   indexTaux,
+  listeBudget,
   mandatHypothequer,
+  modeRepartQuotePart,
   organismeAgrement,
   organismeGarantieEmprunt,
   organismeSubvention,
@@ -34,10 +36,15 @@ import {
   statutCoutMandat,
   statutPartSociale,
   subvention,
+  tranche,
   typeFinancement,
+  typeMissionBudgetArchitecte,
 } from '#/db/domaine.ts'
 import { db } from '#/db/index.ts'
+import { valeursSuivi } from '#/lib/compta.helpers.ts'
 import { requireEcriture, requireSession } from '#/lib/session.server.ts'
+
+import type { FicheSuivi } from '#/lib/compta.helpers.ts'
 
 const versDate = (s: string | null | undefined) => (s ? new Date(s) : null)
 
@@ -67,6 +74,9 @@ export const getComptaNomenclaturesFn = createServerFn({
     statutsApportPromoteur,
     actionsBanque,
     actionsGarantieEmprunt,
+    modesRepartQuotePart,
+    stadesBudget,
+    typesMissionBudgetArchitecte,
   ] = await Promise.all([
     db
       .select()
@@ -111,6 +121,15 @@ export const getComptaNomenclaturesFn = createServerFn({
       .select()
       .from(garantieEmpruntActionType)
       .orderBy(asc(garantieEmpruntActionType.libelle)),
+    db
+      .select()
+      .from(modeRepartQuotePart)
+      .orderBy(asc(modeRepartQuotePart.libelle)),
+    db.select().from(listeBudget).orderBy(asc(listeBudget.libelle)),
+    db
+      .select()
+      .from(typeMissionBudgetArchitecte)
+      .orderBy(asc(typeMissionBudgetArchitecte.libelle)),
   ])
   return {
     categoriesSubvention,
@@ -132,6 +151,9 @@ export const getComptaNomenclaturesFn = createServerFn({
     statutsApportPromoteur,
     actionsBanque,
     actionsGarantieEmprunt,
+    modesRepartQuotePart,
+    stadesBudget,
+    typesMissionBudgetArchitecte,
   }
 })
 
@@ -238,6 +260,15 @@ export const deleteDeblocageSubventionFn = createServerFn({ method: 'POST' })
     await db
       .delete(deblocageSubvention)
       .where(eq(deblocageSubvention.id, data.id))
+  })
+
+// --- Suivi résultat et en-tête du suivi détaillé (colonnes de la tranche) ---
+
+export const saveSuiviTrancheFn = createServerFn({ method: 'POST' })
+  .validator((d: FicheSuivi) => d)
+  .handler(async ({ data }) => {
+    await requireEcriture()
+    return upsert(tranche, { id: data.id }, valeursSuivi(data))
   })
 
 // --- Frais financiers (suivi détaillé) ---
@@ -560,14 +591,14 @@ export const deleteRemboursementFn = createServerFn({ method: 'POST' })
   })
 
 // --- GFA (admin + conditions) et réductions ---
+// EstIntrinseque et DateValidation ne sont plus saisis (recette 2026-09) :
+// absents de la fiche, leurs valeurs legacy restent en base.
 
 interface FicheGfa {
   id?: number
   trancheId: number
   surOpe?: boolean | null
   banqueId?: number | null
-  estIntrinseque?: boolean | null
-  dateValidation?: string | null
   dateDossier?: string | null
   dateAccord?: string | null
   dateAttestation?: string | null
@@ -606,8 +637,6 @@ export const saveGfaFn = createServerFn({ method: 'POST' })
       trancheId: data.trancheId,
       surOpe: data.surOpe ?? null,
       banqueId: data.banqueId ?? null,
-      estIntrinseque: data.estIntrinseque ?? null,
-      dateValidation: versDate(data.dateValidation),
       dateDossier: versDate(data.dateDossier),
       dateAccord: versDate(data.dateAccord),
       dateAttestation: versDate(data.dateAttestation),

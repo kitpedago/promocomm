@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { decouperOnglets, depuisLigne } from './ModaleFiche.tsx'
+import { decouperOnglets, depuisLigne, versFiche } from './ModaleFiche.tsx'
 import type { DescChamp } from './ModaleFiche.tsx'
 
 describe('ModaleFiche', () => {
@@ -30,6 +30,19 @@ describe('ModaleFiche', () => {
         { l: 'Terrains', champs: [montant] },
       ],
     })
+  })
+
+  it('un pourcent se saisit en % et repart en fraction', () => {
+    const champs: Array<DescChamp> = [
+      { k: 'taux', l: 'Taux', t: 'pourcent' },
+      montant,
+    ]
+    const valeurs = depuisLigne(champs, { taux: 0.0035, terrainMontantHt: 12 })
+    expect(valeurs).toEqual({ taux: 0.35, terrainMontantHt: 12 })
+    const fiche = versFiche(champs, valeurs)
+    expect(fiche.taux).toBeCloseTo(0.0035, 10)
+    expect(fiche.terrainMontantHt).toBe(12)
+    expect(versFiche(champs, depuisLigne(champs, null)).taux).toBeNull()
   })
 
   it('les marqueurs onglet ne produisent aucune valeur de fiche', () => {

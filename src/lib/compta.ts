@@ -39,6 +39,7 @@ import {
   usageFrais,
 } from '#/db/domaine.ts'
 import { db } from '#/db/index.ts'
+import { precomEnPourcent } from '#/lib/compta.helpers.ts'
 import { requireSession } from '#/lib/session.server.ts'
 
 // Accordéon « Suivi évolution de dépenses et budget » : blocs financiers de la
@@ -77,6 +78,7 @@ export const getSuiviTrancheFn = createServerFn({ method: 'GET' })
           quotePartVefaNormal: tranche.quotePartVefaNormal,
           quotePartAutre: tranche.quotePartAutre,
           quotePartCommentaire: tranche.quotePartCommentaire,
+          modeRepartQuotePartId: tranche.modeRepartQuotePartId,
           modeRepartQuotePart: modeRepartQuotePart.libelle,
           nbLvoPrev: tranche.nbLvoPrev,
           nbLvoPrevAnnee: tranche.nbLvoPrevAnnee,
@@ -89,7 +91,9 @@ export const getSuiviTrancheFn = createServerFn({ method: 'GET' })
           fraisConsommeCommentaire: tranche.fraisConsommeCommentaire,
           fraisReelDate: tranche.fraisReelDate,
           fraisReelCommentaire: tranche.fraisReelCommentaire,
+          listeBudgetFraisStadeId: tranche.listeBudgetFraisStadeId,
           stadeBudget: listeBudget.libelle,
+          typeMissionBudgetArchitecteId: tranche.typeMissionBudgetArchitecteId,
           typeMissionBudgetArchitecte: typeMissionBudgetArchitecte.libelle,
           dateContratArchitecte: tranche.dateContratArchitecte,
         })
@@ -380,7 +384,7 @@ export const getGfaFn = createServerFn({ method: 'GET' })
   .validator((data: { trancheId: number }) => data)
   .handler(async ({ data }) => {
     await requireSession()
-    return db
+    const lignes = await db
       .select({
         id: gfa.id,
         banqueId: gfa.banqueId,
@@ -389,8 +393,6 @@ export const getGfaFn = createServerFn({ method: 'GET' })
         periodeTauxGfaId: gfa.periodeTauxGfaId,
         surOpe: gfa.surOpe,
         banque: banque.libelle,
-        estIntrinseque: gfa.estIntrinseque,
-        dateValidation: gfa.dateValidation,
         commentaires: gfa.commentaires,
         dateDossier: gfa.dateDossier,
         dateAccord: gfa.dateAccord,
@@ -430,6 +432,10 @@ export const getGfaFn = createServerFn({ method: 'GET' })
       .leftJoin(periodeTauxGfa, eq(gfa.periodeTauxGfaId, periodeTauxGfa.id))
       .where(eq(gfa.trancheId, data.trancheId))
       .orderBy(asc(gfa.id))
+    return lignes.map((g) => ({
+      ...g,
+      precomPourc: precomEnPourcent(g.precomPourc),
+    }))
   })
 
 // Réductions de la GFA sélectionnée

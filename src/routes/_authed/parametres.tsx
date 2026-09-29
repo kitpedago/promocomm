@@ -1288,7 +1288,7 @@ function VueOtl() {
     { t: 'titre', l: 'Terrain bilan opérateur' },
     { k: 'terrainMontantHt', l: 'Montant HT', t: 'nombre' },
     { k: 'terrainMontantTtc', l: 'Montant TTC', t: 'nombre' },
-    { k: 'terrainPourcAcptePrevu', l: '% acompte prévu', t: 'nombre' },
+    { k: 'terrainPourcAcptePrevu', l: 'Acompte prévu', t: 'pourcent' },
     { k: 'terrainAcompte', l: 'Acompte', t: 'nombre' },
     {
       k: 'terrainSignataireId',

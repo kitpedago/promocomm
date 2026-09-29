@@ -148,7 +148,7 @@ export const getHonorairesNomenclaturesFn = createServerFn({
   ] = await Promise.all([
     db.select().from(typeMission).orderBy(asc(typeMission.libelle)),
     // iso-WinDev (REQ_PrestataireMission) : seuls les prestataires
-    // « AfficherMission » sont proposés sur la fiche mission
+    // « AfficherMission » sont proposés sur les fiches mission et facture
     db
       .select({ id: prestataire.id, libelle: prestataire.libelle })
       .from(prestataire)
@@ -166,7 +166,7 @@ export const getHonorairesNomenclaturesFn = createServerFn({
       .select({ id: natureAchat.id, libelle: natureAchat.libelle })
       .from(natureAchat)
       .orderBy(asc(natureAchat.libelle)),
-    // factures d'honoraires de commercialisation : tous les prestataires
+    // tous : pour réafficher le prestataire d'une facture qui n'est plus proposé
     db
       .select({ id: prestataire.id, libelle: prestataire.libelle })
       .from(prestataire)

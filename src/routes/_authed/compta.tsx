@@ -19,6 +19,7 @@ import ModaleFiche from '#/components/ModaleFiche'
 import Onglets from '#/components/Onglets'
 import PanneauOperations from '#/components/PanneauOperations'
 import SelecteurTranche from '#/components/SelecteurTranche'
+import { Button } from '#/components/ui/button'
 import { getOperationCommFn } from '#/lib/commercialisation.ts'
 import {
   getDeblocagesSubventionFn,
@@ -49,6 +50,7 @@ import {
   saveReducGfaFn,
   saveRemboursementFn,
   saveSubventionFn,
+  saveSuiviTrancheFn,
 } from '#/lib/compta.ecriture.ts'
 import { getSubventionsFn } from '#/lib/operations.ts'
 import {
@@ -225,7 +227,8 @@ const colOui = <T,>(
   cell: (c) => (c.getValue() ? 'Oui' : '—'),
 })
 
-// les taux legacy sont stockés en fraction (0.003 → « 0,30 % », comme WinDev)
+// les taux legacy sont stockés en fraction (0.003 → « 0,30 % », comme WinDev) ;
+// leur saisie se fait en % (champs « pourcent » des fiches)
 const colPourc = <T,>(
   id: string,
   header: string,
@@ -589,14 +592,103 @@ const somme = (...ns: Array<number | null | undefined>) =>
     ? ns.reduce<number>((a, n) => a + (n ?? 0), 0)
     : null
 
+// Fiches des deux blocs du suivi : colonnes de la tranche (iso-WinDev, champs
+// de saisie liés à Tranche dans FEN_Compta)
+const CHAMPS_SUIVI_RESULTAT = (
+  nomenclatures: ReturnType<typeof useComptaNomenclatures>,
+): Array<DescChamp> => [
+  { t: 'titre', l: 'PSLA' },
+  { k: 'cahtPrevPsla', l: 'Budget — CA HT', t: 'nombre' },
+  { k: 'subvPrevPsla', l: 'Budget — subvention', t: 'nombre' },
+  { k: 'honoCommPsla', l: 'Budget — hono comm', t: 'nombre' },
+  { k: 'coutPrevPsla', l: 'Coût — budget', t: 'nombre' },
+  { k: 'coutReelPsla', l: 'Coût — réel', t: 'nombre' },
+  { k: 'quotePartPsla', l: 'Quote part', t: 'nombre' },
+  { t: 'titre', l: 'VEFA taux réduit' },
+  { k: 'cahtPrevVefaReduit', l: 'Budget — CA HT', t: 'nombre' },
+  { k: 'subvPrevVefaReduit', l: 'Budget — subvention', t: 'nombre' },
+  { k: 'honoCommVefaReduit', l: 'Budget — hono comm', t: 'nombre' },
+  { k: 'quotePartVefaReduit', l: 'Quote part', t: 'nombre' },
+  { t: 'titre', l: 'VEFA taux normal' },
+  { k: 'cahtPrevVefa', l: 'Budget — CA HT', t: 'nombre' },
+  { k: 'subvPrevVefaNormal', l: 'Budget — subvention', t: 'nombre' },
+  { k: 'honoCommVefaNormal', l: 'Budget — hono comm', t: 'nombre' },
+  { k: 'quotePartVefaNormal', l: 'Quote part', t: 'nombre' },
+  { t: 'titre', l: 'VEFA (coût commun aux deux taux)' },
+  { k: 'coutPrevVefa', l: 'Coût — budget', t: 'nombre' },
+  { k: 'coutReelVefa', l: 'Coût — réel', t: 'nombre' },
+  { t: 'titre', l: 'Autre' },
+  { k: 'cahtPrevAutre', l: 'Budget — CA HT', t: 'nombre' },
+  { k: 'subvPrevAutre', l: 'Budget — subvention', t: 'nombre' },
+  { k: 'honoCommAutre', l: 'Budget — hono comm', t: 'nombre' },
+  { k: 'coutPrevAutre', l: 'Coût — budget', t: 'nombre' },
+  { k: 'coutReelAutre', l: 'Coût — réel', t: 'nombre' },
+  { k: 'quotePartAutre', l: 'Quote part', t: 'nombre' },
+  { t: 'titre', l: 'Commentaires' },
+  { k: 'cahtPrevCommentaire', l: 'Budget', t: 'texte' },
+  { k: 'coutPrevCommentaire', l: 'Coût — budget', t: 'texte' },
+  { k: 'coutReelCommentaire', l: 'Coût — réel', t: 'texte' },
+  { k: 'quotePartCommentaire', l: 'Quote part', t: 'texte' },
+  { t: 'titre', l: 'Répartition et LVO' },
+  {
+    k: 'modeRepartQuotePartId',
+    l: 'Répartition',
+    t: 'select',
+    options: nomenclatures?.modesRepartQuotePart ?? [],
+  },
+  { k: 'nbLvoPrev', l: 'LVO prévi. Nb', t: 'entier' },
+  { k: 'nbLvoPrevAnnee', l: 'LVO prévi. Année', t: 'entier' },
+]
+
+const CHAMPS_SUIVI_FRAIS = (
+  nomenclatures: ReturnType<typeof useComptaNomenclatures>,
+): Array<DescChamp> => [
+  { k: 'fraisBudgetDate', l: 'Budget — date', t: 'date' },
+  { k: 'fraisBudgetCommentaire', l: 'Budget — commentaire', t: 'texte' },
+  { k: 'fraisActuaDate', l: 'Actualisé — date', t: 'date' },
+  { k: 'fraisActuaCommentaire', l: 'Actualisé — commentaire', t: 'texte' },
+  { k: 'fraisConsommeDate', l: 'Consommé — date', t: 'date' },
+  { k: 'fraisConsommeCommentaire', l: 'Consommé — commentaire', t: 'texte' },
+  { k: 'fraisReelDate', l: 'Réel — date', t: 'date' },
+  { k: 'fraisReelCommentaire', l: 'Réel — commentaire', t: 'texte' },
+  {
+    k: 'listeBudgetFraisStadeId',
+    l: 'Stade budget',
+    t: 'select',
+    options: nomenclatures?.stadesBudget ?? [],
+  },
+  {
+    k: 'typeMissionBudgetArchitecteId',
+    l: 'Type mission budget architecte',
+    t: 'select',
+    options: nomenclatures?.typesMissionBudgetArchitecte ?? [],
+  },
+  { k: 'dateContratArchitecte', l: 'Date contrat architecte', t: 'date' },
+]
+
 function OngletSuivi({ trancheId }: { trancheId: number }) {
   const queryClient = useQueryClient()
   const nomenclatures = useComptaNomenclatures()
   const [fraisId, setFraisId] = useState<number | null>(null)
+  const [modale, setModale] = useState<'resultat' | 'frais' | null>(null)
   const suivi = useQuery({
     queryKey: ['compta-suivi', trancheId],
     queryFn: () => getSuiviTrancheFn({ data: { trancheId } }),
   })
+  const enregistrer = useMutation({
+    mutationFn: (v: ValeursFiche) =>
+      saveSuiviTrancheFn({ data: { ...v, id: trancheId } }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['compta-suivi', trancheId],
+      })
+      setModale(null)
+    },
+  })
+  const ouvrir = (m: 'resultat' | 'frais') => {
+    enregistrer.reset()
+    setModale(m)
+  }
   const s = suivi.data
   if (!s)
     return (
@@ -612,7 +704,37 @@ function OngletSuivi({ trancheId }: { trancheId: number }) {
 
   return (
     <div className="flex flex-col gap-8">
+      <ModaleFiche
+        titre={
+          modale === 'frais'
+            ? 'Modifier le suivi détaillé frais / budget'
+            : 'Modifier le suivi résultat'
+        }
+        champs={
+          modale === 'frais'
+            ? CHAMPS_SUIVI_FRAIS(nomenclatures)
+            : CHAMPS_SUIVI_RESULTAT(nomenclatures)
+        }
+        ligne={s}
+        open={modale != null}
+        onOpenChange={(o) => {
+          if (!o) setModale(null)
+        }}
+        onSubmit={(v) => enregistrer.mutate(v)}
+        erreur={enregistrer.error}
+        enCours={enregistrer.isPending}
+        large={modale === 'resultat'}
+      />
       <Bloc titre="Suivi résultat">
+        <div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => ouvrir('resultat')}
+          >
+            Modifier
+          </Button>
+        </div>
         <div className="flex flex-wrap items-start gap-8">
           <div className="overflow-x-auto">
             <table className="min-w-[760px] border-collapse text-[13px]">
@@ -756,6 +878,11 @@ function OngletSuivi({ trancheId }: { trancheId: number }) {
       </Bloc>
 
       <Bloc titre="Suivi détaillé frais / budget">
+        <div>
+          <Button size="sm" variant="outline" onClick={() => ouvrir('frais')}>
+            Modifier
+          </Button>
+        </div>
         <div className="grid gap-x-8 gap-y-3 md:grid-cols-2 xl:grid-cols-4">
           <Champ libelle="Budget — date">{fmtDate(s.fraisBudgetDate)}</Champ>
           <Champ libelle="Actualisé — date">{fmtDate(s.fraisActuaDate)}</Champ>
@@ -1331,13 +1458,13 @@ function OngletFinancements({
       options: nomenclatures?.indexTauxListe ?? [],
     },
     { k: 'indexTauxFloore', l: 'Index flooré', t: 'bool' },
-    { k: 'margeBanque', l: 'Marge banque', t: 'nombre' },
-    { k: 'tauxPret', l: 'Taux du prêt', t: 'nombre' },
+    { k: 'margeBanque', l: 'Marge banque', t: 'pourcent' },
+    { k: 'tauxPret', l: 'Taux du prêt', t: 'pourcent' },
     { k: 'periodicite', l: 'Périodicité', t: 'texte' },
     {
       k: 'commissionEngagementPourc',
-      l: "% commission d'engagement",
-      t: 'nombre',
+      l: "Commission d'engagement",
+      t: 'pourcent',
     },
     { k: 'fraisDossier', l: 'Frais de dossier', t: 'nombre' },
     { k: 'estPrlvFraisDossier', l: 'Frais de dossier prélevés', t: 'bool' },
@@ -1584,7 +1711,19 @@ const COLONNES_CONDITIONS_GFA: Array<ColumnDef<LigneGfa, any>> = [
   colEuro('commissionCautionMontant', 'Comm. caution'),
   colDate('datePremierPrlvt', '1er prélèvement', 120),
   colEuro('fraisDossier', 'Frais dossier'),
-  colPourc('precomPourc', '% précom.'),
+  // déjà en % (cf. precomEnPourcent), contrairement aux taux en fraction
+  {
+    accessorKey: 'precomPourc',
+    header: '% précom.',
+    size: 90,
+    cell: (c) => (
+      <span className="block text-right tabular-nums">
+        {c.getValue() != null
+          ? `${Number(c.getValue()).toFixed(2).replace('.', ',')} %`
+          : '—'}
+      </span>
+    ),
+  },
   colEuro('caTtcMin', 'CA TTC min'),
   {
     accessorKey: 'commentaireConditions',
@@ -1626,8 +1765,6 @@ function OngletGfa({ trancheId }: { trancheId: number }) {
       t: 'select',
       options: nomenclatures?.banques ?? [],
     },
-    { k: 'estIntrinseque', l: 'GFA intrinsèque', t: 'bool' },
-    { k: 'dateValidation', l: 'Date validation', t: 'date' },
     { k: 'dateDossier', l: 'Envoi dossier', t: 'date' },
     { k: 'dateAccord', l: 'Accord', t: 'date' },
     { k: 'dateAttestation', l: 'Attestation', t: 'date' },
@@ -1664,7 +1801,7 @@ function OngletGfa({ trancheId }: { trancheId: number }) {
     { k: 'partSocialeCommentaire', l: 'Commentaire part sociale', t: 'texte' },
     { t: 'titre', l: 'Conditions financières' },
     { k: 'hfCaution', l: 'HF caution', t: 'bool' },
-    { k: 'taux', l: 'Taux', t: 'nombre' },
+    { k: 'taux', l: 'Taux', t: 'pourcent' },
     {
       k: 'periodeTauxGfaId',
       l: 'Période du taux',
@@ -1677,7 +1814,7 @@ function OngletGfa({ trancheId }: { trancheId: number }) {
     { k: 'commissionCautionMontant', l: 'Commission caution', t: 'nombre' },
     { k: 'datePremierPrlvt', l: 'Premier prélèvement', t: 'date' },
     { k: 'fraisDossier', l: 'Frais de dossier', t: 'nombre' },
-    { k: 'precomPourc', l: '% précommercialisation', t: 'nombre' },
+    { k: 'precomPourc', l: 'Précommercialisation (%)', t: 'nombre' },
     { k: 'caTtcMin', l: 'CA TTC minimum', t: 'nombre' },
     { k: 'commentaireConditions', l: 'Commentaire conditions', t: 'long' },
     { k: 'commentaires', l: 'Commentaires', t: 'long' },

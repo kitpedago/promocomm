@@ -26,12 +26,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '#/components/ui/dialog'
+import { enFraction, enPourcent } from '#/lib/sccv.helpers.ts'
 
 export type DescChamp =
   | {
       k: string
       l: string
-      t: 'texte' | 'long' | 'date' | 'nombre' | 'entier' | 'bool'
+      // pourcent : saisi en % (2 décimales), stocké en fraction comme le legacy
+      t: 'texte' | 'long' | 'date' | 'nombre' | 'pourcent' | 'entier' | 'bool'
     }
   | {
       k: string
@@ -56,8 +58,24 @@ export function depuisLigne(
   for (const c of champs) {
     if (c.t === 'titre' || c.t === 'onglet') continue
     const brut = ligne?.[c.k] ?? null
-    v[c.k] = c.t === 'date' ? versInputDate(brut as string | Date | null) : brut
+    v[c.k] =
+      c.t === 'date'
+        ? versInputDate(brut as string | Date | null)
+        : c.t === 'pourcent'
+          ? enPourcent(brut as number | null)
+          : brut
   }
+  return v
+}
+
+// Valeurs envoyées à l'enregistrement : les % repartent en fraction
+export function versFiche(
+  champs: Array<DescChamp>,
+  valeurs: ValeursFiche,
+): ValeursFiche {
+  const v = { ...valeurs }
+  for (const c of champs)
+    if (c.t === 'pourcent') v[c.k] = enFraction(valeurs[c.k] as number | null)
   return v
 }
 
@@ -145,10 +163,10 @@ export default function ModaleFiche({
             value={valeurs[c.k] as string | null}
             onChange={set(c.k)}
           />
-        ) : c.t === 'nombre' || c.t === 'entier' ? (
+        ) : c.t === 'nombre' || c.t === 'entier' || c.t === 'pourcent' ? (
           <ChampNombre
             key={c.k}
-            libelle={c.l}
+            libelle={c.t === 'pourcent' ? `${c.l} (%)` : c.l}
             step={c.t === 'entier' ? '1' : '0.01'}
             value={valeurs[c.k] as number | null}
             onChange={set(c.k)}
@@ -185,7 +203,7 @@ export default function ModaleFiche({
         <form
           onSubmit={(e) => {
             e.preventDefault()
-            onSubmit(valeurs)
+            onSubmit(versFiche(champs, valeurs))
           }}
         >
           {grille(haut)}
