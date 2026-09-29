@@ -268,6 +268,13 @@ export async function rafraichirMiroir(
       const inv = inverser(c)
       try {
         const src = await source.query<Record<string, unknown>>(inv.sql)
+        // colonnes propres à l'application : absentes du DDL, qui vient de
+        // recréer la table
+        for (const col of inv.colonnes)
+          if (col.type)
+            await miroir.query(
+              `ALTER TABLE public."${inv.table}" ADD COLUMN IF NOT EXISTS "${col.legacy}" ${col.type}`,
+            )
         await miroir.query(`TRUNCATE public."${inv.table}"`)
         const colonnes = inv.colonnes.map((col) => ({
           nom: col.legacy,

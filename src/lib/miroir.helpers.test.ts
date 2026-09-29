@@ -95,6 +95,42 @@ describe('inverser', () => {
     expect(r.colonnes.map((c) => c.legacy)).toEqual(['IDDroit', 'IDTypeDroit'])
     expect(r.ignorees).toEqual(['service'])
   })
+  it("ajoute les colonnes propres à l'application (hors legacy)", () => {
+    const r = inverser({
+      target: 'facture',
+      cols: '(id, commentaire)',
+      select: `SELECT s."IDFacture", s."Commentaire" FROM legacy."tFacture" s`,
+      horsLegacy: [
+        {
+          col: 'prestataire_id',
+          legacy: 'IDPrestataire',
+          type: 'integer',
+          fk: true,
+        },
+        { col: 'note', legacy: 'Note', type: 'text' },
+      ],
+    })
+    expect(r.colonnes.slice(2)).toEqual([
+      {
+        legacy: 'IDPrestataire',
+        expr: 'COALESCE("prestataire_id", 0)',
+        type: 'integer',
+      },
+      { legacy: 'Note', expr: '"note"', type: 'text' },
+    ])
+    expect(r.sql).toBe(
+      `SELECT "id" AS "IDFacture", "commentaire" AS "Commentaire", COALESCE("prestataire_id", 0) AS "IDPrestataire", "note" AS "Note" FROM public."facture"`,
+    )
+  })
+  it('expose le prestataire mission de la facture', () => {
+    const r = inverser(copies.find((c) => c.target === 'facture')!)
+    expect(r.table).toBe('tFacture')
+    expect(r.colonnes.at(-1)).toEqual({
+      legacy: 'IDPrestataire',
+      expr: 'COALESCE("prestataire_id", 0)',
+      type: 'integer',
+    })
+  })
   it('inverse toutes les copies réelles du transform', () => {
     const ignorees: Array<string> = []
     for (const c of copies) {

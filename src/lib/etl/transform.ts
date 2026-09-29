@@ -15,6 +15,15 @@ export interface Copy {
   target: string
   cols: string // liste des colonnes cibles
   select: string // SELECT ... FROM legacy."..." s
+  // Colonnes propres à l'application, absentes du legacy : ignorées par l'ETL,
+  // ajoutées à la base miroir sous leur nom SQL Server (miroir.helpers.ts).
+  // fk : « pas de référence » repart en 0, comme les autres références.
+  horsLegacy?: Array<{
+    col: string
+    legacy: string
+    type: string
+    fk?: boolean
+  }>
 }
 
 const nomenclature = (
@@ -880,6 +889,14 @@ export const copies: Array<Copy> = [
       FROM legacy."tFacture" s
       -- factures orphelines (stade supprimé côté WinDev) : ignorées, stade_avancement_id NOT NULL
       WHERE EXISTS (SELECT 1 FROM legacy."tStadeAvancement" m WHERE m."IDStadeAvancement" = s."IDStadeAvancement")`,
+    horsLegacy: [
+      {
+        col: 'prestataire_id',
+        legacy: 'IDPrestataire',
+        type: 'integer',
+        fk: true,
+      },
+    ],
   },
   {
     // colonnes *_old exclues ; IDPrestataire/IDBaremeHonoComm absents du .bak

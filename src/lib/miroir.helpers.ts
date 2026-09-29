@@ -6,6 +6,9 @@ export interface ColonneMiroir {
   legacy: string
   // expression SQL lue dans public (déjà aliasée dans `sql`)
   expr: string
+  // type SQL d'une colonne hors legacy, à ajouter à la table miroir
+  // (miroir.schema.sql, snapshot du legacy, ne la connaît pas)
+  type?: string
 }
 
 export interface Inversion {
@@ -106,6 +109,12 @@ export function inverser(copy: Copy): Inversion {
           : `"${pub}"`,
     })
   })
+  for (const h of copy.horsLegacy ?? [])
+    colonnes.push({
+      legacy: h.legacy,
+      expr: h.fk ? `COALESCE("${h.col}", 0)` : `"${h.col}"`,
+      type: h.type,
+    })
   const sql = `SELECT ${colonnes.map((c) => `${c.expr} AS "${c.legacy}"`).join(', ')} FROM public."${copy.target}"`
   return { table, colonnes, sql, ignorees }
 }
