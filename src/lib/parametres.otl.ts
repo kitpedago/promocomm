@@ -24,6 +24,7 @@ import {
   signataire,
   structureJuridique,
   tranche,
+  typeBatiment,
 } from '#/db/domaine.ts'
 import { db } from '#/db/index.ts'
 import { operationVisuel } from '#/db/schema.ts'
@@ -48,6 +49,7 @@ export const getOtlOptionsFn = createServerFn({ method: 'GET' }).handler(
       signataires,
       ofs,
       destinations,
+      typesBatiment,
     ] = await Promise.all([
       db
         .select({ id: structureJuridique.id, libelle: structureJuridique.rs })
@@ -89,6 +91,7 @@ export const getOtlOptionsFn = createServerFn({ method: 'GET' }).handler(
         .select({ id: destination.id, libelle: destination.libelle })
         .from(destination)
         .orderBy(asc(destination.libelle)),
+      db.select().from(typeBatiment).orderBy(asc(typeBatiment.libelle)),
     ])
     return {
       structures,
@@ -105,6 +108,7 @@ export const getOtlOptionsFn = createServerFn({ method: 'GET' }).handler(
       signataires,
       ofs,
       destinations,
+      typesBatiment,
     }
   },
 )
@@ -175,8 +179,12 @@ export const getTranchesOtlFn = createServerFn({ method: 'GET' })
         dontLogtCollBrs: tranche.dontLogtCollBrs,
         dontLogtIndivBrs: tranche.dontLogtIndivBrs,
         nbEtage: tranche.nbEtage,
+        typeBatimentId: tranche.typeBatimentId,
         nbLvoPrev: tranche.nbLvoPrev,
         dureeChantierMois: tranche.dureeChantierMois,
+        finTabborAnnuel: tranche.finTabborAnnuel,
+        finCommercialisation: tranche.finCommercialisation,
+        avecAppelFondClientDerogatoire: tranche.avecAppelFondClientDerogatoire,
         dateConvention: tranche.dateConvention,
         dateLivraisonContractuelle: tranche.dateLivraisonContractuelle,
         architecteMandataireId: tranche.architecteMandataireId,
@@ -196,6 +204,13 @@ export const getTranchesOtlFn = createServerFn({ method: 'GET' })
         ofsNomId: tranche.ofsNomId,
         terrainOfsMontantHt: tranche.terrainOfsMontantHt,
         terrainOfsSignataireId: tranche.terrainOfsSignataireId,
+        terrainOfsAcptePourcPrevu: tranche.terrainOfsAcptePourcPrevu,
+        terrainOfsAcpteMontantVerse: tranche.terrainOfsAcpteMontantVerse,
+        terrainOfsCompromisDatePrevi: tranche.terrainOfsCompromisDatePrevi,
+        terrainOfsCompromisDateReelle: tranche.terrainOfsCompromisDateReelle,
+        autreMontant: tranche.autreMontant,
+        terrainBailOperateurDatePrevi: tranche.terrainBailOperateurDatePrevi,
+        terrainBailOperateurDateReelle: tranche.terrainBailOperateurDateReelle,
         commentaire: tranche.commentaire,
       })
       .from(tranche)
@@ -331,8 +346,12 @@ interface FicheTranche {
   dontLogtCollBrs?: number | null
   dontLogtIndivBrs?: number | null
   nbEtage?: number | null
+  typeBatimentId?: number | null
   nbLvoPrev?: number | null
   dureeChantierMois?: number | null
+  finTabborAnnuel?: boolean | null
+  finCommercialisation?: boolean | null
+  avecAppelFondClientDerogatoire?: boolean | null
   dateConvention?: string | null
   dateLivraisonContractuelle?: string | null
   architecteMandataireId?: number | null
@@ -352,6 +371,13 @@ interface FicheTranche {
   ofsNomId?: number | null
   terrainOfsMontantHt?: number | null
   terrainOfsSignataireId?: number | null
+  terrainOfsAcptePourcPrevu?: number | null
+  terrainOfsAcpteMontantVerse?: number | null
+  terrainOfsCompromisDatePrevi?: string | null
+  terrainOfsCompromisDateReelle?: string | null
+  autreMontant?: number | null
+  terrainBailOperateurDatePrevi?: string | null
+  terrainBailOperateurDateReelle?: string | null
   commentaire?: string | null
 }
 
@@ -372,8 +398,13 @@ export const saveTrancheOtlFn = createServerFn({ method: 'POST' })
       dontLogtCollBrs: data.dontLogtCollBrs ?? null,
       dontLogtIndivBrs: data.dontLogtIndivBrs ?? null,
       nbEtage: data.nbEtage ?? null,
+      typeBatimentId: data.typeBatimentId ?? null,
       nbLvoPrev: data.nbLvoPrev ?? null,
       dureeChantierMois: data.dureeChantierMois ?? null,
+      finTabborAnnuel: data.finTabborAnnuel ?? null,
+      finCommercialisation: data.finCommercialisation ?? null,
+      avecAppelFondClientDerogatoire:
+        data.avecAppelFondClientDerogatoire ?? null,
       dateConvention: versDate(data.dateConvention),
       dateLivraisonContractuelle: versDate(data.dateLivraisonContractuelle),
       architecteMandataireId: data.architecteMandataireId ?? null,
@@ -393,6 +424,19 @@ export const saveTrancheOtlFn = createServerFn({ method: 'POST' })
       ofsNomId: data.ofsNomId ?? null,
       terrainOfsMontantHt: data.terrainOfsMontantHt ?? null,
       terrainOfsSignataireId: data.terrainOfsSignataireId ?? null,
+      terrainOfsAcptePourcPrevu: data.terrainOfsAcptePourcPrevu ?? null,
+      terrainOfsAcpteMontantVerse: data.terrainOfsAcpteMontantVerse ?? null,
+      terrainOfsCompromisDatePrevi: versDate(data.terrainOfsCompromisDatePrevi),
+      terrainOfsCompromisDateReelle: versDate(
+        data.terrainOfsCompromisDateReelle,
+      ),
+      autreMontant: data.autreMontant ?? null,
+      terrainBailOperateurDatePrevi: versDate(
+        data.terrainBailOperateurDatePrevi,
+      ),
+      terrainBailOperateurDateReelle: versDate(
+        data.terrainBailOperateurDateReelle,
+      ),
       commentaire: data.commentaire || null,
     })
   })

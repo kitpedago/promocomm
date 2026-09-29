@@ -16,6 +16,7 @@ import {
   SousTitre,
   versInputDate,
 } from '#/components/ChampsModale'
+import Onglets from '#/components/Onglets'
 import { Button } from '#/components/ui/button'
 import {
   Dialog,
@@ -40,6 +41,9 @@ export type DescChamp =
     }
   | { k: string; l: string; t: 'selectTexte'; options: Array<string> }
   | { t: 'titre'; l: string }
+  // les champs qui suivent se rangent sous cet onglet ; ceux qui précèdent
+  // le premier marqueur restent visibles quel que soit l'onglet
+  | { t: 'onglet'; l: string }
 
 export type ValeursFiche = Record<string, unknown>
 
@@ -50,11 +54,21 @@ export function depuisLigne(
 ): ValeursFiche {
   const v: ValeursFiche = {}
   for (const c of champs) {
-    if (c.t === 'titre') continue
+    if (c.t === 'titre' || c.t === 'onglet') continue
     const brut = ligne?.[c.k] ?? null
     v[c.k] = c.t === 'date' ? versInputDate(brut as string | Date | null) : brut
   }
   return v
+}
+
+export function decouperOnglets(champs: Array<DescChamp>) {
+  const haut: Array<DescChamp> = []
+  const onglets: Array<{ l: string; champs: Array<DescChamp> }> = []
+  for (const c of champs) {
+    if (c.t === 'onglet') onglets.push({ l: c.l, champs: [] })
+    else (onglets.at(-1)?.champs ?? haut).push(c)
+  }
+  return { haut, onglets }
 }
 
 export default function ModaleFiche({
@@ -84,12 +98,80 @@ export default function ModaleFiche({
   const [valeurs, setValeurs] = useState<ValeursFiche>(() =>
     depuisLigne(champs, ligne),
   )
+  const { haut, onglets } = decouperOnglets(champs)
+  const [ongletActif, setOngletActif] = useState(0)
   useEffect(() => {
-    if (open) setValeurs(depuisLigne(champs, ligne))
+    if (open) {
+      setValeurs(depuisLigne(champs, ligne))
+      setOngletActif(0)
+    }
   }, [open, ligne])
 
   const set = (k: string) => (v: unknown) =>
     setValeurs((s) => ({ ...s, [k]: v }))
+
+  const grille = (liste: Array<DescChamp>) => (
+    <div className="grid gap-3 sm:grid-cols-2">
+      {liste.map((c, i) =>
+        c.t === 'titre' || c.t === 'onglet' ? (
+          <SousTitre key={`titre-${i}`}>{c.l}</SousTitre>
+        ) : c.t === 'select' ? (
+          <ChampSelectId
+            key={c.k}
+            libelle={c.l}
+            value={valeurs[c.k] as number | null}
+            onChange={set(c.k)}
+            options={c.options}
+          />
+        ) : c.t === 'selectTexte' ? (
+          <ChampSelectTexte
+            key={c.k}
+            libelle={c.l}
+            value={valeurs[c.k] as string | null}
+            onChange={set(c.k)}
+            options={c.options}
+          />
+        ) : c.t === 'bool' ? (
+          <ChampBascule
+            key={c.k}
+            libelle={c.l}
+            checked={!!valeurs[c.k]}
+            onChange={set(c.k)}
+          />
+        ) : c.t === 'date' ? (
+          <ChampDate
+            key={c.k}
+            libelle={c.l}
+            value={valeurs[c.k] as string | null}
+            onChange={set(c.k)}
+          />
+        ) : c.t === 'nombre' || c.t === 'entier' ? (
+          <ChampNombre
+            key={c.k}
+            libelle={c.l}
+            step={c.t === 'entier' ? '1' : '0.01'}
+            value={valeurs[c.k] as number | null}
+            onChange={set(c.k)}
+          />
+        ) : c.t === 'long' ? (
+          <div key={c.k} className="sm:col-span-2">
+            <ChampTexteLong
+              libelle={c.l}
+              value={(valeurs[c.k] as string | null) ?? ''}
+              onChange={(v) => set(c.k)(v || null)}
+            />
+          </div>
+        ) : (
+          <ChampTexte
+            key={c.k}
+            libelle={c.l}
+            value={(valeurs[c.k] as string | null) ?? ''}
+            onChange={(v) => set(c.k)(v || null)}
+          />
+        ),
+      )}
+    </div>
+  )
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -106,66 +188,19 @@ export default function ModaleFiche({
             onSubmit(valeurs)
           }}
         >
-          <div className="grid gap-3 sm:grid-cols-2">
-            {champs.map((c, i) =>
-              c.t === 'titre' ? (
-                <SousTitre key={`titre-${i}`}>{c.l}</SousTitre>
-              ) : c.t === 'select' ? (
-                <ChampSelectId
-                  key={c.k}
-                  libelle={c.l}
-                  value={valeurs[c.k] as number | null}
-                  onChange={set(c.k)}
-                  options={c.options}
-                />
-              ) : c.t === 'selectTexte' ? (
-                <ChampSelectTexte
-                  key={c.k}
-                  libelle={c.l}
-                  value={valeurs[c.k] as string | null}
-                  onChange={set(c.k)}
-                  options={c.options}
-                />
-              ) : c.t === 'bool' ? (
-                <ChampBascule
-                  key={c.k}
-                  libelle={c.l}
-                  checked={!!valeurs[c.k]}
-                  onChange={set(c.k)}
-                />
-              ) : c.t === 'date' ? (
-                <ChampDate
-                  key={c.k}
-                  libelle={c.l}
-                  value={valeurs[c.k] as string | null}
-                  onChange={set(c.k)}
-                />
-              ) : c.t === 'nombre' || c.t === 'entier' ? (
-                <ChampNombre
-                  key={c.k}
-                  libelle={c.l}
-                  step={c.t === 'entier' ? '1' : '0.01'}
-                  value={valeurs[c.k] as number | null}
-                  onChange={set(c.k)}
-                />
-              ) : c.t === 'long' ? (
-                <div key={c.k} className="sm:col-span-2">
-                  <ChampTexteLong
-                    libelle={c.l}
-                    value={(valeurs[c.k] as string | null) ?? ''}
-                    onChange={(v) => set(c.k)(v || null)}
-                  />
-                </div>
-              ) : (
-                <ChampTexte
-                  key={c.k}
-                  libelle={c.l}
-                  value={(valeurs[c.k] as string | null) ?? ''}
-                  onChange={(v) => set(c.k)(v || null)}
-                />
-              ),
-            )}
-          </div>
+          {grille(haut)}
+          {onglets.length > 0 && (
+            <div className="mt-4 flex flex-col gap-3">
+              <Onglets
+                onglets={onglets.map((o) => o.l)}
+                actif={onglets[ongletActif].l}
+                onChange={(l) =>
+                  setOngletActif(onglets.findIndex((o) => o.l === l))
+                }
+              />
+              {grille(onglets[ongletActif].champs)}
+            </div>
+          )}
           <ErreurMutation erreur={erreur} />
           <DialogFooter>
             <DialogClose asChild>

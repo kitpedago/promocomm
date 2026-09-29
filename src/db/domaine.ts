@@ -605,13 +605,16 @@ export const tranche = pgTable('tranche', {
   dontLogtCollBrs: integer('dont_logt_coll_brs'),
   dontLogtIndivBrs: integer('dont_logt_indiv_brs'),
   nbEtage: integer('nb_etage'),
+  // avec nbEtage, paramètre des intervalles entre stades (type_batiment_stade)
+  typeBatimentId: integer('type_batiment_id').references(() => typeBatiment.id),
   dureeChantierMois: integer('duree_chantier_mois'),
   dateConvention: timestamp('date_convention'),
   dateLivraisonContractuelle: timestamp('date_livraison_contractuelle'),
   pasDeCommercialisation: boolean('pas_de_commercialisation'),
-  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  // indicateurs de la fiche tranche (FEN_Fiche_Tranche), repris par la base miroir
   finCommercialisation: boolean('fin_commercialisation'),
   finTabborAnnuel: boolean('fin_tabbor_annuel'),
+  avecAppelFondClientDerogatoire: boolean('avec_appel_fond_client_derogatoire'),
   // synthèse d'avancement (legacy StadeCOM / StadeIDSituation / StadeDepuisLe,
   // caches entretenus par WinDev depuis tStadeAvancement — repris tels quels,
   // utilisés par les widgets du tableau de bord)
