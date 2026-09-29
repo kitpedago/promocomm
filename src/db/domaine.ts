@@ -25,6 +25,8 @@ export const civilite = pgTable('civilite', {
   id: id(),
   libelle: text().notNull(),
   libelleCourt: text('libelle_court'),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  client: text(),
 })
 
 export const csp = pgTable('csp', {
@@ -42,6 +44,8 @@ export const situationFamiliale = pgTable('situation_familiale', {
 export const situationFamille = pgTable('situation_famille', {
   id: id(),
   libelle: text().notNull(),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  idSituationDeFamille: integer('id_situation_de_famille'),
 })
 
 export const typeMenage = pgTable('type_menage', {
@@ -124,6 +128,8 @@ export const concept = pgTable('concept', {
   id: id(),
   libelle: text().notNull(),
   commentaire: text(),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  architecteId: integer('architecte_id'),
 })
 
 export const secteurGeographique = pgTable('secteur_geographique', {
@@ -294,6 +300,19 @@ export const listeAvancement = pgTable('liste_avancement', {
   // « Synchro. dates » : ce stade se synchronise entre les tranches d'une
   // opération qui l'autorise (operation.synchroniser_dates_entre_tranche)
   avecSynchroEntreTranche: boolean('avec_synchro_entre_tranche'),
+  // stade ajouté d'office à toute nouvelle tranche (trigger Tranche_Ajout)
+  inclureQuandCreationTranche: boolean('inclure_quand_creation_tranche'),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  libelleMission: text('libelle_mission'),
+  avecAppelFondClient: boolean('avec_appel_fond_client'),
+  avecEquivLgt: boolean('avec_equiv_lgt'),
+  pourcentageAvancement: real('pourcentage_avancement'),
+  avecArchive: boolean('avec_archive'),
+  avecSuivi: boolean('avec_suivi'),
+  nePasDecalerAuto: boolean('ne_pas_decaler_auto'),
+  datePreviPromoAutoDecalageUniteTempsId: integer(
+    'date_previ_promo_auto_decalage_unite_temps_id',
+  ),
 })
 
 // Domaines des stades (legacy DomaineStadeAvancement : codes texte sans id —
@@ -448,6 +467,8 @@ export const structureJuridique = pgTable('structure_juridique', {
   civiliteId: integer('civilite_id').references(() => civilite.id),
   interlocuteurSie: text('interlocuteur_sie'),
   dateMandatSie: timestamp('date_mandat_sie'),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  gestionnaireSccvLegacy: text('gestionnaire_sccv_legacy'),
 })
 
 // Parts des associés dans les SCCV (onglet Associés)
@@ -525,6 +546,8 @@ export const interlocuteurNotaire = pgTable('interlocuteur_notaire', {
   prenom: text(),
   telephone: text(),
   email: text(),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  fonctionLegacy: text('fonction_legacy'),
 })
 
 export const architecte = pgTable('architecte', {
@@ -580,6 +603,14 @@ export const operation = pgTable('operation', {
   // legacy : « cur » trompeur, ce sont des champs saisis sans autre source
   chargeOpe1Id: integer('charge_ope1_id').references(() => personne.id),
   chargeOpe2Id: integer('charge_ope2_id').references(() => personne.id),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  certificationId: integer('certification_id'),
+  labelId: integer('label_id'),
+  performanceEnergetiqueId: integer('performance_energetique_id'),
+  estMoeInterne: boolean('est_moe_interne'),
+  typeFoncierId: integer('type_foncier_id'),
+  apporteurFoncierId: integer('apporteur_foncier_id'),
+  pourcentageKpi: real('pourcentage_kpi'),
 })
 
 export const tranche = pgTable('tranche', {
@@ -727,6 +758,8 @@ export const tranche = pgTable('tranche', {
   listeAvancementSuiviProchainId: integer(
     'liste_avancement_suivi_prochain_id',
   ).references(() => listeAvancement.id),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  montantHonoParLogt: montant('montant_hono_par_logt'),
 })
 
 // Onglet « Stade d'avancement » : un jalon daté par tranche (6 935 lignes).
@@ -764,6 +797,12 @@ export const subvention = pgTable('subvention', {
   budgetPreviCommentaire: text('budget_previ_commentaire'),
   finDeSuivi: boolean('fin_de_suivi'),
   commentaire: text(),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  premierDeblocageAvancement: integer('premier_deblocage_avancement'),
+  soldeDeblocageAvancement: integer('solde_deblocage_avancement'),
+  premierDeblocagePourcentage: real('premier_deblocage_pourcentage'),
+  soldeDeblocagePourcentage: real('solde_deblocage_pourcentage'),
+  surOpe: boolean('sur_ope'),
 })
 
 // Contentieux de l'opération (FEN_Table_Contentieux) — table legacy vide à ce
@@ -1057,6 +1096,11 @@ export const commercialisation = pgTable('commercialisation', {
   dateButoirRevente: timestamp('date_butoir_revente'),
   cdvTechnique: text('cdv_technique'),
   cdvPromo: text('cdv_promo'),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  promoGesNom: text('promo_ges_nom'),
+  tmaMailingListeDevis: text('tma_mailing_liste_devis'),
+  tmaMailingSolde: text('tma_mailing_solde'),
+  nbTma: integer('nb_tma'),
 })
 
 export const commVendeur = pgTable('comm_vendeur', {
@@ -1250,6 +1294,8 @@ export const budget = pgTable('budget', {
   dateValidation: timestamp('date_validation'),
   dateSaisiePromoges: timestamp('date_saisie_promoges'),
   commentaire: text(),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  surOpe: boolean('sur_ope'),
 })
 
 // Financements de la tranche (onglets Financements / Financements PSLA /
@@ -1329,6 +1375,8 @@ export const deblocagePsla = pgTable('deblocage_psla', {
   dateDemande: timestamp('date_demande'),
   dateVersement: timestamp('date_versement'),
   commentaire: text(),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  deblocageFinancementId: integer('deblocage_financement_id'),
 })
 
 export const remboursementAnticipe = pgTable('remboursement_anticipe', {
@@ -1389,6 +1437,8 @@ export const psla = pgTable('psla', {
   commentaire: text(),
   // « Commemtaires » legacy (sic) — second champ libre, affiché sur Contrats PSLA
   commentaires: text(),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  banqueId: integer('banque_id'),
 })
 
 // Garantie financière d'achèvement de la tranche (onglet GFA)
@@ -1481,6 +1531,8 @@ export const bilanCaht = pgTable('bilan_caht', {
   nbLotLvPsla: integer('nb_lot_lv_psla'),
   nbLotAutre: integer('nb_lot_autre'),
   nbLotCommentaire: text('nb_lot_commentaire'),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  idBilanCaht: integer('id_bilan_caht'),
 })
 
 export const bilanResultat = pgTable('bilan_resultat', {
@@ -1518,6 +1570,8 @@ export const bilanResultat = pgTable('bilan_resultat', {
   quotePartHfRanIs: montant('quote_part_hf_ran_is'),
   quotePartHfRanNonIs: montant('quote_part_hf_ran_non_is'),
   quotePartHfRanTotal: montant('quote_part_hf_ran_total'),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  idBilanResultat: integer('id_bilan_resultat'),
 })
 
 // ---------------------------------------------------------------------------
@@ -1595,11 +1649,13 @@ export const prestataire = pgTable('prestataire', {
   id: id(),
   libelle: text().notNull(),
   afficherMission: boolean('afficher_mission'),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  afficherOperation: boolean('afficher_operation'),
+  masquerComm2: boolean('masquer_comm2'),
 })
 
-// tMission — missions facturables par tranche. GrilleSpecifique /
-// PourCoPromotion / PourPromotion non repris : absents de la fiche WinDev
-// (1 ligne à vrai sur 855).
+// tMission — missions facturables par tranche. PourCoPromotion /
+// PourPromotion non repris : absents de la fiche WinDev.
 export const mission = pgTable('mission', {
   id: id(),
   trancheId: integer('tranche_id')
@@ -1616,6 +1672,8 @@ export const mission = pgTable('mission', {
   nbMois: integer('nb_mois'),
   nbLogement: integer('nb_logement'),
   dateFactCommKpiExtContratOfs: timestamp('date_fact_comm_kpi_ext_contrat_ofs'),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  grilleSpecifique: boolean('grille_specifique'),
 })
 
 // tGrilleFacturation — grille de facturation par stade d'une mission. Le
@@ -1733,7 +1791,7 @@ export const reserveEntreprise = pgTable('reserve_entreprise', {
 })
 
 // tReserve (30 431 — la plus grosse table). Colonnes Ancien* (reprise d'un
-// ancien logiciel) et WindowsUser non reprises ; id_air_bat conservé pour
+// ancien logiciel) non reprises ; id_air_bat conservé pour
 // l'import Air-Bat (phase 9), est_verrouille = ligne verrouillée par cet import
 export const reserve = pgTable(
   'reserve',
@@ -1756,6 +1814,8 @@ export const reserve = pgTable(
     envoyerMailDate: timestamp('envoyer_mail_date'),
     estVerrouille: boolean('est_verrouille'),
     idAirBat: integer('id_air_bat'),
+    // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+    windowsUser: text('windows_user'),
   },
   (t) => [index('reserve_lot_id_idx').on(t.lotId)],
 )
@@ -1773,6 +1833,8 @@ export const droit = pgTable('droit', {
   indice: integer(),
   service: text().notNull(),
   type: integer().notNull(),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  commentaires: text(),
 })
 
 // ---------------------------------------------------------------------------

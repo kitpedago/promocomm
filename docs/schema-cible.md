@@ -37,6 +37,23 @@ Alimentation : `npm run db:transform` (ou automatiquement en fin d'import .bak) 
   - `tCommercialisation` : `PrestataireCommercialisation/Comm1/Comm2` (→ `tListePrestataire`,
     confirmé par REQ_InterfaceCommercialisation_Lot — à ajouter en tranche 2), `TMAMailing*`.
 
+### Reprises pour la seule base miroir (2026-09-29, migration 0036)
+
+Une colonne absente de `public` arrive vide dans la base miroir. 40 colonnes
+écartées ci-dessus mais renseignées dans le legacy sont donc recopiées telles
+quelles, **sans écran ni usage dans l'application** : `tOperation`
+(certification, label, performance énergétique, MOE interne, TypeFoncier,
+ApporteurFoncier, PourcentageKPI), `tCommercialisation` (`PromoGesNom`,
+`TMAMailing*`, `NbTMA`), `tSubvention` (`PremierDeblocage*`, `SoldeDeblocage*`,
+`SurOpe`), `tListeAvancement` (8 réglages), `tMission.GrilleSpecifique`,
+`tReserve.WindowsUser`, `tStructureJuridique.GestionnaireSCCV`
+(`gestionnaire_sccv_legacy`), `InterlocuteurNotaire.Fonction`
+(`fonction_legacy`), etc. — liste exacte dans la migration.
+
+Leur valeur est celle du dernier import : l'application ne les met pas à jour.
+Restent non reprises : `cur*`, `old_*`, `Import*`, `*_orig`, `Grille *`, et les
+synthèses `Stade*` / `Nb*` de `tTranche`.
+
 ## Tables (58)
 
 **Nomenclatures (29)** : `civilite`, `csp`, `situation_familiale`, `situation_famille` (les deux
@@ -122,7 +139,7 @@ partagée avec le module SCCV — contacts CC/Prêt), `index_taux`, `type_financ
 | `remboursement_anticipe` | tRemboursementAnticipe | 613 | rattaché à `financement`                                                          |
 | `gfa`                    | tGFA                | 108    | admin + conditions financières ; taux stockés en fraction (0.003 → 0,30 %)        |
 | `reduc_gfa`              | ReducGFA            | 0      | table vide dans le legacy, structure reprise                                      |
-| `deblocage_subvention`   | tDeblocageSubvention | 291   | `tSubvention` retenue (pas `tSubvention2`, colonnes typées texte — à arbitrer)    |
+| `deblocage_subvention`   | tDeblocageSubvention | 291   | `tSubvention` retenue (`tSubvention2` abandonnée, confirmé client 2026-09-29)     |
 | `frais_financier`        | FraisFinancierPub   | 694    | ordre affiché = `categorie_frais.ordre`                                           |
 | `budget`                 | tBudget             | 264    | validations de budget ; pas d'écran dans FEN_Compta                               |
 

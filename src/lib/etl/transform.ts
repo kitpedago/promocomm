@@ -43,7 +43,7 @@ export const copies: Array<Copy> = [
     'civilite',
     'tCivilite',
     'IDCivilite',
-    'libelle_court:s."LibelleCourt"',
+    'libelle_court, client:s."LibelleCourt", s."Client"',
   ),
   nomenclature('csp', 'CSP', 'IDCSP', 'numero:s."Numero"'),
   nomenclature(
@@ -51,7 +51,12 @@ export const copies: Array<Copy> = [
     'SituationFamiliale',
     'IDSituationFamiliale',
   ),
-  nomenclature('situation_famille', 'SituationFamille', 'IDSituationFamille'),
+  nomenclature(
+    'situation_famille',
+    'SituationFamille',
+    'IDSituationFamille',
+    'id_situation_de_famille:s."IDSituationDeFamille"',
+  ),
   nomenclature('type_menage', 'TypeDeMenage', 'IDTypeDeMenage'),
   nomenclature(
     'type_logement_actuel',
@@ -123,8 +128,10 @@ export const copies: Array<Copy> = [
   },
   {
     target: 'concept',
-    cols: '(id, libelle, commentaire)',
-    select: `SELECT s."IDConcept", COALESCE(s."Libelle", ''), s."Commentaire" FROM legacy."tConcept" s`,
+    cols: '(id, libelle, commentaire, architecte_id)',
+    select: `SELECT s."IDConcept", COALESCE(s."Libelle", ''), s."Commentaire",
+        s."IDArchitecte"
+      FROM legacy."tConcept" s`,
   },
   nomenclature(
     'secteur_geographique',
@@ -159,9 +166,16 @@ export const copies: Array<Copy> = [
   {
     target: 'liste_avancement',
     cols: `(id, domaine, code, libelle, ordre, avec_hono_gestion, pourcentage_standard,
-            avec_synchro_entre_tranche)`,
+            avec_synchro_entre_tranche, inclure_quand_creation_tranche,
+            libelle_mission, avec_appel_fond_client, avec_equiv_lgt, pourcentage_avancement,
+            avec_archive, avec_suivi, ne_pas_decaler_auto,
+            date_previ_promo_auto_decalage_unite_temps_id)`,
     select: `SELECT s."IDListeAvancement", s."Domaine", s."Code", COALESCE(s."Libelle", ''), s."Ordre",
-        s."AvecHonoGestion", s."PourcentageStandard", s."AvecSynchroEntreTranche"
+        s."AvecHonoGestion", s."PourcentageStandard", s."AvecSynchroEntreTranche",
+        s."InclureQuandCreationTranche",
+        s."LibelleMission", s."AvecAppelFondClient", s."AvecEquivLgt",
+        s."PourcentageAvancement", s."AvecArchive", s."AvecSuivi", s."NePasDecalerAuto",
+        s."DatePreviPromoAuto_IDDecalageUniteTemps"
       FROM legacy."tListeAvancement" s`,
   },
   {
@@ -222,12 +236,13 @@ export const copies: Array<Copy> = [
   },
   nomenclature('type_foncier', 'TypeFoncier', 'IDTypeFoncier'),
   nomenclature('equipe_personne', 'EquipePersonne', 'IDEquipePersonne'),
-  nomenclature(
-    'prestataire',
-    'tListePrestataire',
-    'IDPrestataire',
-    'afficher_mission:s."AfficherMission"',
-  ),
+  {
+    target: 'prestataire',
+    cols: '(id, libelle, afficher_mission, afficher_operation, masquer_comm2)',
+    select: `SELECT s."IDPrestataire", COALESCE(s."Libelle", ''), s."AfficherMission",
+        s."AfficherOperation", s."MasquerComm2"
+      FROM legacy."tListePrestataire" s`,
+  },
   nomenclature('bareme_hono_comm', 'BaremeHonoComm', 'IDBaremeHonoComm'),
   {
     // codes texte sans id dans le legacy (commune.zonage_abc_revise reste le
@@ -269,13 +284,16 @@ export const copies: Array<Copy> = [
       FROM legacy."EtudeNotaire" s`,
   },
   {
-    // la colonne texte "Fonction" du legacy ne contient que des codes ('1') —
-    // seule la FK IDFonctionInterlocuteurNotaire est reprise
+    // la colonne texte "Fonction" du legacy ne contient que des codes ('1') :
+    // l'application lit la FK IDFonctionInterlocuteurNotaire, le texte n'est
+    // repris que pour la base miroir
     target: 'interlocuteur_notaire',
-    cols: '(id, etude_notaire_id, fonction_id, civilite, patronyme, prenom, telephone, email)',
+    cols: `(id, etude_notaire_id, fonction_id, civilite, patronyme, prenom, telephone, email,
+            fonction_legacy)`,
     select: `SELECT s."IDInterlocuteurNotaire", ${fk('IDEtudeNotaire')},
         ${fk('IDFonctionInterlocuteurNotaire')},
-        s."Civilite", s."Patronyme", s."Prenom", s."Telephone", s."Email"
+        s."Civilite", s."Patronyme", s."Prenom", s."Telephone", s."Email",
+        s."Fonction"
       FROM legacy."InterlocuteurNotaire" s`,
   },
   {
@@ -414,7 +432,8 @@ export const copies: Array<Copy> = [
             stade_id, personne_comptable_id, gestionnaire_sccv_id, partenariat_id, hfsga,
             date_bilan_debut_premier_exercice, date_bilan_fin_premier_exercice,
             date_modif_cloture, date_planning_cloture, date_liberation_capital,
-            edi_tva, edi_liasse, cpte_fiscal, sie_id, civilite_id, interlocuteur_sie, date_mandat_sie)`,
+            edi_tva, edi_liasse, cpte_fiscal, sie_id, civilite_id, interlocuteur_sie, date_mandat_sie,
+            gestionnaire_sccv_legacy)`,
     select: `SELECT s."IDStructureJuridique", s."RS", s."NumTVAIntra",
         NULLIF(s."Siret", 0)::bigint::text,
         s."DateDebutActivite", s."DateImmat", s."DateLiquidation",
@@ -429,7 +448,8 @@ export const copies: Array<Copy> = [
         s."EDI_TVA", s."EDI_Liasse", s."CpteFiscal",
         ${fkSafe('IDSIE', 'tSIE', 'IDSIE')},
         ${fkSafe('IDCivilite', 'tCivilite', 'IDCivilite')},
-        s."InterlocuteurSIE", s."DateMandatSIE"
+        s."InterlocuteurSIE", s."DateMandatSIE",
+        s."GestionnaireSCCV"
       FROM legacy."tStructureJuridique" s`,
   },
   {
@@ -469,7 +489,9 @@ export const copies: Array<Copy> = [
             possibilite_investisseur, taux_investisseur_autorise, commentaire_investisseur,
             date_validation_engagement, date_abandon, commentaires_abandon,
             masquer_commercial, masquer_comptable, masquer_promo, commentaire,
-            charge_ope1_id, charge_ope2_id, synchroniser_dates_entre_tranche)`,
+            charge_ope1_id, charge_ope2_id, synchroniser_dates_entre_tranche,
+            certification_id, label_id, performance_energetique_id, est_moe_interne,
+            type_foncier_id, apporteur_foncier_id, pourcentage_kpi)`,
     select: `SELECT s."IDOperation", ${fk('IDStructureJuridique')}, s."Libelle", s."Adresse", s."CP", s."Commune",
         s."NomZAC", ${fk('IDSecteurGeographiqueDeveloppement')},
         s."SurRennesMetropole", s."ANRU", s."ANRUComment", s."IndivColl", s."AnneeDGD", s."AbreviationPourCodeReserve",
@@ -482,7 +504,9 @@ export const copies: Array<Copy> = [
         s."MasquerCommercial", s."MasquerComptable", s."MasquerPromo", s."Commentaire",
         ${fkSafe('curIDPersonne_ChargeOpe1', 'tPersonne', 'IDPersonne')},
         ${fkSafe('curIDPersonne_ChargeOpe2', 'tPersonne', 'IDPersonne')},
-        s."SynchroniserDatesEntreTranche"
+        s."SynchroniserDatesEntreTranche",
+        s."IDCertification", s."IDLabel", s."IDPerformanceEnergetique", s."EstMOEInterne",
+        s."IDTypeFoncier", s."IDApporteurFoncier", s."PourcentageKPI"
       FROM legacy."tOperation" s`,
   },
   {
@@ -516,7 +540,8 @@ export const copies: Array<Copy> = [
             frais_consomme_date, frais_consomme_commentaire, frais_reel_date, frais_reel_commentaire,
             liste_budget_frais_stade_id, type_mission_budget_architecte_id, date_contrat_architecte,
             liste_avancement_actuel_id, liste_avancement_prochain_id,
-            liste_avancement_suivi_actuel_id, liste_avancement_suivi_prochain_id)`,
+            liste_avancement_suivi_actuel_id, liste_avancement_suivi_prochain_id,
+            montant_hono_par_logt)`,
     select: `SELECT s."IDTranche", s."IDOperation", s."Libelle", ${fk('IDConcept')},
         ${fkSafe('IDArchitecte_Mandataire', 'tArchitecte', 'IDArchitecte')},
         ${fkSafe('IDArchitecte_CoTraitant', 'tArchitecte', 'IDArchitecte')},
@@ -559,7 +584,8 @@ export const copies: Array<Copy> = [
         ${fkSafe('IDListeAvancement_actuel', 'tListeAvancement', 'IDListeAvancement')},
         ${fkSafe('IDListeAvancement_prochain', 'tListeAvancement', 'IDListeAvancement')},
         ${fkSafe('IDListeAvancement_suivi_actuel', 'tListeAvancement', 'IDListeAvancement')},
-        ${fkSafe('IDListeAvancement_suivi_prochain', 'tListeAvancement', 'IDListeAvancement')}
+        ${fkSafe('IDListeAvancement_suivi_prochain', 'tListeAvancement', 'IDListeAvancement')},
+        s."MontantHonoParLogt"
       FROM legacy."tTranche" s`,
   },
   {
@@ -579,14 +605,18 @@ export const copies: Array<Copy> = [
     target: 'subvention',
     cols: `(id, tranche_id, categorie_id, organisme_id, num_convention, date_convention, date_caducite,
             montant_agrement, montant_provisoire, montant_definitif,
-            budget_previ_montant, budget_previ_commentaire, fin_de_suivi, commentaire)`,
+            budget_previ_montant, budget_previ_commentaire, fin_de_suivi, commentaire,
+            premier_deblocage_avancement, solde_deblocage_avancement,
+            premier_deblocage_pourcentage, solde_deblocage_pourcentage, sur_ope)`,
     select: `SELECT s."IDSubvention",
         ${fkSafe('IDTranche', 'tTranche', 'IDTranche')},
         ${fkSafe('IDCategorieSubvention', 'tCategorieSubvention', 'IDCategorieSubvention')},
         ${fkSafe('IDOrganismeSubvention', 'OrganismeSubvention', 'IDOrganismeSubvention')},
         s."NumConvention", s."DateConvention", s."DateCaducite",
         s."MontantAgrement", s."MontantProvisoire", s."MontantDefinitif",
-        s."BudgetPreviMontant", s."BudgetPreviCommentaire", (s."FinDeSuivi" <> 0), s."Commentaire"
+        s."BudgetPreviMontant", s."BudgetPreviCommentaire", (s."FinDeSuivi" <> 0), s."Commentaire",
+        s."PremierDeblocageAvancement", s."SoldeDeblocageAvancement",
+        s."PremierDeblocagePoucentage", s."SoldeDeblocagePoucentage", (s."SurOpe" <> 0)
       FROM legacy."tSubvention" s`,
   },
   {
@@ -618,11 +648,13 @@ export const copies: Array<Copy> = [
   },
   {
     target: 'budget',
-    cols: '(id, tranche_id, liste_budget_id, date_validation, date_saisie_promoges, commentaire)',
+    cols: `(id, tranche_id, liste_budget_id, date_validation, date_saisie_promoges, commentaire,
+            sur_ope)`,
     select: `SELECT s."IDBudget",
         ${fkSafe('IDTranche', 'tTranche', 'IDTranche')},
         ${fkSafe('IDListeBudget', 'tListeBudget', 'IDListeBudget')},
-        s."DateValidation", s."DateSaisiePromoges", s."Commentaire"
+        s."DateValidation", s."DateSaisiePromoges", s."Commentaire",
+        s."SurOpe"
       FROM legacy."tBudget" s`,
   },
   {
@@ -684,7 +716,8 @@ export const copies: Array<Copy> = [
             num_bureau_garantie, num_convention_garantie, date_signature_garant,
             garantie_emprunt_action_date, garantie_emprunt_action_type_id,
             banque_action_date, banque_action_type_id,
-            date_info_annuelle, date_info_fin, fin_suivi, commentaire, commentaires)`,
+            date_info_annuelle, date_info_fin, fin_suivi, commentaire, commentaires,
+            banque_id)`,
     select: `SELECT s."IDPSLA",
         ${fkSafe('IDTranche', 'tTranche', 'IDTranche')},
         s."EstimPSLA", s."MontantPSLA", s."CoutTotal", s."NbLogtAgrement",
@@ -702,16 +735,19 @@ export const copies: Array<Copy> = [
         ${fkSafe('IDGarantieEmpruntActionType', 'GarantieEmpruntActionType', 'IDGarantieEmpruntActionType')},
         s."BanqueActionDate",
         ${fkSafe('IDBanqueActionType', 'BanqueActionType', 'IDBanqueActionType')},
-        s."DateInfoAnnuelle", s."DateInfoFin", s."FinSuivi", s."Commentaire", s."Commemtaires"
+        s."DateInfoAnnuelle", s."DateInfoFin", s."FinSuivi", s."Commentaire", s."Commemtaires",
+        s."IDBanque"
       FROM legacy."tPSLA" s`,
   },
   {
     target: 'deblocage_psla',
-    cols: '(id, financement_id, psla_id, numero, montant, date_demande, date_versement, commentaire)',
+    cols: `(id, financement_id, psla_id, numero, montant, date_demande, date_versement, commentaire,
+            deblocage_financement_id)`,
     select: `SELECT s."IDDeblocagePSLA",
         ${fkSafe('IDFinancement', 'tFinancement', 'IDFinancement')},
         ${fkSafe('IDPSLA', 'tPSLA', 'IDPSLA')},
-        s."Numero", s."Montant", s."DateDemande", s."DateVersement", s."Commentaire"
+        s."Numero", s."Montant", s."DateDemande", s."DateVersement", s."Commentaire",
+        s."IDDeblocageFinancement"
       FROM legacy."tDeblocagePSLA" s`,
   },
   {
@@ -775,11 +811,13 @@ export const copies: Array<Copy> = [
     target: 'bilan_caht',
     cols: `(id, structure_juridique_id, annee, caht_vefa, caht_lv_psla, caht_loyers,
             caht_tma, caht_terrain, caht_autres, caht_commentaire,
-            nb_lot_vefa, nb_lot_lv_psla, nb_lot_autre, nb_lot_commentaire)`,
+            nb_lot_vefa, nb_lot_lv_psla, nb_lot_autre, nb_lot_commentaire,
+            id_bilan_caht)`,
     select: `SELECT s."IDBilanCAHT", s."IDStructureJuridique", s."Annee",
         s."CAHT_VEFA", s."CAHT_LV_PSLA", s."CAHT_Loyers", s."CAHT_TMA", s."CAHT_Terrain",
         s."CAHT_Autres", s."CAHT_Commentaire",
-        s."NbLot_VEFA", s."NbLot_LV_PSLA", s."NbLot_Autre", s."NbLot_Commentaire"
+        s."NbLot_VEFA", s."NbLot_LV_PSLA", s."NbLot_Autre", s."NbLot_Commentaire",
+        s."IDBilan_CAHT"
       FROM legacy."tBilan_CAHT" s`,
   },
   {
@@ -794,7 +832,8 @@ export const copies: Array<Copy> = [
             pourc_hf_annee, commentaire_pourc_hf,
             result_fisca_sccv_is, result_fisca_sccv_non_is,
             ran_sccv_is, ran_sccv_non_is, ran_sccv_total,
-            quote_part_hf_ran_is, quote_part_hf_ran_non_is, quote_part_hf_ran_total)`,
+            quote_part_hf_ran_is, quote_part_hf_ran_non_is, quote_part_hf_ran_total,
+            id_bilan_resultat)`,
     select: `SELECT s."IDBilanResultat", s."IDStructureJuridique", s."Annee",
         s."ResultCpta_SCCV_Total", s."RAN_SCCV", s."CpteCourant_SCCV",
         s."DatePVAG", s."ResultAcompteMontant", s."ResultAcompteDateVersement",
@@ -805,7 +844,8 @@ export const copies: Array<Copy> = [
         s."PourcHFAnnee", s."CommentairePourcHF",
         s."ResultFisca_SCCV_IS", s."ResultFisca_SCCV_NonIS",
         s."RAN_SCCV_IS", s."RAN_SCCV_NonIS", s."RAN_SCCV_Total",
-        s."QuotePartHF_RAN_IS", s."QuotePartHF_RAN_NonIS", s."QuotePartHF_RAN_Total"
+        s."QuotePartHF_RAN_IS", s."QuotePartHF_RAN_NonIS", s."QuotePartHF_RAN_Total",
+        s."IDBilan_Resultat"
       FROM legacy."tBilan_Resultat" s`,
   },
 
@@ -851,17 +891,19 @@ export const copies: Array<Copy> = [
 
   // --- honoraires (phase 7) ---
   {
-    // GrilleSpecifique/PourCoPromotion/PourPromotion/DateFactCommKPI non
-    // repris (cf. commentaire du schéma cible)
+    // PourCoPromotion/PourPromotion/DateFactCommKPI non repris (cf.
+    // commentaire du schéma cible) ; GrilleSpecifique pour la base miroir
     target: 'mission',
     cols: `(id, tranche_id, date_convention, base_hono_unitaire_ht, base_hono_ht,
             type_mission_id, prestataire_id, fin_facturation, commentaire, ordre,
-            nb_mois, nb_logement, date_fact_comm_kpi_ext_contrat_ofs)`,
+            nb_mois, nb_logement, date_fact_comm_kpi_ext_contrat_ofs,
+            grille_specifique)`,
     select: `SELECT s."IDMission", s."IDTranche", s."DateConvention",
         s."BaseHonoUnitaireHT", s."BaseHonoHT",
         ${fk('IDTypeMission')}, ${fk('IDPrestataire')},
         s."FinFacturation", s."Commentaire", s."Ordre", s."NbMois", s."NbLogement",
-        s."DateFactCommKPI_Ext_ContratOFS"
+        s."DateFactCommKPI_Ext_ContratOFS",
+        s."GrilleSpecifique"
       FROM legacy."tMission" s`,
   },
   {
@@ -1010,7 +1052,8 @@ export const copies: Array<Copy> = [
             livraison_date_envoi_courrier, livraison_rdv_date, livraison_rdv_heure,
             livraison_trimestre_prevu_contrat, livraison_trimestre_decale, date_etat_sortie_lieux,
             date_demande_agrement, date_agrement_obtenu, date_reception_courrier_lvo,
-            est_revente_bien, date_butoir_revente, cdv_technique, cdv_promo)`,
+            est_revente_bien, date_butoir_revente, cdv_technique, cdv_promo,
+            promo_ges_nom, tma_mailing_liste_devis, tma_mailing_solde, nb_tma)`,
     select: `SELECT s."IDCommercialisation", s."IDLot", ${fk('IDAcquereur')},
         ${fkSafe('IDListeTypeAcquereur', 'tListeTypeAcquereur', 'IDListeTypeAcquereur')},
         ${fkSafe('IDNatureAchat', 'tListeNatureAchat', 'IDNatureAchat')},
@@ -1037,7 +1080,8 @@ export const copies: Array<Copy> = [
         s."LivraisonDateEnvoiCourrier", s."LivraisonRDVDate", s."LivraisonRDVHeure",
         s."LivraisonTrimestrePrevueAuContrat", s."LivraisonTrimestreDecale", s."DateEtatSortieLieux",
         s."DateDemandeAgrement", s."DateAgrementObtenuEtEnvoiNotaire", s."DateReceptionCourrierLVO",
-        s."EstReventeBien", s."DateButoirRevente", s."CDVTechnique", s."CDVPromo"
+        s."EstReventeBien", s."DateButoirRevente", s."CDVTechnique", s."CDVPromo",
+        s."PromoGesNom", s."TMAMailingListeDevis", s."TMAMailingSolde", s."NbTMA"
       FROM legacy."tCommercialisation" s`,
   },
   {
@@ -1067,15 +1111,18 @@ export const copies: Array<Copy> = [
   },
 
   {
-    // droits fins (phase 2) : IDService legacy = ordre de la liste FEN_Login
+    // droits fins (phase 2) : IDService legacy = énumération ENomService du
+    // projet WinDev (COMPTA = 1, PROMO = 2…), qui n'est PAS l'ordre de la
+    // liste de FEN_Login (Promotion en tête)
     target: 'droit',
-    cols: '(id, fenetre, controle, indice, service, type)',
+    cols: '(id, fenetre, controle, indice, service, type, commentaires)',
     select: `SELECT s."IDDroit", s."Fenetre", s."Controle", s."Indice",
         CASE s."IDService"
-          WHEN 1 THEN 'promo' WHEN 2 THEN 'compta' WHEN 3 THEN 'consultation'
+          WHEN 1 THEN 'compta' WHEN 2 THEN 'promo' WHEN 3 THEN 'consultation'
           WHEN 4 THEN 'dcial' WHEN 5 THEN 'admin' WHEN 6 THEN 'juridique'
           WHEN 7 THEN 'direction-promo' END,
-        s."IDTypeDroit"
+        s."IDTypeDroit",
+        s."Commentaires"
       FROM legacy."Droit" s
       WHERE s."IDService" BETWEEN 1 AND 7`,
   },
@@ -1093,27 +1140,54 @@ export const copies: Array<Copy> = [
       FROM legacy."tReserveEntreprise" s`,
   },
   {
-    // Ancien*/WindowsUser non repris (reprise d'un ancien logiciel, convention
-    // schéma cible) ; les 16 439 lignes sans IDLot ne vivent que par ces
+    // Ancien* non repris (reprise d'un ancien logiciel, convention schéma
+    // cible), WindowsUser pour la base miroir seulement ; les 16 439 lignes
+    // sans IDLot ne vivent que par ces
     // colonnes Ancien* et ne sont affichables nulle part (l'écran WinDev
     // filtre par lot) → non copiées. IDPiece orphelin à 97 % (tReservePiece
     // vidée dans le legacy) → fkSafe
     target: 'reserve',
     cols: `(id, lot_id, code, type_id, piece_id, entreprise_id, travaux_effectues,
             reserve, date_reclamation, date_intervention, envoyer_mail,
-            envoyer_mail_date, est_verrouille, id_air_bat)`,
+            envoyer_mail_date, est_verrouille, id_air_bat,
+            windows_user)`,
     select: `SELECT s."IDReserve", s."IDLot", s."ReserveCode",
         ${fk('IDTypeReserve')},
         ${fkSafe('IDPiece', 'tReservePiece', 'IDReservePiece')},
         ${fk('IDEntreprise')},
         s."TravauxEffectues", s."Reserve", s."DateReclamation", s."DateDIntervention",
-        s."EnvoyerMail", s."EnvoyerMailDate", s."EstVerrouille", ${fk('IDAirBat')}
+        s."EnvoyerMail", s."EnvoyerMailDate", s."EstVerrouille", ${fk('IDAirBat')},
+        s."WindowsUser"
       FROM legacy."tReserve" s
       WHERE s."IDLot" IS NOT NULL AND s."IDLot" <> 0`,
   },
 ]
 
 const targets = copies.map((c) => `"${c.target}"`)
+
+// Coordonnées des acquéreurs, mêmes règles que normaliserTelephone /
+// normaliserEmail (acquereurs.helpers.ts) : le legacy a perdu le 0 initial de
+// ~860 numéros et stocke « 0 » pour « pas de numéro ». Passe après la copie
+// plutôt que dans le SELECT : celui-ci doit rester inversible pour la base
+// miroir (miroir.helpers.ts).
+// l'espace insécable (copier-coller) n'est pas dans [[:space:]]
+const sansInsecable = (col: string) => `replace(${col}, chr(160), ' ')`
+const telephoneNormalise = (col: string) => {
+  // classes POSIX plutôt que des \ : rien à échapper entre JS et SQL
+  const chiffres = `regexp_replace(regexp_replace(${sansInsecable(col)}, '[[:space:]./-]', '', 'g'), '^([+]|00)33[(]?0?[)]?', '0')`
+  return `CASE
+      WHEN ${chiffres} ~ '^0*$' THEN NULL
+      WHEN ${chiffres} ~ '^[1-9][0-9]{8}$' THEN '0' || ${chiffres}
+      WHEN ${chiffres} ~ '^0[0-9]{9}$' THEN ${chiffres}
+      ELSE btrim(${sansInsecable(col)}) END`
+}
+const emailNormalise = (col: string) =>
+  `NULLIF(lower(regexp_replace(${sansInsecable(col)}, '[[:space:]]+', '', 'g')), '')`
+export const NORMALISER_ACQUEREURS = `UPDATE "acquereur" SET
+    "telephone" = ${telephoneNormalise('"telephone"')},
+    "portable" = ${telephoneNormalise('"portable"')},
+    "email" = ${emailNormalise('"email"')},
+    "email2" = ${emailNormalise('"email2"')}`
 
 export async function runTransform(
   log: (line: string) => Promise<void> | void,
@@ -1131,6 +1205,8 @@ export async function runTransform(
         `SELECT setval(pg_get_serial_sequence('"${c.target}"','id'), COALESCE((SELECT MAX(id) FROM "${c.target}"), 0) + 1, false)`,
       )
     }
+    await pg.query(NORMALISER_ACQUEREURS)
+    await log('acquereur: téléphones et emails normalisés')
     await pg.query('COMMIT')
   } catch (err) {
     await pg.query('ROLLBACK')
