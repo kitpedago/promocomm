@@ -117,6 +117,20 @@ services:
 
 puis `docker compose up -d` ; retirer et relancer une fois l'usage terminé.
 
+### Microsoft Access (pilote ODBC PostgreSQL)
+
+- Les textes gardent leur longueur SQL Server (`varchar(n)` jusqu'à 255) :
+  Access les lit en « Texte court », utilisable en jointure. Seuls les textes
+  longs (commentaires) restent en Mémo.
+- Access garde en mémoire le type des champs d'une table liée. Après une mise à
+  jour qui change le schéma du miroir : _Données externes > Gestionnaire de
+  tables liées_, tout sélectionner, _Actualiser_.
+- Laisser les options du pilote par défaut. Les champs Oui/Non arrivent en
+  texte `0`/`1` : `[Champ]=Vrai` et `VraiFaux([Champ];…)` fonctionnent, pas
+  `[Champ]=-1`.
+- Les tables du miroir n'ont pas de clé primaire : à la liaison, Access demande
+  un identifiant unique, choisir la colonne `ID<Table>`.
+
 ## Sauvegardes
 
 À la charge du client (Veeam). Le volume `promocomm-db-data` contient toute la

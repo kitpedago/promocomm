@@ -119,6 +119,28 @@ export function inverser(copy: Copy): Inversion {
   return { table, colonnes, sql, ignorees }
 }
 
+/**
+ * Coupe sur place les textes plus longs que leur colonne miroir (varchar(n),
+ * longueur SQL Server) : `public` n'a pas de limite, et une seule valeur trop
+ * longue ferait échouer le chargement de toute la table. Renvoie le nombre de
+ * valeurs coupées.
+ */
+export function tronquer(
+  lignes: Array<Record<string, unknown>>,
+  limites: Record<string, number>,
+): number {
+  let n = 0
+  for (const ligne of lignes)
+    for (const [col, max] of Object.entries(limites)) {
+      const v = ligne[col]
+      if (typeof v === 'string' && v.length > max) {
+        ligne[col] = v.slice(0, max)
+        n++
+      }
+    }
+  return n
+}
+
 // --- Planification : intervalle borné à des jours et une plage horaire ---
 
 export interface Planif {

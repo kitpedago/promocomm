@@ -8,6 +8,7 @@ import {
   inverser,
   normaliserPlanif,
   prochainPassage,
+  tronquer,
 } from './miroir.helpers.ts'
 
 import type { Planif } from './miroir.helpers.ts'
@@ -57,6 +58,20 @@ describe('colonneLegacy', () => {
     expect(
       colonneLegacy(`CASE s."IDService" WHEN 1 THEN 'promo' END`),
     ).toBeNull()
+  })
+})
+
+describe('tronquer', () => {
+  it('coupe les textes trop longs pour la colonne miroir et les compte', () => {
+    const lignes = [
+      { Libelle: 'Rennes', CP: '35000', Commentaire: 'x'.repeat(300) },
+      { Libelle: 'Saint-Jacques', CP: null, Commentaire: null },
+    ]
+    expect(tronquer(lignes, { Libelle: 6, CP: 10 })).toBe(1)
+    expect(lignes).toEqual([
+      { Libelle: 'Rennes', CP: '35000', Commentaire: 'x'.repeat(300) },
+      { Libelle: 'Saint-', CP: null, Commentaire: null },
+    ])
   })
 })
 

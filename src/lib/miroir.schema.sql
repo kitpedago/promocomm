@@ -1,17 +1,17 @@
--- Généré par npm run db:miroir -- --ddl depuis le schéma legacy (2026-09-08). Ne pas éditer.
+-- Généré par npm run db:miroir -- --ddl depuis le schéma legacy (2026-09-29). Ne pas éditer.
 DROP TABLE IF EXISTS "AccordCadreAssurance";
 CREATE TABLE "AccordCadreAssurance" (
-  "Code" text
+  "Code" character varying(255)
 );
 DROP TABLE IF EXISTS "ActionFinGFAType";
 CREATE TABLE "ActionFinGFAType" (
   "IDActionFinGFAType" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "ArchiveStadeAvancement";
 CREATE TABLE "ArchiveStadeAvancement" (
   "DateArchivage" timestamp without time zone,
-  "Libelle" text,
+  "Libelle" character varying(20),
   "IDArchiveStadeAvancement" integer
 );
 DROP TABLE IF EXISTS "ArchiveStadeAvancementListe";
@@ -22,50 +22,50 @@ CREATE TABLE "ArchiveStadeAvancementListe" (
   "DatePrevMAJPromo" timestamp without time zone,
   "DateReelle" timestamp without time zone,
   "Ordre" integer,
-  "Domaine" text,
-  "CodeStadeAvancement" text,
-  "StadeAvancement" text,
-  "LibelleMission" text,
+  "Domaine" character varying(255),
+  "CodeStadeAvancement" character varying(255),
+  "StadeAvancement" character varying(255),
+  "LibelleMission" character varying(255),
   "IDOperation" integer,
-  "Tranche" text,
+  "Tranche" character varying(255),
   "NbLogtIndiv" integer,
   "NbLogtColl" integer,
   "NbAutresLocaux" integer,
   "NbTerrain" integer,
   "curPourcentageHF" real,
   "AnneeStade" integer,
-  "Commune" text,
-  "Operation" text,
+  "Commune" character varying(255),
+  "Operation" character varying(255),
   "DateStade" timestamp without time zone,
-  "StatutDate" text,
+  "StatutDate" character varying(255),
   "IDTypeDateStadeAvancement" integer,
-  "TypeDateStadeAvancement" text,
+  "TypeDateStadeAvancement" character varying(255),
   "IDArchiveStadeAvancementListe" integer
 );
 DROP TABLE IF EXISTS "BanqueActionType";
 CREATE TABLE "BanqueActionType" (
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDBanqueActionType" integer
 );
 DROP TABLE IF EXISTS "BanqueCourtage";
 CREATE TABLE "BanqueCourtage" (
-  "Libelle" text,
+  "Libelle" character varying(100),
   "IDBanqueCourtage" integer
 );
 DROP TABLE IF EXISTS "BaremeHonoComm";
 CREATE TABLE "BaremeHonoComm" (
   "IDBaremeHonoComm" integer,
-  "Libelle" text
+  "Libelle" character varying(50)
 );
 DROP TABLE IF EXISTS "BlocageHonoOCFin";
 CREATE TABLE "BlocageHonoOCFin" (
   "IDBlocageHonoOCFin" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "CSP";
 CREATE TABLE "CSP" (
   "Numero" integer,
-  "Libelle" text,
+  "Libelle" character varying(100),
   "IDCSP" integer
 );
 DROP TABLE IF EXISTS "CalendrierMois";
@@ -73,11 +73,11 @@ CREATE TABLE "CalendrierMois" (
   "DateDebutMois" timestamp without time zone,
   "DateFinMois" timestamp without time zone,
   "Ann_e" integer,
-  "Mois" text
+  "Mois" character varying(50)
 );
 DROP TABLE IF EXISTS "CategorieFrais";
 CREATE TABLE "CategorieFrais" (
-  "Libelle" text,
+  "Libelle" character varying(255),
   "EstPublicite" boolean,
   "Ordre" integer,
   "IDCategorieFrais" integer,
@@ -85,31 +85,31 @@ CREATE TABLE "CategorieFrais" (
 );
 DROP TABLE IF EXISTS "Certification";
 CREATE TABLE "Certification" (
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDCertification" integer
 );
 DROP TABLE IF EXISTS "Commune";
 CREATE TABLE "Commune" (
-  "CodeINSEE" text,
-  "Libelle" text,
-  "Departement" text,
-  "ZonageABCRevise" text,
-  "CodePostal" text,
+  "CodeINSEE" character varying(255),
+  "Libelle" character varying(255),
+  "Departement" character varying(3),
+  "ZonageABCRevise" character varying(3),
+  "CodePostal" character varying(10),
   "IDCommune" integer
 );
 DROP TABLE IF EXISTS "CommuneEtZonePourImport";
 CREATE TABLE "CommuneEtZonePourImport" (
   "code_commune_insee" integer,
-  "nom_de_la_commune" text,
+  "nom_de_la_commune" character varying(50),
   "code_postal" integer
 );
 DROP TABLE IF EXISTS "Contentieux";
 CREATE TABLE "Contentieux" (
-  "Objet" text,
+  "Objet" character varying(255),
   "DateDebut" timestamp without time zone,
   "DateFin" timestamp without time zone,
-  "Avocats" text,
-  "Commentaires" text,
+  "Avocats" character varying(255),
+  "Commentaires" character varying(255),
   "IDOperation" integer,
   "IDContentieux" integer
 );
@@ -125,7 +125,7 @@ CREATE TABLE "Copie de tCommercialisation" (
   "DateLeveeOption" timestamp without time zone,
   "DateAnnulation" timestamp without time zone,
   "PrestataireCommercialisation" integer,
-  "PromoGesNom" text,
+  "PromoGesNom" character varying(255),
   "DatePrevueSignatureActe" timestamp without time zone,
   "PrestataireComm1" integer,
   "PrestataireComm2" integer,
@@ -136,7 +136,7 @@ CREATE TABLE "Copie de tCommercialisation" (
   "IDListeTypeAcquereur" integer,
   "PasAideRM" boolean,
   "MontantSubv" numeric(19,4),
-  "MotifAnnulation" text,
+  "MotifAnnulation" character varying(255),
   "DateSignatureComm" text,
   "EstFiscalite" boolean,
   "IDFiscaliteAcquereur" integer,
@@ -153,24 +153,24 @@ CREATE TABLE "Copie de tCommercialisation" (
   "PlacoRDVDate" timestamp without time zone,
   "PlacoRDVHeure" timestamp without time zone,
   "QuinzaineLivraisonDateEnvoiCourrier_old" timestamp without time zone,
-  "QuinzaineLivraisonPeriode_old" text,
+  "QuinzaineLivraisonPeriode_old" character varying(255),
   "PreviLivraisionDateEnvoiCourrier_old" timestamp without time zone,
   "PreviLivraisionRDVDate_old" timestamp without time zone,
   "PreviLivraisionRDVHeure_old" timestamp without time zone,
   "LivraisonDateEnvoiCourrier" timestamp without time zone,
   "LivraisonRDVDate" timestamp without time zone,
   "LivraisonRDVHeure" timestamp without time zone,
-  "LivraisonTrimestrePrevueAuContrat" text,
-  "LivraisonTrimestreDecale" text,
+  "LivraisonTrimestrePrevueAuContrat" character varying(10),
+  "LivraisonTrimestreDecale" character varying(255),
   "CDVPromo" text,
   "TMADateEnvoiCourrier" timestamp without time zone,
   "TMAMontantOuvertureDossier" numeric(19,4),
   "TMACommentaire" text,
   "TMADatePaiementSolde" timestamp without time zone,
-  "TMAMailingListeDevis" text,
-  "TMAMailingSolde" text,
+  "TMAMailingListeDevis" character varying(255),
+  "TMAMailingSolde" character varying(255),
   "DateEtatSortieLieux" timestamp without time zone,
-  "AnnulationCommentaire" text,
+  "AnnulationCommentaire" character varying(255),
   "DateResiliationContratLoc" timestamp without time zone,
   "MontantDepotGarantie" real,
   "curNbCommVendeur" integer,
@@ -186,7 +186,7 @@ CREATE TABLE "Copie de tCommercialisation" (
   "CDVTechnique" text,
   "AvecTMA" boolean,
   "TroisMoisAvantLivraisonDateEnvoiCourrier" timestamp without time zone,
-  "TroisMoisAvantLivraisonPeriode" text,
+  "TroisMoisAvantLivraisonPeriode" character varying(255),
   "TMA_PMR_ContratSigne" boolean,
   "TMA_PMR_DateRemisNotaireContratEtPlanVEFA" timestamp without time zone,
   "DateDemandeAgrement" timestamp without time zone,
@@ -200,48 +200,48 @@ CREATE TABLE "Copie de tCommercialisation" (
   "DateSouscription" timestamp without time zone,
   "IDMoyenDePaiement" integer,
   "PasDeSouscriptionAuCapital" boolean,
-  "CommentairesSouscription" text
+  "CommentairesSouscription" character varying(255)
 );
 DROP TABLE IF EXISTS "DataLots";
 CREATE TABLE "DataLots" (
   "ID TRANCHE" double precision,
-  "Tranche" text,
-  "Tranche - libellé" text,
-  "Grille" text,
-  "Grille - libellé" text,
-  "Numéro de lot" text,
-  "Lot associé" text,
-  "Code de copropriété" text,
-  "Famille de bien" text,
-  "Type de bien" text,
-  "Caractéristique" text,
+  "Tranche" character varying(255),
+  "Tranche - libellé" character varying(255),
+  "Grille" character varying(255),
+  "Grille - libellé" character varying(255),
+  "Numéro de lot" character varying(255),
+  "Lot associé" character varying(255),
+  "Code de copropriété" character varying(255),
+  "Famille de bien" character varying(255),
+  "Type de bien" character varying(255),
+  "Caractéristique" character varying(255),
   "Surf habitable" double precision,
   "Surf pondérée" double precision,
   "Surf utile" double precision,
   "Surf terrasse" double precision,
-  "N° étage" text,
+  "N° étage" character varying(255),
   "Surf garage" double precision,
-  "N°parcelle" text,
+  "N°parcelle" character varying(255),
   "Surf cave" double precision,
   "Surf balcon" double precision,
   "Surf loggias" double precision,
   "Surf remise" double precision,
   "Surf jardin" double precision,
   "Surf terrain" double precision,
-  "Exposition" text,
+  "Exposition" character varying(255),
   "Tantièmes" double precision,
   "Prix d'origine HT" double precision,
-  "TVA Origine" text,
+  "TVA Origine" character varying(255),
   "Prix d'origine" double precision,
   "Prix de vente HT" double precision,
-  "Acquéreur - code" text,
-  "Tx Vente" text,
+  "Acquéreur - code" character varying(255),
+  "Tx Vente" character varying(255),
   "Prix de vente TTC" double precision,
   "Tva/M" double precision,
   "Non destiné a la vente" double precision,
-  "Statut" text,
+  "Statut" character varying(255),
   "Prix au m²" double precision,
-  "Acquéreur - nom" text,
+  "Acquéreur - nom" character varying(255),
   "Date dépôt de prêt" timestamp without time zone,
   "Date prévue accord de prêt" timestamp without time zone,
   "Date accord de prêt" timestamp without time zone,
@@ -252,52 +252,52 @@ CREATE TABLE "DataLots" (
   "Date signature" timestamp without time zone,
   "Date prévue livraison" timestamp without time zone,
   "Date livraison" timestamp without time zone,
-  "Prescripteur" text,
+  "Prescripteur" character varying(255),
   "Mnt Comm" double precision,
-  "Notes" text
+  "Notes" character varying(255)
 );
 DROP TABLE IF EXISTS "DecalageUniteTemps";
 CREATE TABLE "DecalageUniteTemps" (
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDDecalageUniteTemps" integer
 );
 DROP TABLE IF EXISTS "DomaineStadeAvancement";
 CREATE TABLE "DomaineStadeAvancement" (
-  "CodeDomaineStadeAvancement" text
+  "CodeDomaineStadeAvancement" character varying(255)
 );
 DROP TABLE IF EXISTS "Droit";
 CREATE TABLE "Droit" (
   "IDDroit" integer,
-  "Fenetre" text,
-  "Controle" text,
+  "Fenetre" character varying(255),
+  "Controle" character varying(255),
   "Indice" integer,
   "IDService" integer,
   "IDTypeDroit" integer,
-  "Commentaires" text
+  "Commentaires" character varying(255)
 );
 DROP TABLE IF EXISTS "EquipePersonne";
 CREATE TABLE "EquipePersonne" (
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDEquipePersonne" integer
 );
 DROP TABLE IF EXISTS "EtatStadeAvancementAlerte";
 CREATE TABLE "EtatStadeAvancementAlerte" (
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDEtatStadeAvancementAlerte" integer
 );
 DROP TABLE IF EXISTS "EtudeNotaire";
 CREATE TABLE "EtudeNotaire" (
-  "NomEtude" text,
-  "Adresse" text,
-  "CP" text,
-  "Commune" text,
-  "Email" text,
-  "Commentaire" text,
+  "NomEtude" character varying(150),
+  "Adresse" character varying(255),
+  "CP" character varying(255),
+  "Commune" character varying(255),
+  "Email" character varying(255),
+  "Commentaire" character varying(255),
   "IDEtudeNotaire" integer
 );
 DROP TABLE IF EXISTS "FonctionInterlocuteurNotaire";
 CREATE TABLE "FonctionInterlocuteurNotaire" (
-  "Libelle" text,
+  "Libelle" character varying(50),
   "IDFonctionInterlocuteurNotaire" integer
 );
 DROP TABLE IF EXISTS "FraisFinancierPub";
@@ -310,31 +310,31 @@ CREATE TABLE "FraisFinancierPub" (
   "IDTranche" integer,
   "Ordre" integer,
   "IDFraisFinancierPub" integer,
-  "UsageFrais" text
+  "UsageFrais" character varying(255)
 );
 DROP TABLE IF EXISTS "GarantieEmpruntActionType";
 CREATE TABLE "GarantieEmpruntActionType" (
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDGarantieEmpruntActionType" integer
 );
 DROP TABLE IF EXISTS "GestionnaireSCCV";
 CREATE TABLE "GestionnaireSCCV" (
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDGestionnaireSCCV" integer
 );
 DROP TABLE IF EXISTS "ImportLotPromoGes";
 CREATE TABLE "ImportLotPromoGes" (
   "IDTranche" double precision,
-  "Tranche" text,
-  "Tranche - libellé" text,
-  "Grille" text,
-  "Grille - libellé" text,
-  "Numéro de lot" text,
-  "Lot associé" text,
-  "Code de copropriété" text,
-  "Famille de bien" text,
-  "Type de bien" text,
-  "Caractéristique" text,
+  "Tranche" character varying(255),
+  "Tranche - libellé" character varying(255),
+  "Grille" character varying(255),
+  "Grille - libellé" character varying(255),
+  "Numéro de lot" character varying(255),
+  "Lot associé" character varying(255),
+  "Code de copropriété" character varying(255),
+  "Famille de bien" character varying(255),
+  "Type de bien" character varying(255),
+  "Caractéristique" character varying(255),
   "Surf habitable" double precision,
   "Surf pondérée" double precision,
   "Surf utile" double precision,
@@ -346,20 +346,20 @@ CREATE TABLE "ImportLotPromoGes" (
   "Surf remise" double precision,
   "Surf jardin" double precision,
   "Surf terrain" double precision,
-  "N° étage" text,
-  "Exposition" text,
-  "N°parcelle" text,
+  "N° étage" character varying(255),
+  "Exposition" character varying(255),
+  "N°parcelle" character varying(255),
   "Tantièmes" double precision,
   "Prix d'origine" double precision,
   "Prix de vente HT" double precision,
   "Prix de vente TTC" double precision,
-  "TVA" text,
+  "TVA" character varying(255),
   "Tva/M" double precision,
   "Non destiné a la vente" double precision,
-  "Statut" text,
+  "Statut" character varying(255),
   "Prix au m²" double precision,
-  "Acquéreur - code" text,
-  "Acquéreur - nom" text,
+  "Acquéreur - code" character varying(255),
+  "Acquéreur - nom" character varying(255),
   "Date dépôt de prêt" timestamp without time zone,
   "Date prévue accord de prêt" timestamp without time zone,
   "Date accord de prêt" timestamp without time zone,
@@ -370,150 +370,150 @@ CREATE TABLE "ImportLotPromoGes" (
   "Date signature" timestamp without time zone,
   "Date prévue livraison" timestamp without time zone,
   "Date livraison" timestamp without time zone,
-  "Commercial" text,
+  "Commercial" character varying(255),
   "Pct comm" double precision,
   "Mnt Comm" double precision,
-  "Notes" text,
+  "Notes" character varying(255),
   "IDDestination" integer
 );
 DROP TABLE IF EXISTS "InfoConsigne";
 CREATE TABLE "InfoConsigne" (
-  "NomTable" text,
-  "NomChamp" text,
-  "TexteInfoConsigne" text,
-  "NomControleAlternatif" text,
+  "NomTable" character varying(255),
+  "NomChamp" character varying(255),
+  "TexteInfoConsigne" character varying(255),
+  "NomControleAlternatif" character varying(255),
   "IDInfoConsigne" integer
 );
 DROP TABLE IF EXISTS "InterlocuteurNotaire";
 CREATE TABLE "InterlocuteurNotaire" (
-  "Civilite" text,
-  "Patronyme" text,
-  "Prenom" text,
-  "Fonction" text,
-  "Telephone" text,
-  "Email" text,
+  "Civilite" character varying(10),
+  "Patronyme" character varying(100),
+  "Prenom" character varying(100),
+  "Fonction" character varying(100),
+  "Telephone" character varying(20),
+  "Email" character varying(100),
   "IDEtudeNotaire" integer,
   "IDFonctionInterlocuteurNotaire" integer,
   "IDInterlocuteurNotaire" integer
 );
 DROP TABLE IF EXISTS "Label";
 CREATE TABLE "Label" (
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDLabel" integer
 );
 DROP TABLE IF EXISTS "ListeNumEtage";
 CREATE TABLE "ListeNumEtage" (
-  "NumEtageImport" text,
-  "NumEtageAfficher" text
+  "NumEtageImport" character varying(255),
+  "NumEtageAfficher" character varying(10)
 );
 DROP TABLE IF EXISTS "MandatHypothequer";
 CREATE TABLE "MandatHypothequer" (
   "IDMandatHypothequer" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "MissionMOEInterne";
 CREATE TABLE "MissionMOEInterne" (
   "IDMissionMOEInterne" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "ModeleMail";
 CREATE TABLE "ModeleMail" (
   "IDModeleMail" integer,
-  "Libelle" text,
-  "Sujet" text,
+  "Libelle" character varying(255),
+  "Sujet" character varying(255),
   "Corps" bytea,
   "ModeBrouillon" smallint,
-  "Destinataire" text,
-  "DestinataireCC" text,
-  "DestinataireCCI" text,
-  "req_WD" text
+  "Destinataire" character varying(255),
+  "DestinataireCC" character varying(255),
+  "DestinataireCCI" character varying(255),
+  "req_WD" character varying(255)
 );
 DROP TABLE IF EXISTS "ModelePJ";
 CREATE TABLE "ModelePJ" (
   "IDModelePJ" integer,
-  "Libelle" text,
-  "Nom_etat_WD" text,
+  "Libelle" character varying(255),
+  "Nom_etat_WD" character varying(255),
   "IDModeleMail" integer,
-  "Chemin" text
+  "Chemin" character varying(255)
 );
 DROP TABLE IF EXISTS "MotifAnnulation";
 CREATE TABLE "MotifAnnulation" (
   "IDMotifAnnulation" integer,
-  "Libelle" text
+  "Libelle" character varying(50)
 );
 DROP TABLE IF EXISTS "MotifClauseParticuliereComm";
 CREATE TABLE "MotifClauseParticuliereComm" (
   "IDMotifClauseParticuliereComm" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "MotifRemunerationAssocie";
 CREATE TABLE "MotifRemunerationAssocie" (
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDMotifRemunerationAssocie" integer
 );
 DROP TABLE IF EXISTS "MoyenDePaiement";
 CREATE TABLE "MoyenDePaiement" (
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDMoyenDePaiement" integer
 );
 DROP TABLE IF EXISTS "NatureJuridique";
 CREATE TABLE "NatureJuridique" (
   "IDNatureJuridique" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "NumEtageTemp";
 CREATE TABLE "NumEtageTemp" (
-  "NumAvant" text,
-  "NumApres" text
+  "NumAvant" character varying(255),
+  "NumApres" character varying(255)
 );
 DROP TABLE IF EXISTS "OFSNom";
 CREATE TABLE "OFSNom" (
   "IDOFSNom" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "OrganismeSubvention";
 CREATE TABLE "OrganismeSubvention" (
   "IDOrganismeSubvention" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "OrganismeSubvention-23062026";
 CREATE TABLE "OrganismeSubvention-23062026" (
   "IDOrganismeSubvention" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "Param";
 CREATE TABLE "Param" (
   "IDParam" integer,
-  "Param" text,
-  "Typ" text,
+  "Param" character varying(255),
+  "Typ" character varying(1),
   "ValeurD" timestamp without time zone,
   "ValeurN" real,
-  "ValeurT" text,
+  "ValeurT" character varying(255),
   "ValeurH" text
 );
 DROP TABLE IF EXISTS "Partenariat";
 CREATE TABLE "Partenariat" (
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDPartenariat" integer
 );
 DROP TABLE IF EXISTS "PerformanceEnergetique";
 CREATE TABLE "PerformanceEnergetique" (
   "IDPerformanceEnergetique" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "PeriodeTauxGFA";
 CREATE TABLE "PeriodeTauxGFA" (
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDPeriodeTauxGFA" integer
 );
 DROP TABLE IF EXISTS "Periodicite";
 CREATE TABLE "Periodicite" (
-  "CodePeriodicite" text
+  "CodePeriodicite" character varying(255)
 );
 DROP TABLE IF EXISTS "REQ_Acquereur_Simple";
 CREATE TABLE "REQ_Acquereur_Simple" (
   "IDAcquereur" integer,
-  "NomComplet" text
+  "NomComplet" character varying(255)
 );
 DROP TABLE IF EXISTS "REQ_Assistante";
 CREATE TABLE "REQ_Assistante" (
@@ -523,14 +523,14 @@ CREATE TABLE "REQ_Assistante" (
 DROP TABLE IF EXISTS "REQ_Avancement_selon_domaine";
 CREATE TABLE "REQ_Avancement_selon_domaine" (
   "IDListeAvancement" integer,
-  "Libelle" text,
-  "Domaine" text,
+  "Libelle" character varying(255),
+  "Domaine" character varying(255),
   "Ordre" integer
 );
 DROP TABLE IF EXISTS "REQ_Interface_Operation_Tranche";
 CREATE TABLE "REQ_Interface_Operation_Tranche" (
   "IDTranche" integer,
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDConcept" integer,
   "IDOperation" integer,
   "NbLogtIndiv" integer,
@@ -543,7 +543,7 @@ CREATE TABLE "REQ_Interface_Operation_Tranche" (
   "DateLivraisonContractuelle" timestamp without time zone,
   "MontantHonoParLogt" numeric(24,6),
   "PasDeCommercialisation" smallint,
-  "Adresse" text,
+  "Adresse" character varying(255),
   "DureeChantierMois" integer,
   "TerrainMontantHT" numeric(24,6),
   "TerrainAcompte" numeric(24,6),
@@ -566,8 +566,8 @@ CREATE TABLE "REQ_Interface_Operation_Tranche" (
   "NbLVOPrevAnnee" integer,
   "FinCommercialisation" smallint,
   "FinTabborAnnuel" smallint,
-  "Concept" text,
-  "Architecte" text,
+  "Concept" character varying(255),
+  "Architecte" character varying(255),
   "DontLogtCollBRS" integer,
   "DontLogtIndivBRS" integer,
   "AlerteStadeAvancement_Texte" text,
@@ -581,7 +581,7 @@ CREATE TABLE "REQ_Interface_Operation_Tranche" (
 );
 DROP TABLE IF EXISTS "REQ_InterlocuteurNotaire";
 CREATE TABLE "REQ_InterlocuteurNotaire" (
-  "NomEtude" text,
+  "NomEtude" character varying(150),
   "IDInterlocuteurNotaire" integer,
   "InterlocuteurNotaire" text,
   "NomComplet" text
@@ -590,20 +590,20 @@ DROP TABLE IF EXISTS "REQ_Operation";
 CREATE TABLE "REQ_Operation" (
   "IDOperation" integer,
   "IDStructureJuridique" integer,
-  "Libelle" text,
-  "CP" text,
-  "Commune" text,
+  "Libelle" character varying(255),
+  "CP" character varying(255),
+  "Commune" character varying(255),
   "SurRennesMetropole" smallint,
   "ANRU" smallint,
   "Commentaire" text,
   "AnneeDGD" integer,
   "MasquerCommercial" smallint,
   "MasquerComptable" smallint,
-  "Adresse" text,
-  "NomZAC" text,
+  "Adresse" character varying(255),
+  "NomZAC" character varying(255),
   "DureeChantierMois_old" integer,
   "MasquerPromo" smallint,
-  "RS" text,
+  "RS" character varying(255),
   "curIDPersonne_ChargeOpe1" integer,
   "curIDPersonne_ChargeOpe2" integer,
   "NbTranches" numeric(20,0),
@@ -611,11 +611,11 @@ CREATE TABLE "REQ_Operation" (
   "TotalTerrain" bigint,
   "TotalLogtIndiv" bigint,
   "TotalNbAutresLocaux" bigint,
-  "ANRUComment" text,
+  "ANRUComment" character varying(255),
   "IDSecteurGeographiqueDeveloppement" integer,
   "IDInterlocuteurNotaire_Foncier" integer,
   "IDInterlocuteurNotaire_Vente" integer,
-  "AbreviationPourCodeReserve" text,
+  "AbreviationPourCodeReserve" character varying(5),
   "IDPersonne_Assistante" integer,
   "SynchroniserDatesEntreTranche" smallint,
   "IDApporteurFoncier" integer
@@ -623,18 +623,18 @@ CREATE TABLE "REQ_Operation" (
 DROP TABLE IF EXISTS "REQ_PrestataireComm2";
 CREATE TABLE "REQ_PrestataireComm2" (
   "IDPrestataire" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "REQ_Reservation";
 CREATE TABLE "REQ_Reservation" (
   "IDCommercialisation" integer,
   "IDLot" integer,
-  "Numlot" text,
-  "NomComplet" text,
+  "Numlot" character varying(255),
+  "NomComplet" character varying(255),
   "IDDestination" integer,
   "IDNatureAchat" integer,
   "DateResa" timestamp without time zone,
-  "LivraisonTrimestrePrevueAuContrat" text,
+  "LivraisonTrimestrePrevueAuContrat" character varying(10),
   "PrixDeVenteReelTTC" numeric(24,6),
   "DateAnnulation" timestamp without time zone,
   "MontantDepotGarantie" real,
@@ -661,12 +661,12 @@ DROP TABLE IF EXISTS "REQ_Reservation_Tout";
 CREATE TABLE "REQ_Reservation_Tout" (
   "IDCommercialisation" integer,
   "IDLot" integer,
-  "NomComplet" text,
-  "Numlot" text,
+  "NomComplet" character varying(255),
+  "Numlot" character varying(255),
   "IDDestination" integer,
   "IDNatureAchat" integer,
   "DateResa" timestamp without time zone,
-  "LivraisonTrimestrePrevueAuContrat" text,
+  "LivraisonTrimestrePrevueAuContrat" character varying(10),
   "PrixDeVenteReelTTC" numeric(24,6),
   "DateAnnulation" timestamp without time zone,
   "MontantDepotGarantie" real,
@@ -692,18 +692,18 @@ CREATE TABLE "REQ_Reservation_Tout" (
 );
 DROP TABLE IF EXISTS "REQ_SCCV_Creation_DernierMois";
 CREATE TABLE "REQ_SCCV_Creation_DernierMois" (
-  "RS" text,
-  "Commune" text,
-  "Operation" text,
+  "RS" character varying(255),
+  "Commune" character varying(255),
+  "Operation" character varying(255),
   "DateLiquidation" timestamp without time zone,
   "NbLogt" bigint,
   "DateImmat" timestamp without time zone
 );
 DROP TABLE IF EXISTS "REQ_SCCV_Liquidation_DernierMois";
 CREATE TABLE "REQ_SCCV_Liquidation_DernierMois" (
-  "RS" text,
-  "Commune" text,
-  "Operation" text,
+  "RS" character varying(255),
+  "Commune" character varying(255),
+  "Operation" character varying(255),
   "DateLiquidation" timestamp without time zone,
   "NbLogt" bigint,
   "DateImmat" timestamp without time zone
@@ -720,26 +720,26 @@ CREATE TABLE "REQ_Subvention_Simple" (
 );
 DROP TABLE IF EXISTS "REQ_Tranche_Situation_DernierMois_LIV";
 CREATE TABLE "REQ_Tranche_Situation_DernierMois_LIV" (
-  "Operation" text,
-  "Commune" text,
-  "Tranche" text,
+  "Operation" character varying(255),
+  "Commune" character varying(255),
+  "Tranche" character varying(255),
   "StadeIDSituation" integer,
   "StadeDepuisLe" timestamp without time zone,
   "NbLogt" bigint
 );
 DROP TABLE IF EXISTS "REQ_Tranche_Situation_DernierMois_LancementCom";
 CREATE TABLE "REQ_Tranche_Situation_DernierMois_LancementCom" (
-  "Operation" text,
-  "Commune" text,
-  "Tranche" text,
+  "Operation" character varying(255),
+  "Commune" character varying(255),
+  "Tranche" character varying(255),
   "NbLogt" bigint,
   "StadeCOM" timestamp without time zone
 );
 DROP TABLE IF EXISTS "REQ_Tranche_Situation_DernierMois_TRAVAUX";
 CREATE TABLE "REQ_Tranche_Situation_DernierMois_TRAVAUX" (
-  "Operation" text,
-  "Commune" text,
-  "Tranche" text,
+  "Operation" character varying(255),
+  "Commune" character varying(255),
+  "Tranche" character varying(255),
   "StadeIDSituation" integer,
   "NbLogt" bigint,
   "StadeDepuisLe" timestamp without time zone
@@ -749,7 +749,7 @@ CREATE TABLE "ReducGFA" (
   "IDGFA" integer,
   "Montant" numeric(19,4),
   "DateReduc" timestamp without time zone,
-  "Comm" text,
+  "Comm" character varying(255),
   "IDReducGFA" integer
 );
 DROP TABLE IF EXISTS "RegleAlerteStadeAvancement";
@@ -760,72 +760,72 @@ CREATE TABLE "RegleAlerteStadeAvancement" (
   "IDTypeDate2" integer,
   "IDStadeAvancement2" integer,
   "IDEtatStadeAlerte2" integer,
-  "TxtSiALerte" text,
+  "TxtSiALerte" character varying(255),
   "IDRegleAlerteStadeAvancement" integer
 );
 DROP TABLE IF EXISTS "SecteurGeographiqueDeveloppement";
 CREATE TABLE "SecteurGeographiqueDeveloppement" (
-  "Libelle" text,
+  "Libelle" character varying(50),
   "IDSecteurGeographiqueDeveloppement" integer
 );
 DROP TABLE IF EXISTS "Service";
 CREATE TABLE "Service" (
   "IDService" integer,
-  "Libelle" text,
+  "Libelle" character varying(255),
   "Num" integer
 );
 DROP TABLE IF EXISTS "Signataire";
 CREATE TABLE "Signataire" (
   "IDSignataire" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "SituationFamiliale";
 CREATE TABLE "SituationFamiliale" (
   "IDSituationFamiliale" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "SituationFamille";
 CREATE TABLE "SituationFamille" (
   "IDSituationDeFamille" integer,
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDSituationFamille" integer
 );
 DROP TABLE IF EXISTS "StatutApport";
 CREATE TABLE "StatutApport" (
   "IDStatutApport" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "StatutApportPromoteurGFA";
 CREATE TABLE "StatutApportPromoteurGFA" (
   "IDStatutApportPromoteurGFA" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "StatutCoutMandat";
 CREATE TABLE "StatutCoutMandat" (
   "IDStatutCoutMandat" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "StructureBaseDonnee";
 CREATE TABLE "StructureBaseDonnee" (
   "IDBaseDonnee" integer,
-  "FullName" text,
+  "FullName" character varying(255),
   "IDStructureBaseDonnee" integer
 );
 DROP TABLE IF EXISTS "StructureChamp";
 CREATE TABLE "StructureChamp" (
   "IDChamp" integer,
   "IDTableData" integer,
-  "Code" text,
-  "Libelle" text,
+  "Code" character varying(255),
+  "Libelle" character varying(255),
   "IDTypeChamp" integer,
   "Taille" integer,
   "DateAjout" timestamp without time zone,
-  "Commentaire" text,
-  "NomIndex" text,
+  "Commentaire" character varying(255),
+  "NomIndex" character varying(255),
   "Unique" smallint,
   "ClePrimaire" smallint,
   "Requis" smallint,
-  "OrigineDeLaDonnee" text,
+  "OrigineDeLaDonnee" character varying(255),
   "IDStructureDomaine" integer,
   "IDStructureEmplacementInterface" integer,
   "IDStructureStatutChamp" integer,
@@ -836,44 +836,44 @@ CREATE TABLE "StructureChamp" (
 );
 DROP TABLE IF EXISTS "StructureDomaine";
 CREATE TABLE "StructureDomaine" (
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDStructureDomaine" integer
 );
 DROP TABLE IF EXISTS "StructureEmplacementInterface";
 CREATE TABLE "StructureEmplacementInterface" (
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDStructureEmplacementInterface" integer
 );
 DROP TABLE IF EXISTS "StructureStatutChamp";
 CREATE TABLE "StructureStatutChamp" (
-  "Libelle" text,
-  "Commentaire" text,
+  "Libelle" character varying(255),
+  "Commentaire" character varying(255),
   "IDStructureStatutChamp" integer
 );
 DROP TABLE IF EXISTS "StructureTableData";
 CREATE TABLE "StructureTableData" (
   "IDTableData" integer,
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDBaseDonnee" integer,
   "DateAjout" timestamp without time zone,
-  "Commentaire" text,
+  "Commentaire" character varying(255),
   "IDStructureTableData" integer
 );
 DROP TABLE IF EXISTS "StructureTypeChamp";
 CREATE TABLE "StructureTypeChamp" (
   "IDTypeChamp" integer,
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDStructureTypeChamp" integer
 );
 DROP TABLE IF EXISTS "SurfaceNature";
 CREATE TABLE "SurfaceNature" (
   "IDSurfaceNature" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "TypeBatiment";
 CREATE TABLE "TypeBatiment" (
   "IDTypeBatiment" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "TypeBatimentStade";
 CREATE TABLE "TypeBatimentStade" (
@@ -885,47 +885,47 @@ CREATE TABLE "TypeBatimentStade" (
 );
 DROP TABLE IF EXISTS "TypeContratAssurance";
 CREATE TABLE "TypeContratAssurance" (
-  "Code" text
+  "Code" character varying(255)
 );
 DROP TABLE IF EXISTS "TypeDateStadeAvancement";
 CREATE TABLE "TypeDateStadeAvancement" (
   "IDTypeDateStadeAvancement" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "TypeDeMenage";
 CREATE TABLE "TypeDeMenage" (
   "IDTypeDeMenage" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "TypeDroit";
 CREATE TABLE "TypeDroit" (
   "IDTypeDroit" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "TypeFoncier";
 CREATE TABLE "TypeFoncier" (
   "IDTypeFoncier" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "TypeLogementActuel";
 CREATE TABLE "TypeLogementActuel" (
   "IDTypeLogementActuel" integer,
-  "Libelle" text,
+  "Libelle" character varying(255),
   "NumRM" integer
 );
 DROP TABLE IF EXISTS "TypeMissionBudgetArchitecte";
 CREATE TABLE "TypeMissionBudgetArchitecte" (
   "IDTypeMissionBudgetArchitecte" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "UsageFrais";
 CREATE TABLE "UsageFrais" (
   "IDUsageFrais" integer,
-  "Libelle" text
+  "Libelle" character varying(50)
 );
 DROP TABLE IF EXISTS "ZonageABC";
 CREATE TABLE "ZonageABC" (
-  "CodeZonageABC" text
+  "CodeZonageABC" character varying(3)
 );
 DROP TABLE IF EXISTS "audit__tSubvention_delete_log";
 CREATE TABLE "audit__tSubvention_delete_log" (
@@ -936,26 +936,26 @@ CREATE TABLE "audit__tSubvention_delete_log" (
   "server_principal" text,
   "host_name" text,
   "app_name" text,
-  "client_net_addr" text,
+  "client_net_addr" character varying(48),
   "statement_text" text
 );
 DROP TABLE IF EXISTS "audit__tSubvention_truncate_log";
 CREATE TABLE "audit__tSubvention_truncate_log" (
   "log_id" integer,
   "log_time" timestamp without time zone,
-  "database_name" text,
-  "schema_name" text,
-  "object_name" text,
+  "database_name" character varying(128),
+  "schema_name" character varying(128),
+  "object_name" character varying(128),
   "login_name" text,
   "server_principal" text,
   "host_name" text,
   "app_name" text,
-  "client_net_addr" text,
+  "client_net_addr" character varying(48),
   "statement_text" text
 );
 DROP TABLE IF EXISTS "sysdiagrams";
 CREATE TABLE "sysdiagrams" (
-  "name" text,
+  "name" character varying(128),
   "principal_id" integer,
   "diagram_id" integer,
   "version" integer,
@@ -964,85 +964,85 @@ CREATE TABLE "sysdiagrams" (
 DROP TABLE IF EXISTS "tAcquereur";
 CREATE TABLE "tAcquereur" (
   "IDAcquereur" integer,
-  "Code" text,
-  "Patronyme" text,
-  "Civilite" text,
-  "Prenom" text,
-  "RS" text,
+  "Code" character varying(255),
+  "Patronyme" character varying(255),
+  "Civilite" character varying(255),
+  "Prenom" character varying(255),
+  "RS" character varying(255),
   "NatureJuridique" integer,
   "TypePropriétaire_old" integer,
   "Commentaire" text,
-  "PromoGesNom" text,
+  "PromoGesNom" character varying(255),
   "ImportIDLot" integer,
   "ImportDateResa" timestamp without time zone,
   "ImportDatePrevueSignature" timestamp without time zone,
   "ImportDateLivraison" timestamp without time zone,
-  "Identifiant" text,
-  "N° Lot" text,
-  "Typologie" text,
-  "Etage" text,
-  "surface" text,
-  "Téléphone" text,
-  "Portable" text,
-  "Email" text,
-  "AdresseActuelle" text,
-  "CPActuel" text,
-  "Communeactuelle" text,
+  "Identifiant" character varying(255),
+  "N° Lot" character varying(255),
+  "Typologie" character varying(255),
+  "Etage" character varying(255),
+  "surface" character varying(255),
+  "Téléphone" character varying(255),
+  "Portable" character varying(255),
+  "Email" character varying(255),
+  "AdresseActuelle" character varying(255),
+  "CPActuel" character varying(255),
+  "Communeactuelle" character varying(255),
   "IDTypeLogementActuel" integer,
-  "RevenusFoyerFiscal_orig" text,
+  "RevenusFoyerFiscal_orig" character varying(255),
   "IDAcquereurRevenuFoyerFiscalParQuartile" integer,
-  "AnneeDeDeclaration_orig" text,
-  "NombreAdultes_orig" text,
-  "NombreEnfants_orig" text,
-  "EnfantAVenir_orig" text,
+  "AnneeDeDeclaration_orig" character varying(255),
+  "NombreAdultes_orig" character varying(255),
+  "NombreEnfants_orig" character varying(255),
+  "EnfantAVenir_orig" character varying(255),
   "IDAcquereurPlafondRessources" integer,
-  "PrixDAchat_orig" text,
-  "TauxTVA_orig" text,
-  "ApportReelADateHorsSubvention_orig" text,
-  "Subvention_orig" text,
-  "DateDeReservation" text,
-  "Date  signature de contrat de loc acc" text,
-  "Date de transfert de propriété" text,
-  "Adresse programme" text,
-  "CP programme" text,
-  "Ville programme" text,
-  "Nom programme" text,
-  "Type de programme" text,
-  "Co-propriété" text,
-  "Zone ANRU" text,
-  "Type d'acquisition" text,
-  "PrimoAccedant" text,
-  "Modifications" text,
-  "ReservesDE" text,
-  "Date prévisionnelle livraison" text,
-  "Date réelle livraison" text,
+  "PrixDAchat_orig" character varying(255),
+  "TauxTVA_orig" character varying(255),
+  "ApportReelADateHorsSubvention_orig" character varying(255),
+  "Subvention_orig" character varying(255),
+  "DateDeReservation" character varying(255),
+  "Date  signature de contrat de loc acc" character varying(255),
+  "Date de transfert de propriété" character varying(255),
+  "Adresse programme" character varying(255),
+  "CP programme" character varying(255),
+  "Ville programme" character varying(255),
+  "Nom programme" character varying(255),
+  "Type de programme" character varying(255),
+  "Co-propriété" character varying(255),
+  "Zone ANRU" character varying(255),
+  "Type d'acquisition" character varying(255),
+  "PrimoAccedant" character varying(255),
+  "Modifications" character varying(255),
+  "ReservesDE" character varying(255),
+  "Date prévisionnelle livraison" character varying(255),
+  "Date réelle livraison" character varying(255),
   "IDAcquereurTrancheAge" integer,
-  "Etape" text,
+  "Etape" character varying(255),
   "IDConseillerCommercial" integer,
   "IDConseillerTechnique" integer,
-  "EnqueteA" text,
-  "EnqueteB" text,
-  "EnqueteC" text,
+  "EnqueteA" character varying(255),
+  "EnqueteB" character varying(255),
+  "EnqueteC" character varying(255),
   "SituationFamiliale" integer,
   "Adulte1Age" integer,
   "Adulte2Age" integer,
   "Adulte1CSP" integer,
   "Adulte2CSP" integer,
-  "Adulte1Metier" text,
-  "Adulte2Metier" text,
-  "Adulte1CommuneTravail" text,
-  "Adulte2CommuneTravail" text,
+  "Adulte1Metier" character varying(255),
+  "Adulte2Metier" character varying(255),
+  "Adulte1CommuneTravail" character varying(255),
+  "Adulte2CommuneTravail" character varying(255),
   "TypeDeMenage" integer,
   "AgeEnfant1" integer,
   "AgeEnfant2" integer,
   "AgeEnfant3" integer,
   "AgeEnfant4" integer,
   "AgeEnfant5" integer,
-  "RevenuNetFoyerMensuel_orig" text,
+  "RevenuNetFoyerMensuel_orig" character varying(255),
   "MultiAccedant" boolean,
   "RevenusNetImposableNMoins1" numeric(19,4),
-  "Telephone_old" text,
-  "TelPortable_old" text,
+  "Telephone_old" character varying(255),
+  "TelPortable_old" character varying(255),
   "EstPTZ" boolean,
   "MensualiteDuFinancementClient" numeric(19,4),
   "TauxEffort" real,
@@ -1060,40 +1060,40 @@ CREATE TABLE "tAcquereur" (
   "old_PlacoRDVDate" timestamp without time zone,
   "old_PlacoRDVHeure" timestamp without time zone,
   "old_QuinzaineLivraisonDateEnvoiCourrier" timestamp without time zone,
-  "old_QuinzaineLivraisonPeriode" text,
+  "old_QuinzaineLivraisonPeriode" character varying(255),
   "old_PreviLivraisionDateEnvoiCourrier" timestamp without time zone,
   "old_PreviLivraisionRDVDate" timestamp without time zone,
   "old_PreviLivraisionRDVHeure" timestamp without time zone,
   "old_LivraisonDateEnvoiCourrier" timestamp without time zone,
   "old_LivraisonRDVDate" timestamp without time zone,
   "old_LivraisonRDVHeure" timestamp without time zone,
-  "old_LivraisonTrimestrePrevueAuContrat" text,
-  "old_LivraisonTrimestreDecale" text,
+  "old_LivraisonTrimestrePrevueAuContrat" character varying(10),
+  "old_LivraisonTrimestreDecale" character varying(255),
   "old_CDVPromo" text,
   "IDCivilite" integer,
   "Adulte1DateNaissance" timestamp without time zone,
   "Adulte2DateNaissance" timestamp without time zone,
-  "InfoPourEntreprise" text,
+  "InfoPourEntreprise" character varying(255),
   "curIDLot" integer,
   "curDateResa" timestamp without time zone,
-  "CommuneOrigine" text,
+  "CommuneOrigine" character varying(255),
   "DateModifAdresse" timestamp without time zone,
   "IDSituationFamille" integer,
   "PensionEtAutresRevenus" numeric(19,4),
   "LoyerActuel" numeric(19,4),
   "DureeFinancementEnMois" integer,
-  "Adulte1LieuDeNaissance" text,
-  "Adulte2LieuDeNaissance" text,
+  "Adulte1LieuDeNaissance" character varying(255),
+  "Adulte2LieuDeNaissance" character varying(255),
   "IDCivilite2" integer,
-  "Patronyme2" text,
-  "Prenom2" text,
-  "NomComplet" text,
+  "Patronyme2" character varying(255),
+  "Prenom2" character varying(255),
+  "NomComplet" character varying(255),
   "curDateAnnulation" timestamp without time zone,
-  "DescriptionLotCourant" text,
-  "Patronyme3" text,
-  "Prenom3" text,
+  "DescriptionLotCourant" character varying(255),
+  "Patronyme3" character varying(255),
+  "Prenom3" character varying(255),
   "IDCivilite3" integer,
-  "Email2" text,
+  "Email2" character varying(255),
   "DateCreation" timestamp without time zone,
   "DateModification" timestamp without time zone,
   "RevenusFoyerFiscal" numeric(19,4),
@@ -1109,116 +1109,116 @@ CREATE TABLE "tAcquereur" (
 );
 DROP TABLE IF EXISTS "tAcquereurOrigine";
 CREATE TABLE "tAcquereurOrigine" (
-  "Libelle" text,
+  "Libelle" character varying(255),
   "NumRM" integer,
   "IDAcquereurOrigine" integer
 );
 DROP TABLE IF EXISTS "tAcquereurPlafondRessources";
 CREATE TABLE "tAcquereurPlafondRessources" (
   "IDAcquereurPlafondRessources" integer,
-  "Libelle" text,
-  "Libelle_ancien" text
+  "Libelle" character varying(255),
+  "Libelle_ancien" character varying(255)
 );
 DROP TABLE IF EXISTS "tAcquereurRevenuFoyerFiscalParQuartile";
 CREATE TABLE "tAcquereurRevenuFoyerFiscalParQuartile" (
   "IDAcquereurRevenuFoyerFiscalParQuartile" integer,
-  "Libelle" text,
+  "Libelle" character varying(255),
   "BorneMax" integer
 );
 DROP TABLE IF EXISTS "tAcquereurTrancheAge";
 CREATE TABLE "tAcquereurTrancheAge" (
   "IDAcquereurTrancheAge" integer,
-  "Libelle" text,
+  "Libelle" character varying(255),
   "BorneMax" integer
 );
 DROP TABLE IF EXISTS "tAcquereur_ExportErrors";
 CREATE TABLE "tAcquereur_ExportErrors" (
-  "Champ" text,
-  "Erreur" text,
+  "Champ" character varying(255),
+  "Erreur" character varying(255),
   "Ligne" integer
 );
 DROP TABLE IF EXISTS "tAcquereur_copie";
 CREATE TABLE "tAcquereur_copie" (
   "IDAcquereur" integer,
-  "Code" text,
-  "Patronyme" text,
-  "Civilite" text,
-  "Prenom" text,
-  "RS" text,
+  "Code" character varying(255),
+  "Patronyme" character varying(255),
+  "Civilite" character varying(255),
+  "Prenom" character varying(255),
+  "RS" character varying(255),
   "NatureJuridique" integer,
   "TypePropriétaire_old" integer,
   "Commentaire" text,
-  "PromoGesNom" text,
+  "PromoGesNom" character varying(255),
   "ImportIDLot" integer,
   "ImportDateResa" timestamp without time zone,
   "ImportDatePrevueSignature" timestamp without time zone,
   "ImportDateLivraison" timestamp without time zone,
-  "Identifiant" text,
-  "N° Lot" text,
-  "Typologie" text,
-  "Etage" text,
-  "surface" text,
-  "Téléphone" text,
-  "Portable" text,
-  "Email" text,
-  "AdresseActuelle" text,
-  "CPActuel" text,
-  "Communeactuelle" text,
+  "Identifiant" character varying(255),
+  "N° Lot" character varying(255),
+  "Typologie" character varying(255),
+  "Etage" character varying(255),
+  "surface" character varying(255),
+  "Téléphone" character varying(255),
+  "Portable" character varying(255),
+  "Email" character varying(255),
+  "AdresseActuelle" character varying(255),
+  "CPActuel" character varying(255),
+  "Communeactuelle" character varying(255),
   "IDTypeLogementActuel" integer,
-  "RevenusFoyerFiscal" text,
+  "RevenusFoyerFiscal" character varying(255),
   "IDAcquereurRevenuFoyerFiscalParQuartile" integer,
-  "AnneeDeDeclaration_old" text,
-  "NombreAdultes" text,
-  "NombreEnfants" text,
-  "EnfantAVenir" text,
+  "AnneeDeDeclaration_old" character varying(255),
+  "NombreAdultes" character varying(255),
+  "NombreEnfants" character varying(255),
+  "EnfantAVenir" character varying(255),
   "IDAcquereurPlafondRessources" integer,
-  "PrixDAchat" text,
-  "TauxTVA" text,
-  "ApportReelADateHorsSubvention" text,
-  "Subvention" text,
-  "DateDeReservation" text,
-  "Date  signature de contrat de loc acc" text,
-  "Date de transfert de propriété" text,
-  "Adresse programme" text,
-  "CP programme" text,
-  "Ville programme" text,
-  "Nom programme" text,
-  "Type de programme" text,
-  "Co-propriété" text,
-  "Zone ANRU" text,
-  "Type d'acquisition" text,
-  "PrimoAccedant" text,
-  "Modifications" text,
-  "ReservesDE" text,
-  "Date prévisionnelle livraison" text,
-  "Date réelle livraison" text,
+  "PrixDAchat" character varying(255),
+  "TauxTVA" character varying(255),
+  "ApportReelADateHorsSubvention" character varying(255),
+  "Subvention" character varying(255),
+  "DateDeReservation" character varying(255),
+  "Date  signature de contrat de loc acc" character varying(255),
+  "Date de transfert de propriété" character varying(255),
+  "Adresse programme" character varying(255),
+  "CP programme" character varying(255),
+  "Ville programme" character varying(255),
+  "Nom programme" character varying(255),
+  "Type de programme" character varying(255),
+  "Co-propriété" character varying(255),
+  "Zone ANRU" character varying(255),
+  "Type d'acquisition" character varying(255),
+  "PrimoAccedant" character varying(255),
+  "Modifications" character varying(255),
+  "ReservesDE" character varying(255),
+  "Date prévisionnelle livraison" character varying(255),
+  "Date réelle livraison" character varying(255),
   "IDAcquereurTrancheAge" integer,
-  "Etape" text,
+  "Etape" character varying(255),
   "IDConseillerCommercial" integer,
   "IDConseillerTechnique" integer,
-  "EnqueteA" text,
-  "EnqueteB" text,
-  "EnqueteC" text,
+  "EnqueteA" character varying(255),
+  "EnqueteB" character varying(255),
+  "EnqueteC" character varying(255),
   "SituationFamiliale" integer,
   "Adulte1Age" integer,
   "Adulte2Age" integer,
   "Adulte1CSP" integer,
   "Adulte2CSP" integer,
-  "Adulte1Metier" text,
-  "Adulte2Metier" text,
-  "Adulte1CommuneTravail" text,
-  "Adulte2CommuneTravail" text,
+  "Adulte1Metier" character varying(255),
+  "Adulte2Metier" character varying(255),
+  "Adulte1CommuneTravail" character varying(255),
+  "Adulte2CommuneTravail" character varying(255),
   "TypeDeMenage" integer,
   "AgeEnfant1" integer,
   "AgeEnfant2" integer,
   "AgeEnfant3" integer,
   "AgeEnfant4" integer,
   "AgeEnfant5" integer,
-  "RevenuNetFoyerMensuel" text,
+  "RevenuNetFoyerMensuel" character varying(255),
   "MultiAccedant" boolean,
   "RevenusNetImposableNMoins1" numeric(19,4),
-  "Telephone_old" text,
-  "TelPortable_old" text,
+  "Telephone_old" character varying(255),
+  "TelPortable_old" character varying(255),
   "EstPTZ" boolean,
   "MensualiteDuFinancementClient" numeric(19,4),
   "TauxEffort" real,
@@ -1236,40 +1236,40 @@ CREATE TABLE "tAcquereur_copie" (
   "old_PlacoRDVDate" timestamp without time zone,
   "old_PlacoRDVHeure" timestamp without time zone,
   "old_QuinzaineLivraisonDateEnvoiCourrier" timestamp without time zone,
-  "old_QuinzaineLivraisonPeriode" text,
+  "old_QuinzaineLivraisonPeriode" character varying(255),
   "old_PreviLivraisionDateEnvoiCourrier" timestamp without time zone,
   "old_PreviLivraisionRDVDate" timestamp without time zone,
   "old_PreviLivraisionRDVHeure" timestamp without time zone,
   "old_LivraisonDateEnvoiCourrier" timestamp without time zone,
   "old_LivraisonRDVDate" timestamp without time zone,
   "old_LivraisonRDVHeure" timestamp without time zone,
-  "old_LivraisonTrimestrePrevueAuContrat" text,
-  "old_LivraisonTrimestreDecale" text,
+  "old_LivraisonTrimestrePrevueAuContrat" character varying(10),
+  "old_LivraisonTrimestreDecale" character varying(255),
   "old_CDVPromo" text,
   "IDCivilite" integer,
   "Adulte1DateNaissance" timestamp without time zone,
   "Adulte2DateNaissance" timestamp without time zone,
-  "InfoPourEntreprise" text,
+  "InfoPourEntreprise" character varying(255),
   "curIDLot" integer,
   "curDateResa" timestamp without time zone,
-  "CommuneOrigine" text,
+  "CommuneOrigine" character varying(255),
   "DateModifAdresse" timestamp without time zone,
   "IDSituationFamille" integer,
   "PensionEtAutresRevenus" numeric(19,4),
   "LoyerActuel" numeric(19,4),
   "DureeFinancementEnMois" integer,
-  "Adulte1LieuDeNaissance" text,
-  "Adulte2LieuDeNaissance" text,
+  "Adulte1LieuDeNaissance" character varying(255),
+  "Adulte2LieuDeNaissance" character varying(255),
   "IDCivilite2" integer,
-  "Patronyme2" text,
-  "Prenom2" text,
-  "NomComplet" text,
+  "Patronyme2" character varying(255),
+  "Prenom2" character varying(255),
+  "NomComplet" character varying(255),
   "curDateAnnulation" timestamp without time zone,
-  "DescriptionLotCourant" text,
-  "Patronyme3" text,
-  "Prenom3" text,
+  "DescriptionLotCourant" character varying(255),
+  "Patronyme3" character varying(255),
+  "Prenom3" character varying(255),
   "IDCivilite3" integer,
-  "Email2" text,
+  "Email2" character varying(255),
   "DateCreation" timestamp without time zone,
   "DateModification" timestamp without time zone,
   "AnneeDeDeclaration" integer
@@ -1283,36 +1283,36 @@ CREATE TABLE "tArchi_Operation" (
 );
 DROP TABLE IF EXISTS "tArchitecte";
 CREATE TABLE "tArchitecte" (
-  "RS" text,
+  "RS" character varying(255),
   "Commentaires" text,
-  "Commune" text,
+  "Commune" character varying(255),
   "IDArchitecte" integer
 );
 DROP TABLE IF EXISTS "tAssocie";
 CREATE TABLE "tAssocie" (
-  "RS" text,
-  "FormeJuridique" text,
-  "SIREN" text,
-  "Adresse1" text,
-  "Adresse2" text,
-  "CP" text,
-  "Commune" text,
-  "Tel" text,
+  "RS" character varying(255),
+  "FormeJuridique" character varying(255),
+  "SIREN" character varying(255),
+  "Adresse1" character varying(255),
+  "Adresse2" character varying(255),
+  "CP" character varying(10),
+  "Commune" character varying(255),
+  "Tel" character varying(255),
   "EstHLM" boolean,
-  "ContactNomComplet" text,
-  "ContactFonction" text,
-  "EMail" text,
+  "ContactNomComplet" character varying(255),
+  "ContactFonction" character varying(255),
+  "EMail" character varying(255),
   "Commentaire" text,
   "IDAssocie" integer
 );
 DROP TABLE IF EXISTS "tAssuranceDoMrH";
 CREATE TABLE "tAssuranceDoMrH" (
-  "NumContrat" text,
-  "TypeContrat" text,
+  "NumContrat" character varying(255),
+  "TypeContrat" character varying(255),
   "DateSouscription" timestamp without time zone,
   "DateDGD" timestamp without time zone,
   "DateResiliation" timestamp without time zone,
-  "AccordCadre" text,
+  "AccordCadre" character varying(255),
   "CoutOperation" numeric(19,4),
   "MontantCotisation" numeric(19,4),
   "Commentaire" text,
@@ -1325,8 +1325,8 @@ CREATE TABLE "tAssuranceDoMrH" (
 DROP TABLE IF EXISTS "tAssurancePNO";
 CREATE TABLE "tAssurancePNO" (
   "IDAssurancePNO" integer,
-  "NumContrat" text,
-  "TypeContrat" text,
+  "NumContrat" character varying(255),
+  "TypeContrat" character varying(255),
   "DateSouscription" timestamp without time zone,
   "DateEcheance" timestamp without time zone,
   "DateResiliation" timestamp without time zone,
@@ -1336,19 +1336,19 @@ CREATE TABLE "tAssurancePNO" (
 );
 DROP TABLE IF EXISTS "tBanque";
 CREATE TABLE "tBanque" (
-  "Libelle" text,
-  "CCNom" text,
-  "CCAdresse" text,
-  "CCTel" text,
-  "CCEMail" text,
-  "PretNom" text,
-  "PretAdresse" text,
-  "PretTel" text,
-  "PretEMail" text,
-  "CCCP" text,
-  "CCCommune" text,
-  "PretCP" text,
-  "PretCommune" text,
+  "Libelle" character varying(255),
+  "CCNom" character varying(50),
+  "CCAdresse" character varying(255),
+  "CCTel" character varying(20),
+  "CCEMail" character varying(100),
+  "PretNom" character varying(50),
+  "PretAdresse" character varying(255),
+  "PretTel" character varying(20),
+  "PretEMail" character varying(100),
+  "CCCP" character varying(10),
+  "CCCommune" character varying(150),
+  "PretCP" character varying(10),
+  "PretCommune" character varying(150),
   "IDBanque" integer
 );
 DROP TABLE IF EXISTS "tBilan_CAHT";
@@ -1362,11 +1362,11 @@ CREATE TABLE "tBilan_CAHT" (
   "CAHT_TMA" double precision,
   "CAHT_Terrain" double precision,
   "CAHT_Autres" double precision,
-  "CAHT_Commentaire" text,
+  "CAHT_Commentaire" character varying(255),
   "NbLot_VEFA" integer,
   "NbLot_LV_PSLA" integer,
   "NbLot_Autre" integer,
-  "NbLot_Commentaire" text,
+  "NbLot_Commentaire" character varying(255),
   "IDBilan_CAHT" integer
 );
 DROP TABLE IF EXISTS "tBilan_CAHT_VEFA";
@@ -1389,8 +1389,8 @@ CREATE TABLE "tBilan_Resultat" (
   "CpteCourant_SCCV" double precision,
   "ReintegrationFiscale_SCCV" double precision,
   "DeductionFiscale_SCCV" double precision,
-  "ReintegrationFiscaleComm" text,
-  "DeductionFiscaleCOmm" text,
+  "ReintegrationFiscaleComm" character varying(255),
+  "DeductionFiscaleCOmm" character varying(255),
   "ReintHF_ResultFiscal" double precision,
   "DeducHF_PerteFiscale" double precision,
   "PourcHFAnnee" double precision,
@@ -1399,7 +1399,7 @@ CREATE TABLE "tBilan_Resultat" (
   "ResultFisca_SCCV_NonIS" double precision,
   "ReintHF_PerteComptable" double precision,
   "DeducHF_ResultComptable" double precision,
-  "CommentairePourcHF" text,
+  "CommentairePourcHF" character varying(255),
   "ResultCpta_SCCV_IS" real,
   "ResultCpta_SCCV_NonIS" real,
   "ResultCpta_SCCV_Total" double precision,
@@ -1444,18 +1444,18 @@ CREATE TABLE "tBudget" (
 DROP TABLE IF EXISTS "tCategorieSubvention";
 CREATE TABLE "tCategorieSubvention" (
   "IDCategorieSubvention" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "tCategorieSubvention-23062026";
 CREATE TABLE "tCategorieSubvention-23062026" (
   "IDCategorieSubvention" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "tCivilite";
 CREATE TABLE "tCivilite" (
-  "Libelle" text,
-  "LibelleCourt" text,
-  "Client" text,
+  "Libelle" character varying(255),
+  "LibelleCourt" character varying(255),
+  "Client" character varying(255),
   "IDCivilite" integer
 );
 DROP TABLE IF EXISTS "tCommVendeur";
@@ -1474,12 +1474,12 @@ CREATE TABLE "tCommVendeur" (
 );
 DROP TABLE IF EXISTS "tCommercial";
 CREATE TABLE "tCommercial" (
-  "Denomination" text,
-  "Prenom" text,
-  "Initiales" text,
-  "EMail" text,
-  "Societe" text,
-  "Fonction" text,
+  "Denomination" character varying(255),
+  "Prenom" character varying(255),
+  "Initiales" character varying(4),
+  "EMail" character varying(255),
+  "Societe" character varying(50),
+  "Fonction" character varying(255),
   "IDCommercial" integer
 );
 DROP TABLE IF EXISTS "tCommercialisation";
@@ -1494,7 +1494,7 @@ CREATE TABLE "tCommercialisation" (
   "DateLeveeOption" timestamp without time zone,
   "DateAnnulation" timestamp without time zone,
   "PrestataireCommercialisation" integer,
-  "PromoGesNom" text,
+  "PromoGesNom" character varying(255),
   "DatePrevueSignatureActe" timestamp without time zone,
   "PrestataireComm1" integer,
   "PrestataireComm2" integer,
@@ -1505,7 +1505,7 @@ CREATE TABLE "tCommercialisation" (
   "IDListeTypeAcquereur" integer,
   "PasAideRM" boolean,
   "MontantSubv" numeric(19,4),
-  "MotifAnnulation" text,
+  "MotifAnnulation" character varying(255),
   "DateSignatureComm" text,
   "EstFiscalite" boolean,
   "IDFiscaliteAcquereur" integer,
@@ -1522,24 +1522,24 @@ CREATE TABLE "tCommercialisation" (
   "PlacoRDVDate" timestamp without time zone,
   "PlacoRDVHeure" timestamp without time zone,
   "QuinzaineLivraisonDateEnvoiCourrier_old" timestamp without time zone,
-  "QuinzaineLivraisonPeriode_old" text,
+  "QuinzaineLivraisonPeriode_old" character varying(255),
   "PreviLivraisionDateEnvoiCourrier_old" timestamp without time zone,
   "PreviLivraisionRDVDate_old" timestamp without time zone,
   "PreviLivraisionRDVHeure_old" timestamp without time zone,
   "LivraisonDateEnvoiCourrier" timestamp without time zone,
   "LivraisonRDVDate" timestamp without time zone,
   "LivraisonRDVHeure" timestamp without time zone,
-  "LivraisonTrimestrePrevueAuContrat" text,
-  "LivraisonTrimestreDecale" text,
+  "LivraisonTrimestrePrevueAuContrat" character varying(10),
+  "LivraisonTrimestreDecale" character varying(255),
   "CDVPromo" text,
   "TMADateEnvoiCourrier" timestamp without time zone,
   "TMAMontantOuvertureDossier" numeric(19,4),
   "TMACommentaire" text,
   "TMADatePaiementSolde" timestamp without time zone,
-  "TMAMailingListeDevis" text,
-  "TMAMailingSolde" text,
+  "TMAMailingListeDevis" character varying(255),
+  "TMAMailingSolde" character varying(255),
   "DateEtatSortieLieux" timestamp without time zone,
-  "AnnulationCommentaire" text,
+  "AnnulationCommentaire" character varying(255),
   "DateResiliationContratLoc" timestamp without time zone,
   "MontantDepotGarantie" real,
   "curNbCommVendeur" integer,
@@ -1555,7 +1555,7 @@ CREATE TABLE "tCommercialisation" (
   "CDVTechnique" text,
   "AvecTMA" boolean,
   "TroisMoisAvantLivraisonDateEnvoiCourrier" timestamp without time zone,
-  "TroisMoisAvantLivraisonPeriode" text,
+  "TroisMoisAvantLivraisonPeriode" character varying(255),
   "TMA_PMR_ContratSigne" boolean,
   "TMA_PMR_DateRemisNotaireContratEtPlanVEFA" timestamp without time zone,
   "DateDemandeAgrement" timestamp without time zone,
@@ -1569,10 +1569,10 @@ CREATE TABLE "tCommercialisation" (
   "DateSouscription" timestamp without time zone,
   "IDMoyenDePaiement" integer,
   "PasDeSouscriptionAuCapital" boolean,
-  "CommentairesSouscription" text,
+  "CommentairesSouscription" character varying(255),
   "AvecClauseParticuliereComm" integer,
   "IDMotifClauseParticuliereComm" integer,
-  "CommentaireClauseParticuliereComm" text,
+  "CommentaireClauseParticuliereComm" character varying(255),
   "DatePreviActabilite" timestamp without time zone,
   "EstReventeBien" integer,
   "DateButoirRevente" timestamp without time zone,
@@ -1583,11 +1583,11 @@ CREATE TABLE "tCompteBanque" (
   "IDBanque" integer,
   "IDTypeCompteBanque" integer,
   "IDUtilisationCompte" integer,
-  "NumCompte" text,
-  "IBAN" text,
-  "BIC" text,
+  "NumCompte" character varying(50),
+  "IBAN" character varying(255),
+  "BIC" character varying(11),
   "EstCloture" boolean,
-  "Commentaires" text,
+  "Commentaires" character varying(255),
   "IDStructureJuridique" integer,
   "IDCompteBanque" integer
 );
@@ -1596,17 +1596,17 @@ CREATE TABLE "tCompteBanque_old" (
   "IDBanque" integer,
   "IDTypeCompteBanque" integer,
   "IDUtilisationCompte" integer,
-  "NumCompte" text,
-  "IBAN" text,
-  "BIC" text,
+  "NumCompte" character varying(50),
+  "IBAN" character varying(255),
+  "BIC" character varying(11),
   "EstCloture" boolean,
-  "Commentaires" text,
+  "Commentaires" character varying(255),
   "IDStructureJuridique" integer,
   "IDCompteBanque" integer
 );
 DROP TABLE IF EXISTS "tConcept";
 CREATE TABLE "tConcept" (
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDArchitecte" integer,
   "Commentaire" text,
   "IDConcept" integer
@@ -1640,67 +1640,67 @@ CREATE TABLE "tDeclaration940" (
   "DateTvaLASM" timestamp without time zone,
   "IDTranche" integer,
   "SurOpe" boolean,
-  "Commentaires" text,
+  "Commentaires" character varying(255),
   "FinSuivi" boolean
 );
 DROP TABLE IF EXISTS "tDestination";
 CREATE TABLE "tDestination" (
   "IDDestination" integer,
-  "Libelle" text,
+  "Libelle" character varying(255),
   "Commentaire" text,
-  "LibelleComm" text
+  "LibelleComm" character varying(255)
 );
 DROP TABLE IF EXISTS "tEnqueteClient";
 CREATE TABLE "tEnqueteClient" (
-  "Identifiant" text,
-  "N° Lot" text,
-  "Typologie" text,
-  "Etage" text,
-  "surface" text,
-  "Nom Client" text,
-  "Prénom Client" text,
-  "Téléphone" text,
-  "Email Client" text,
-  "Adresse actuelle" text,
-  "CP Actuel" text,
-  "Ville actuelle" text,
-  "Origine" text,
-  "Revenus foyer fiscal" text,
-  "Revenu foyer fiscal par quartile" text,
-  "Année de déclaration" text,
-  "Nombre d'adulte" text,
-  "Nombre d'enfants" text,
-  "Enfant à venir" text,
-  "Plafond de ressources" text,
-  "Prix d'achat" text,
-  "Taux TVA" text,
-  "apport réel à  date hors subvention" text,
-  "Subvention" text,
-  "Date de réservation" text,
-  "Date  signature de contrat de loc acc" text,
-  "Date de transfert de propriété" text,
-  "Adresse programme" text,
-  "CP programme" text,
-  "Ville programme" text,
-  "Nom programme" text,
-  "Type de programme" text,
-  "Co-propriété" text,
-  "Zone ANRU" text,
-  "Type d'acquisition" text,
-  "Primo accedant" text,
-  "Modifications" text,
-  "Réserves DE" text,
-  "Date prévisionnelle livraison" text,
-  "Date réelle livraison" text,
-  "Age chef de famille" text,
-  "Etape" text,
-  "Nom Conseiller commercial" text,
-  "Email Conseiller Commercial" text,
-  "Nom Conseiller Technique" text,
-  "Email Conseiller Technique" text,
-  "EnquêteA" text,
-  "EnquêteB" text,
-  "EnquêteC" text
+  "Identifiant" character varying(255),
+  "N° Lot" character varying(255),
+  "Typologie" character varying(255),
+  "Etage" character varying(255),
+  "surface" character varying(255),
+  "Nom Client" character varying(255),
+  "Prénom Client" character varying(255),
+  "Téléphone" character varying(255),
+  "Email Client" character varying(255),
+  "Adresse actuelle" character varying(255),
+  "CP Actuel" character varying(255),
+  "Ville actuelle" character varying(255),
+  "Origine" character varying(255),
+  "Revenus foyer fiscal" character varying(255),
+  "Revenu foyer fiscal par quartile" character varying(255),
+  "Année de déclaration" character varying(255),
+  "Nombre d'adulte" character varying(255),
+  "Nombre d'enfants" character varying(255),
+  "Enfant à venir" character varying(255),
+  "Plafond de ressources" character varying(255),
+  "Prix d'achat" character varying(255),
+  "Taux TVA" character varying(255),
+  "apport réel à  date hors subvention" character varying(255),
+  "Subvention" character varying(255),
+  "Date de réservation" character varying(255),
+  "Date  signature de contrat de loc acc" character varying(255),
+  "Date de transfert de propriété" character varying(255),
+  "Adresse programme" character varying(255),
+  "CP programme" character varying(255),
+  "Ville programme" character varying(255),
+  "Nom programme" character varying(255),
+  "Type de programme" character varying(255),
+  "Co-propriété" character varying(255),
+  "Zone ANRU" character varying(255),
+  "Type d'acquisition" character varying(255),
+  "Primo accedant" character varying(255),
+  "Modifications" character varying(255),
+  "Réserves DE" character varying(255),
+  "Date prévisionnelle livraison" character varying(255),
+  "Date réelle livraison" character varying(255),
+  "Age chef de famille" character varying(255),
+  "Etape" character varying(255),
+  "Nom Conseiller commercial" character varying(255),
+  "Email Conseiller Commercial" character varying(255),
+  "Nom Conseiller Technique" character varying(255),
+  "Email Conseiller Technique" character varying(255),
+  "EnquêteA" character varying(255),
+  "EnquêteB" character varying(255),
+  "EnquêteC" character varying(255)
 );
 DROP TABLE IF EXISTS "tFacture";
 CREATE TABLE "tFacture" (
@@ -1717,7 +1717,7 @@ CREATE TABLE "tFacture" (
 DROP TABLE IF EXISTS "tFamilleDeBien";
 CREATE TABLE "tFamilleDeBien" (
   "IDFamilleDeBien" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "tFinancement";
 CREATE TABLE "tFinancement" (
@@ -1734,7 +1734,7 @@ CREATE TABLE "tFinancement" (
   "CommissionEngagementPourc" double precision,
   "FraisDossier" numeric(19,4),
   "Commentaire" text,
-  "NumContrat" text,
+  "NumContrat" character varying(255),
   "EstPhaseAmortissement" boolean,
   "SurOpe" boolean,
   "ApportPromoteur" numeric(19,4),
@@ -1745,7 +1745,7 @@ CREATE TABLE "tFinancement" (
   "DateStatutPartSociale" timestamp without time zone,
   "EstSolde" boolean,
   "MontantPrevi" numeric(19,4),
-  "InfosPretprevi" text,
+  "InfosPretprevi" character varying(255),
   "DateEnvoiDossier" timestamp without time zone,
   "ContratMontant" numeric(19,4),
   "ContratNbLogt" integer,
@@ -1757,15 +1757,15 @@ CREATE TABLE "tFinancement" (
   "FinancementSolde_old" boolean,
   "CommissionEngagementMontant_old" numeric(19,4),
   "DureeMoisMobPSLA" integer,
-  "Periodicite" text,
+  "Periodicite" character varying(255),
   "DateVerstPret" timestamp without time zone,
   "PrevMtOC" integer,
   "IDActionAlerte" integer,
   "EstPrlvFraisDossier" boolean,
   "HFCautionOC" boolean,
   "BlocageHonoOCMontant" numeric(19,4),
-  "BlocageHonoOCFin" text,
-  "BlocageHonoOCComment" text,
+  "BlocageHonoOCFin" character varying(255),
+  "BlocageHonoOCComment" character varying(255),
   "EstHFCautionOC" boolean,
   "PretEmployeurNumeroModifEcheance" integer,
   "PretEmployeurDateDebutAmort" timestamp without time zone,
@@ -1781,7 +1781,7 @@ CREATE TABLE "tFinancement" (
 DROP TABLE IF EXISTS "tFonction";
 CREATE TABLE "tFonction" (
   "IDFonction" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "tGFA";
 CREATE TABLE "tGFA" (
@@ -1790,7 +1790,7 @@ CREATE TABLE "tGFA" (
   "SurOpe" boolean,
   "EstIntrinseque" boolean,
   "DateValidation" timestamp without time zone,
-  "Commentaires" text,
+  "Commentaires" character varying(255),
   "IDBanque" integer,
   "DateDossierGFA" timestamp without time zone,
   "DateAccord" timestamp without time zone,
@@ -1814,12 +1814,12 @@ CREATE TABLE "tGFA" (
   "HFCautionGFA" boolean,
   "IDPeriodeTauxGFA" integer,
   "DureeMoisGFA" smallint,
-  "CommGFA" text,
+  "CommGFA" character varying(255),
   "BaseInitialeGFA" numeric(19,4),
   "DatePremierPrlevtGFA" timestamp without time zone,
   "ApportPromoteurGFA" numeric(19,4),
   "IDStatutApportPromoteurGFA" integer,
-  "PartSocialeComm" text
+  "PartSocialeComm" character varying(255)
 );
 DROP TABLE IF EXISTS "tGrilleFacturation";
 CREATE TABLE "tGrilleFacturation" (
@@ -1832,7 +1832,7 @@ CREATE TABLE "tGrilleFacturation" (
 DROP TABLE IF EXISTS "tGrilleHonoCom";
 CREATE TABLE "tGrilleHonoCom" (
   "IDGrilleHonoCom" integer,
-  "Evenement" text,
+  "Evenement" character varying(255),
   "Pourcentage" double precision,
   "IDCommercialisation" integer,
   "Commentaire" text
@@ -1864,7 +1864,7 @@ CREATE TABLE "tHonoCommHFFacture" (
   "NbActeFiscalise_old" integer,
   "MontantResaFiscalise_old" double precision,
   "MontantActeFiscalise_old" double precision,
-  "Commentaires" text,
+  "Commentaires" character varying(255),
   "NbResaAide_old" integer,
   "NbActeAide_old" integer,
   "MontantResaAide_old" double precision,
@@ -1881,33 +1881,33 @@ CREATE TABLE "tHonoCommHFNatureAchat" (
   "MontantCLA" double precision,
   "MontantActe" double precision,
   "MontantLeveeOption" double precision,
-  "Commentaires" text,
+  "Commentaires" character varying(255),
   "PourcentageResa" real,
   "PourcentageActe" real
 );
 DROP TABLE IF EXISTS "tIndextaux";
 CREATE TABLE "tIndextaux" (
   "IDIndextaux" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "tListeActionAlerte";
 CREATE TABLE "tListeActionAlerte" (
   "IDActionAlerte" integer,
-  "Libelle" text
+  "Libelle" character varying(50)
 );
 DROP TABLE IF EXISTS "tListeAvancement";
 CREATE TABLE "tListeAvancement" (
   "IDListeAvancement" integer,
-  "Domaine" text,
-  "Code" text,
-  "Libelle" text,
-  "LibelleMission" text,
+  "Domaine" character varying(255),
+  "Code" character varying(255),
+  "Libelle" character varying(255),
+  "LibelleMission" character varying(255),
   "AvecHonoGestion" boolean,
   "AvecAppelFondClient" boolean,
   "AvecEquivLgt" boolean,
   "Ordre" integer,
   "PourcentageStandard" real,
-  "PlanningTxt" text,
+  "PlanningTxt" character varying(255),
   "CouleurJalonFond" integer,
   "CouleurJalonPolice" integer,
   "PourcentageAvancement" real,
@@ -1931,16 +1931,16 @@ CREATE TABLE "tListeAvancement" (
 DROP TABLE IF EXISTS "tListeAvancement_old";
 CREATE TABLE "tListeAvancement_old" (
   "IDListeAvancement" integer,
-  "Domaine" text,
-  "Code" text,
-  "Libelle" text,
-  "LibelleMission" text,
+  "Domaine" character varying(255),
+  "Code" character varying(255),
+  "Libelle" character varying(255),
+  "LibelleMission" character varying(255),
   "AvecHonoGestion" boolean,
   "AvecAppelFondClient" boolean,
   "AvecEquivLgt" boolean,
   "Ordre" integer,
   "PourcentageStandard" real,
-  "PlanningTxt" text,
+  "PlanningTxt" character varying(255),
   "PlanningCouleurFond" integer,
   "PlanningCouleurPolice" integer,
   "PourcentageAvancement" real
@@ -1948,51 +1948,51 @@ CREATE TABLE "tListeAvancement_old" (
 DROP TABLE IF EXISTS "tListeBudget";
 CREATE TABLE "tListeBudget" (
   "IDListeBudget" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "tListeFinPret";
 CREATE TABLE "tListeFinPret" (
   "IDFinPret" integer,
-  "Libelle" text
+  "Libelle" character varying(20)
 );
 DROP TABLE IF EXISTS "tListeFiscaliteAcquereur";
 CREATE TABLE "tListeFiscaliteAcquereur" (
   "IDFiscaliteAcquereur" integer,
-  "Libelle" text,
-  "LibelleCourt" text
+  "Libelle" character varying(50),
+  "LibelleCourt" character varying(17)
 );
 DROP TABLE IF EXISTS "tListeModeRepartQuotePart";
 CREATE TABLE "tListeModeRepartQuotePart" (
   "IDModeRepartQuotePart" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "tListeNatureAchat";
 CREATE TABLE "tListeNatureAchat" (
   "IDNatureAchat" integer,
-  "Libelle" text,
-  "LibelleLong" text,
+  "Libelle" character varying(255),
+  "LibelleLong" character varying(255),
   "OrdreComm" integer
 );
 DROP TABLE IF EXISTS "tListeOrganismeAgrement";
 CREATE TABLE "tListeOrganismeAgrement" (
   "IDOrganismeAgrement" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "tListeOrganismeGarantieEmprunt";
 CREATE TABLE "tListeOrganismeGarantieEmprunt" (
   "IDOrganismeGarantieEmprunt" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "tListePhaseMontagePSLA";
 CREATE TABLE "tListePhaseMontagePSLA" (
   "IDListePhaseMontagePSLA" integer,
-  "Libelle" text,
-  "Code" text
+  "Libelle" character varying(255),
+  "Code" character varying(255)
 );
 DROP TABLE IF EXISTS "tListePrestataire";
 CREATE TABLE "tListePrestataire" (
   "IDPrestataire" integer,
-  "Libelle" text,
+  "Libelle" character varying(255),
   "AfficherMission" boolean,
   "AfficherOperation" boolean,
   "MasquerComm1" boolean,
@@ -2001,56 +2001,56 @@ CREATE TABLE "tListePrestataire" (
 DROP TABLE IF EXISTS "tListeSituation";
 CREATE TABLE "tListeSituation" (
   "IDSituation" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "tListeStatutPartSociale";
 CREATE TABLE "tListeStatutPartSociale" (
   "IDStatutPartSociale" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "tListeTypeAcquereur";
 CREATE TABLE "tListeTypeAcquereur" (
   "IDListeTypeAcquereur" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "tListeTypeBien";
 CREATE TABLE "tListeTypeBien" (
   "IDTypeDeBien" integer,
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDFamilleDeBien" integer
 );
 DROP TABLE IF EXISTS "tListeTypeCompteBanque";
 CREATE TABLE "tListeTypeCompteBanque" (
   "IDTypeCompteBanque" integer,
-  "Libelle" text
+  "Libelle" character varying(50)
 );
 DROP TABLE IF EXISTS "tListeTypeEvenement";
 CREATE TABLE "tListeTypeEvenement" (
   "IDListeTypeEvenement" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "tListeTypeFinancement";
 CREATE TABLE "tListeTypeFinancement" (
   "IDTypeFinancement" integer,
-  "Libelle" text,
-  "Categorie" text
+  "Libelle" character varying(255),
+  "Categorie" character varying(255)
 );
 DROP TABLE IF EXISTS "tListeTypeMission";
 CREATE TABLE "tListeTypeMission" (
   "IDTypeMission" integer,
-  "Libelle" text,
+  "Libelle" character varying(255),
   "CoPromotion" boolean
 );
 DROP TABLE IF EXISTS "tListeTypePropriétaire";
 CREATE TABLE "tListeTypePropriétaire" (
   "IDListeTypePropriétaire" integer,
-  "Libelle" text,
+  "Libelle" character varying(255),
   "EstInvestisseur" boolean
 );
 DROP TABLE IF EXISTS "tListeUtilisationCompte";
 CREATE TABLE "tListeUtilisationCompte" (
   "IDUtilisationCompte" integer,
-  "Libelle" text
+  "Libelle" character varying(20)
 );
 DROP TABLE IF EXISTS "tListetauxTVA";
 CREATE TABLE "tListetauxTVA" (
@@ -2062,11 +2062,11 @@ CREATE TABLE "tLot" (
   "IDlot" integer,
   "IDTranche" integer,
   "IDDestination" integer,
-  "Numlot" text,
-  "LotAssocie" text,
-  "FamilleDeBien" text,
-  "TypeDeBien" text,
-  "Commentaire" text,
+  "Numlot" character varying(255),
+  "LotAssocie" character varying(255),
+  "FamilleDeBien" character varying(255),
+  "TypeDeBien" character varying(255),
+  "Commentaire" character varying(255),
   "SurfHabitable" double precision,
   "SurfTerrasse" double precision,
   "SurfGarage" double precision,
@@ -2076,19 +2076,19 @@ CREATE TABLE "tLot" (
   "SurfRemise" double precision,
   "SurfJardin" double precision,
   "SurfTerrain" double precision,
-  "NumEtage" text,
-  "Exposition" text,
-  "NumParcelle" text,
-  "NumCopropriete" text,
+  "NumEtage" character varying(255),
+  "Exposition" character varying(255),
+  "NumParcelle" character varying(255),
+  "NumCopropriete" character varying(255),
   "Tantiemes" double precision,
   "PrixOrigine" double precision,
   "PrixDeVenteHT" double precision,
   "PrixDeVenteTTC" double precision,
-  "TVA" text,
-  "GrilleStatut" text,
+  "TVA" character varying(255),
+  "GrilleStatut" character varying(255),
   "PrixM2" double precision,
-  "Grille Acquéreur - code" text,
-  "Grille Acquéreur - nom" text,
+  "Grille Acquéreur - code" character varying(255),
+  "Grille Acquéreur - nom" character varying(255),
   "Grille Date dépôt de prêt" timestamp without time zone,
   "Grille Date prévue accord de prêt" timestamp without time zone,
   "Grille Date accord de prêt" timestamp without time zone,
@@ -2099,27 +2099,27 @@ CREATE TABLE "tLot" (
   "Grille Date signature" timestamp without time zone,
   "Grille Date prévue livraison" timestamp without time zone,
   "Grille Date livraison" timestamp without time zone,
-  "Grille Commercial" text,
+  "Grille Commercial" character varying(255),
   "Grille Pct comm" double precision,
   "Grille Mnt Comm" double precision,
-  "Notes" text,
+  "Notes" character varying(255),
   "MontantHonoCom" numeric(19,4),
-  "Commercial" text,
+  "Commercial" character varying(255),
   "IDCommercial" integer,
   "IDAcquereur" integer,
   "TauxCommResa" real,
   "TauxCommActe" real,
   "CommVendeurAVerserResa" numeric(19,4),
   "CommVendeurAVerserActe" numeric(19,4),
-  "Adresse" text,
-  "LocatairePatronyme" text,
-  "LocatairePrenom" text,
-  "LocataireCivilite" text,
-  "LocataireTelephone" text,
-  "LocatairePortable" text,
+  "Adresse" character varying(255),
+  "LocatairePatronyme" character varying(255),
+  "LocatairePrenom" character varying(255),
+  "LocataireCivilite" character varying(255),
+  "LocataireTelephone" character varying(255),
+  "LocatairePortable" character varying(255),
   "DateLivraison_old" timestamp without time zone,
-  "PDL" text,
-  "PCE" text,
+  "PDL" character varying(50),
+  "PCE" character varying(50),
   "DateLivraisonSCCV" timestamp without time zone,
   "curIDAcquereur" integer,
   "curDateResa" timestamp without time zone,
@@ -2134,9 +2134,9 @@ CREATE TABLE "tLot" (
   "NbTMA" integer,
   "curDateLivraison" timestamp without time zone,
   "EstVenteAcheve" boolean,
-  "Designation" text,
+  "Designation" character varying(255),
   "SurfaceUtile" real,
-  "DescriptionAcquereurCourant" text
+  "DescriptionAcquereurCourant" character varying(255)
 );
 DROP TABLE IF EXISTS "tMission";
 CREATE TABLE "tMission" (
@@ -2179,9 +2179,9 @@ DROP TABLE IF EXISTS "tOperation";
 CREATE TABLE "tOperation" (
   "IDOperation" integer,
   "IDStructureJuridique" integer,
-  "Libelle" text,
-  "CP" text,
-  "Commune" text,
+  "Libelle" character varying(255),
+  "CP" character varying(255),
+  "Commune" character varying(255),
   "SurRennesMetropole" boolean,
   "ANRU" boolean,
   "Commentaire" text,
@@ -2189,8 +2189,8 @@ CREATE TABLE "tOperation" (
   "MasquerCommercial" boolean,
   "MasquerComptable" boolean,
   "IndivColl" integer,
-  "Adresse" text,
-  "NomZAC" text,
+  "Adresse" character varying(255),
+  "NomZAC" character varying(255),
   "DureeChantierMois_old" integer,
   "MasquerPromo" boolean,
   "curIDPersonne_ChargeOpe1" integer,
@@ -2204,21 +2204,21 @@ CREATE TABLE "tOperation" (
   "IDPerformanceEnergetique" integer,
   "EstMOEInterne" boolean,
   "IDMissionMOEInterne" integer,
-  "ANRUComment" text,
+  "ANRUComment" character varying(255),
   "AvecAlerte" boolean,
   "IDSecteurGeographiqueDeveloppement" integer,
   "IDInterlocuteurNotaire_Notaire_Foncier" integer,
   "IDInterlocuteurNotaire_Notaire_Vente" integer,
-  "AbreviationPourCodeReserve" text,
+  "AbreviationPourCodeReserve" character varying(5),
   "IDPersonne_Assistante" integer,
   "IDTypeFoncier" integer,
   "DateValidationEngagement" timestamp without time zone,
   "SynchroniserDatesEntreTranche" boolean,
   "DateAbandon" timestamp without time zone,
-  "CommentairesAbandon" text,
+  "CommentairesAbandon" character varying(255),
   "PossibiliteInvestisseur" boolean,
   "TauxInvestisseurAutorise" real,
-  "CommentaireInvestisseur" text,
+  "CommentaireInvestisseur" character varying(255),
   "IDInterlocuteurNotaire_Clerc_Foncier" integer,
   "IDInterlocuteurNotaire_Clerc_Vente" integer,
   "IDApporteurFoncier" integer,
@@ -2235,7 +2235,7 @@ DROP TABLE IF EXISTS "tPSLA";
 CREATE TABLE "tPSLA" (
   "IDPSLA" integer,
   "DateAgrementProvisoire" timestamp without time zone,
-  "NumAgrement" text,
+  "NumAgrement" character varying(255),
   "CoutTotal" numeric(19,4),
   "MontantPSLA" numeric(19,4),
   "IDBanque" integer,
@@ -2243,16 +2243,16 @@ CREATE TABLE "tPSLA" (
   "DateDeliberationGarantie" timestamp without time zone,
   "IDTranche" integer,
   "GarantieEmpruntActionDate" timestamp without time zone,
-  "old_GarantieEmpruntActionType" text,
+  "old_GarantieEmpruntActionType" character varying(255),
   "Commentaire" text,
   "NbLogtAgrement" integer,
   "DateSignatureGarant" timestamp without time zone,
   "DateInfoAnnuelle" timestamp without time zone,
   "DateInfoFin" timestamp without time zone,
-  "Commemtaires" text,
+  "Commemtaires" character varying(255),
   "BanqueActionDate" timestamp without time zone,
-  "old_BanqueActionType" text,
-  "old_ActionDestinataire" text,
+  "old_BanqueActionType" character varying(255),
+  "old_ActionDestinataire" character varying(255),
   "old_DateDepotDossierAgrement" timestamp without time zone,
   "old_DateSignaturePretSCCV" timestamp without time zone,
   "old_DateEnvoiPretGarant" timestamp without time zone,
@@ -2274,18 +2274,18 @@ CREATE TABLE "tPSLA" (
   "CFF_FI_Client" timestamp without time zone,
   "DureeAnneePSLA" integer,
   "EstimPSLA" integer,
-  "NumBureauGarantie" text,
-  "NumConventionGarantie" text,
+  "NumBureauGarantie" character varying(20),
+  "NumConventionGarantie" character varying(20),
   "IDBanqueActionType" integer,
   "IDGarantieEmpruntActionType" integer
 );
 DROP TABLE IF EXISTS "tParam_old";
 CREATE TABLE "tParam_old" (
   "IDParam" integer,
-  "Param" text,
+  "Param" character varying(255),
   "ValeurD" timestamp without time zone,
   "ValeurN" integer,
-  "ValeurT" text
+  "ValeurT" character varying(255)
 );
 DROP TABLE IF EXISTS "tParticipation";
 CREATE TABLE "tParticipation" (
@@ -2293,24 +2293,24 @@ CREATE TABLE "tParticipation" (
   "IDStructureJuridique" integer,
   "IDAssocie" integer,
   "Pourcentage" double precision,
-  "Commmentaires" text,
+  "Commmentaires" character varying(255),
   "IDIndexTaux_Remuneration" integer,
   "DateFinRemuneration" timestamp without time zone,
   "IDMotifRemunerationAssocie" integer,
   "ConvTreso" boolean,
   "DateSignatureConv" timestamp without time zone,
   "DateApplication" timestamp without time zone,
-  "InfoTauxRemuneration" text,
+  "InfoTauxRemuneration" character varying(255),
   "IDPeriodicite_Versement" integer
 );
 DROP TABLE IF EXISTS "tPersonne";
 CREATE TABLE "tPersonne" (
   "IDPersonne" integer,
-  "Patronyme" text,
-  "Prenom" text,
+  "Patronyme" character varying(255),
+  "Prenom" character varying(255),
   "EstPresent" boolean,
   "IDFonction" integer,
-  "EMail" text,
+  "EMail" character varying(255),
   "IDEquipePersonne" integer
 );
 DROP TABLE IF EXISTS "tPlanningStade";
@@ -2323,7 +2323,7 @@ CREATE TABLE "tPlanningStade" (
 DROP TABLE IF EXISTS "tPlanningType";
 CREATE TABLE "tPlanningType" (
   "IDPlanningType" integer,
-  "Label" text
+  "Label" character varying(255)
 );
 DROP TABLE IF EXISTS "tRemboursementAnticipe";
 CREATE TABLE "tRemboursementAnticipe" (
@@ -2338,63 +2338,63 @@ CREATE TABLE "tRemboursementAnticipe" (
 DROP TABLE IF EXISTS "tReport";
 CREATE TABLE "tReport" (
   "IDReport" integer,
-  "Libelle" text,
-  "NomInterne" text,
-  "ServiceHF" text,
+  "Libelle" character varying(255),
+  "NomInterne" character varying(255),
+  "ServiceHF" character varying(255),
   "FilterIDOperation" boolean,
   "FilterIDEntreprise" boolean,
   "FilterIDAcquereur" boolean,
   "FilterIDLot" boolean,
   "FilterReserveRestantALever" boolean,
-  "NomWinDev" text
+  "NomWinDev" character varying(255)
 );
 DROP TABLE IF EXISTS "tReserve";
 CREATE TABLE "tReserve" (
   "IDReserve" integer,
-  "ReserveCode" text,
+  "ReserveCode" character varying(20),
   "IDTypeReserve" integer,
   "TravauxEffectues" boolean,
-  "Reserve" text,
+  "Reserve" character varying(255),
   "DateReclamation" timestamp without time zone,
   "DateDIntervention" timestamp without time zone,
   "IDLot" integer,
   "IDEntreprise" integer,
   "IDPiece" integer,
-  "AncienNumLot" text,
-  "AncienneEntreprise" text,
-  "AncienneOperation" text,
-  "AncienPiece" text,
-  "AncienType" text,
+  "AncienNumLot" character varying(10),
+  "AncienneEntreprise" character varying(50),
+  "AncienneOperation" character varying(50),
+  "AncienPiece" character varying(255),
+  "AncienType" character varying(255),
   "EnvoyerMail" boolean,
   "EnvoyerMailDate" timestamp without time zone,
-  "WindowsUser" text,
+  "WindowsUser" character varying(255),
   "EstVerrouille" boolean,
   "IDAirBat" integer
 );
 DROP TABLE IF EXISTS "tReserveEntreprise";
 CREATE TABLE "tReserveEntreprise" (
   "IDReserveEntreprise" integer,
-  "RS" text,
-  "Adresse1" text,
-  "Adresse2" text,
-  "CP" text,
-  "Commune" text,
-  "Telephone" text,
-  "Fax" text,
-  "Contact" text,
-  "TelContact" text,
-  "CorpsDEtat" text,
-  "EMail" text
+  "RS" character varying(50),
+  "Adresse1" character varying(50),
+  "Adresse2" character varying(50),
+  "CP" character varying(5),
+  "Commune" character varying(30),
+  "Telephone" character varying(15),
+  "Fax" character varying(15),
+  "Contact" character varying(20),
+  "TelContact" character varying(50),
+  "CorpsDEtat" character varying(50),
+  "EMail" character varying(255)
 );
 DROP TABLE IF EXISTS "tReservePiece";
 CREATE TABLE "tReservePiece" (
   "IDReservePiece" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "tReserveType";
 CREATE TABLE "tReserveType" (
   "IDReserveType" integer,
-  "Libelle" text
+  "Libelle" character varying(60)
 );
 DROP TABLE IF EXISTS "tSGA";
 CREATE TABLE "tSGA" (
@@ -2416,10 +2416,10 @@ CREATE TABLE "tSGA" (
 DROP TABLE IF EXISTS "tSIE";
 CREATE TABLE "tSIE" (
   "IDSIE" integer,
-  "Libelle" text,
-  "Adresse" text,
-  "CP" text,
-  "Commune" text
+  "Libelle" character varying(255),
+  "Adresse" character varying(255),
+  "CP" character varying(255),
+  "Commune" character varying(255)
 );
 DROP TABLE IF EXISTS "tStadeAvancement";
 CREATE TABLE "tStadeAvancement" (
@@ -2436,13 +2436,13 @@ CREATE TABLE "tStadeAvancement" (
   "MontantPrevi" numeric(19,4),
   "AvecAppelFondClientSuppl" boolean,
   "DatePreviObjectif_OLD" timestamp without time zone,
-  "LienHypertexte" text
+  "LienHypertexte" character varying(255)
 );
 DROP TABLE IF EXISTS "tStructureJuridique";
 CREATE TABLE "tStructureJuridique" (
   "IDStructureJuridique" integer,
-  "RS" text,
-  "NumTVAIntra" text,
+  "RS" character varying(255),
+  "NumTVAIntra" character varying(255),
   "Siret" numeric(19,4),
   "DateDebutActivite" timestamp without time zone,
   "DateImmat" timestamp without time zone,
@@ -2450,18 +2450,18 @@ CREATE TABLE "tStructureJuridique" (
   "EDI_Liasse" boolean,
   "DateBilanDebutPremierExercice" timestamp without time zone,
   "DateBilanFinPremierExercice" timestamp without time zone,
-  "DatePlanningCloture" text,
+  "DatePlanningCloture" character varying(255),
   "IDPersonneComptable" integer,
   "Stade" integer,
-  "GestionnaireSCCV" text,
+  "GestionnaireSCCV" character varying(255),
   "HFSGA" boolean,
   "DateLiquidation" timestamp without time zone,
-  "old_CentreImpotsSIE" text,
-  "InterlocuteurSIE" text,
+  "old_CentreImpotsSIE" character varying(255),
+  "InterlocuteurSIE" character varying(255),
   "IDSIE" integer,
   "IDCivilite" integer,
   "CpteFiscal" boolean,
-  "DateModifCloture" text,
+  "DateModifCloture" character varying(255),
   "SCCV_HF" boolean,
   "SCCV_HLM" boolean,
   "CapitalSCCV" integer,
@@ -2476,20 +2476,20 @@ CREATE TABLE "tStructureJuridique" (
   "curPourcKGI" real,
   "curPourcMH" real,
   "curPourcAutre" real,
-  "curAutreNom" text,
-  "curAutreNomPourc" text
+  "curAutreNom" character varying(255),
+  "curAutreNomPourc" character varying(255)
 );
 DROP TABLE IF EXISTS "tStructureJuridique_Stade";
 CREATE TABLE "tStructureJuridique_Stade" (
   "IDStructureJuridique_Stade" integer,
-  "Libelle" text
+  "Libelle" character varying(255)
 );
 DROP TABLE IF EXISTS "tSubvention";
 CREATE TABLE "tSubvention" (
   "IDSubvention" integer,
   "IDCategorieSubvention" integer,
-  "Organisme_old" text,
-  "NumConvention" text,
+  "Organisme_old" character varying(255),
+  "NumConvention" character varying(255),
   "DateConvention" timestamp without time zone,
   "DateCaducite" timestamp without time zone,
   "MontantProvisoire" numeric(24,6),
@@ -2513,8 +2513,8 @@ DROP TABLE IF EXISTS "tSubvention-SECOURS";
 CREATE TABLE "tSubvention-SECOURS" (
   "IDSubvention" integer,
   "IDCategorieSubvention" integer,
-  "Organisme_old" text,
-  "NumConvention" text,
+  "Organisme_old" character varying(255),
+  "NumConvention" character varying(255),
   "DateConvention" timestamp without time zone,
   "DateCaducite" timestamp without time zone,
   "MontantProvisoire" numeric(24,6),
@@ -2537,20 +2537,20 @@ CREATE TABLE "tSubvention-SECOURS" (
 DROP TABLE IF EXISTS "tTMA";
 CREATE TABLE "tTMA" (
   "IDTMA" integer,
-  "RefDevis" text,
+  "RefDevis" character varying(30),
   "DateDevis" timestamp without time zone,
-  "ObjetDevis" text,
+  "ObjetDevis" character varying(100),
   "DateSignatureDevis" timestamp without time zone,
   "MontantDevis" numeric(19,4),
   "MontantVersement1" numeric(19,4),
-  "Commentaires" text,
+  "Commentaires" character varying(255),
   "IDCommercialisation" integer,
   "MontantVersement2" numeric(19,4)
 );
 DROP TABLE IF EXISTS "tTranche";
 CREATE TABLE "tTranche" (
   "IDTranche" integer,
-  "Libelle" text,
+  "Libelle" character varying(255),
   "IDConcept" integer,
   "IDOperation" integer,
   "NbLogtIndiv" integer,
@@ -2563,7 +2563,7 @@ CREATE TABLE "tTranche" (
   "DateLivraisonContractuelle" timestamp without time zone,
   "MontantHonoParLogt" numeric(19,4),
   "PasDeCommercialisation" boolean,
-  "Adresse" text,
+  "Adresse" character varying(255),
   "DureeChantierMois" integer,
   "TerrainMontantHT" numeric(19,4),
   "TerrainAcompte" numeric(19,4),
@@ -2596,7 +2596,7 @@ CREATE TABLE "tTranche" (
   "Situation_FINSAV" integer,
   "StadeDepuisLe" timestamp without time zone,
   "StadeIDSituation" integer,
-  "StadeCode" text,
+  "StadeCode" character varying(255),
   "StadePreviOS" timestamp without time zone,
   "StadePreviCOM" timestamp without time zone,
   "StadePreviLIV" timestamp without time zone,
@@ -2616,13 +2616,13 @@ CREATE TABLE "tTranche" (
   "NbLeveeOption_N" integer,
   "NbPhaseLoc" integer,
   "FraisBudgetDate" timestamp without time zone,
-  "FraisBudgetCommentaire" text,
+  "FraisBudgetCommentaire" character varying(255),
   "FraisActuaDate" timestamp without time zone,
-  "FraisActuaCommentaire" text,
+  "FraisActuaCommentaire" character varying(255),
   "FraisConsommeDate" timestamp without time zone,
-  "FraisConsommeCommentaire" text,
+  "FraisConsommeCommentaire" character varying(255),
   "FraisReelDate" timestamp without time zone,
-  "FraisReelCommentaire" text,
+  "FraisReelCommentaire" character varying(255),
   "CAHTActua" numeric(19,4),
   "CAHTReel" numeric(19,4),
   "TerrainMontantTTC" numeric(19,4),
@@ -2630,24 +2630,24 @@ CREATE TABLE "tTranche" (
   "CAHTPrevPSLA" numeric(19,4),
   "CAHTPrevVEFA" numeric(19,4),
   "CAHTPrevAutre" numeric(19,4),
-  "CAHTPrevCommentaire" text,
+  "CAHTPrevCommentaire" character varying(255),
   "DontLogtCollBRS" integer,
   "DontLogtIndivBRS" integer,
   "TerrainPourcAcptePrevu" real,
-  "TerrainComment" text,
+  "TerrainComment" character varying(255),
   "IDOFSNom" integer,
   "TerrainOFSMontantHT" numeric(19,4),
   "TerrainOFSAcptePourcPrevu" real,
   "TerrainOFSAcpteMontantVerse" real,
   "TerrainOFSCompromis_IDSignataire" integer,
   "old_DroitAppuiLogtMntUnitaire" numeric(19,4),
-  "old_DroitAppuiLogtComment" text,
+  "old_DroitAppuiLogtComment" character varying(255),
   "old_DroitAppuiSurfaceMntUnitaire" numeric(19,4),
   "old_DroitAppui_IDSurfaceNature" integer,
   "old_DroitAppuiSurfaceNbre" real,
-  "old_DroitAppuiSurfaceComment" text,
+  "old_DroitAppuiSurfaceComment" character varying(255),
   "old_DroitAppuiAutreMnt" numeric(19,4),
-  "old_DroitAppuiAutreComment" text,
+  "old_DroitAppuiAutreComment" character varying(255),
   "old_TerrainOFSCompromisDatePrevi" timestamp without time zone,
   "old_TerrainOFSCompromisDateReele" timestamp without time zone,
   "AlerteStadeAvancement_Texte" text,
@@ -2707,7 +2707,7 @@ CREATE TABLE "tVersementDepotGarantie" (
   "IDVersementDepotGarantie" integer,
   "MontantVerse" real,
   "DateRemise" timestamp without time zone,
-  "Commentaire" text,
+  "Commentaire" character varying(255),
   "IDCommercialisation" integer,
   "DateCreation" timestamp without time zone
 );
@@ -2716,6 +2716,6 @@ CREATE TABLE "tVersementDepotGarantie_old" (
   "IDVersementDepotGarantie" integer,
   "MontantVerse" real,
   "DateRemise" timestamp without time zone,
-  "Commentaire" text,
+  "Commentaire" character varying(255),
   "IDCommercialisation" integer
 );

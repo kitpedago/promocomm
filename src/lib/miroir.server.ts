@@ -25,6 +25,7 @@ import {
   inverser,
   normaliserPlanif,
   prochainPassage,
+  tronquer,
 } from '#/lib/miroir.helpers.ts'
 import { decryptSecret, encryptSecret } from '#/lib/secrets.server.ts'
 
@@ -262,6 +263,14 @@ export async function rafraichirMiroir(
   try {
     await miroir.query(await readFile(await cheminDdl(), 'utf8'))
     const lecteur = await accorderLecture(miroir)
+    const limites = new Map<string, Record<string, number>>()
+    const longueurs = await miroir.query<{ t: string; c: string; n: number }>(
+      `SELECT table_name AS t, column_name AS c, character_maximum_length AS n
+         FROM information_schema.columns
+        WHERE table_schema = 'public' AND character_maximum_length IS NOT NULL`,
+    )
+    for (const { t, c, n } of longueurs.rows)
+      limites.set(t, { ...limites.get(t), [c]: n })
     let lignes = 0
     const echecs: ResultatMiroir['echecs'] = []
     for (const c of copies) {
@@ -276,6 +285,7 @@ export async function rafraichirMiroir(
               `ALTER TABLE public."${inv.table}" ADD COLUMN IF NOT EXISTS "${col.legacy}" ${col.type}`,
             )
         await miroir.query(`TRUNCATE public."${inv.table}"`)
+        const coupes = tronquer(src.rows, limites.get(inv.table) ?? {})
         const colonnes = inv.colonnes.map((col) => ({
           nom: col.legacy,
           json: false,
@@ -290,7 +300,12 @@ export async function rafraichirMiroir(
           await miroir.query(sql, params)
         }
         lignes += src.rows.length
-        log(`${inv.table}: ${src.rows.length} lignes`)
+        log(
+          `${inv.table}: ${src.rows.length} lignes` +
+            (coupes
+              ? ` (${coupes} valeurs coupées à la longueur SQL Server)`
+              : ''),
+        )
       } catch (e) {
         echecs.push({ table: inv.table, erreur: message(e).slice(0, 200) })
         log(`${inv.table}: ERREUR ${message(e)}`)

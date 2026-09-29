@@ -136,8 +136,23 @@ const quoteMs = (ident: string) => `[${ident.replaceAll(']', ']]')}]`
 const escapeMsString = (v: string) => v.replaceAll("'", "''")
 
 // Correspondance de types SQL Server → PostgreSQL pour la copie brute
-function msTypeToPg(dataType: string, precision?: number, scale?: number): string {
+export function msTypeToPg(
+  dataType: string,
+  precision?: number,
+  scale?: number,
+  longueur?: number,
+): string {
   switch (dataType.toLowerCase()) {
+    case 'char':
+    case 'varchar':
+    case 'nchar':
+    case 'nvarchar':
+      // Longueur conservée jusqu'à 255 : elle passe dans la base miroir
+      // (miroir.schema.sql), où Access lit `text` comme un champ Mémo,
+      // inutilisable en jointure. Au-delà (et max = -1) : text.
+      return longueur && longueur > 0 && longueur <= 255
+        ? `varchar(${longueur})`
+        : 'text'
     case 'int':
       return 'integer'
     case 'bigint':
@@ -175,7 +190,7 @@ function msTypeToPg(dataType: string, precision?: number, scale?: number): strin
     case 'timestamp': // rowversion SQL Server, rien à voir avec une date
       return 'bytea'
     default:
-      // char/varchar/nchar/nvarchar/text/ntext/xml/sql_variant…
+      // text/ntext/xml/sql_variant…
       return 'text'
   }
 }
@@ -256,8 +271,10 @@ async function runPipeline(runId: number, fileName: string) {
             DATA_TYPE: string
             NUMERIC_PRECISION: number | null
             NUMERIC_SCALE: number | null
+            CHARACTER_MAXIMUM_LENGTH: number | null
           }>(`
-            SELECT COLUMN_NAME, DATA_TYPE, NUMERIC_PRECISION, NUMERIC_SCALE
+            SELECT COLUMN_NAME, DATA_TYPE, NUMERIC_PRECISION, NUMERIC_SCALE,
+                   CHARACTER_MAXIMUM_LENGTH
             FROM ${quoteMs(SOURCE_DB)}.INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA = @s AND TABLE_NAME = @t
             ORDER BY ORDINAL_POSITION
@@ -268,7 +285,7 @@ async function runPipeline(runId: number, fileName: string) {
       const colDefs = columns
         .map(
           (c) =>
-            `${quotePg(c.COLUMN_NAME)} ${msTypeToPg(c.DATA_TYPE, c.NUMERIC_PRECISION ?? undefined, c.NUMERIC_SCALE ?? undefined)}`,
+            `${quotePg(c.COLUMN_NAME)} ${msTypeToPg(c.DATA_TYPE, c.NUMERIC_PRECISION ?? undefined, c.NUMERIC_SCALE ?? undefined, c.CHARACTER_MAXIMUM_LENGTH ?? undefined)}`,
         )
         .join(', ')
       const target = `${LEGACY_SCHEMA}.${quotePg(pgTableName)}`
