@@ -605,6 +605,9 @@ export const tranche = pgTable('tranche', {
   dateConvention: timestamp('date_convention'),
   dateLivraisonContractuelle: timestamp('date_livraison_contractuelle'),
   pasDeCommercialisation: boolean('pas_de_commercialisation'),
+  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+  finCommercialisation: boolean('fin_commercialisation'),
+  finTabborAnnuel: boolean('fin_tabbor_annuel'),
   // synthèse d'avancement (legacy StadeCOM / StadeIDSituation / StadeDepuisLe,
   // caches entretenus par WinDev depuis tStadeAvancement — repris tels quels,
   // utilisés par les widgets du tableau de bord)
