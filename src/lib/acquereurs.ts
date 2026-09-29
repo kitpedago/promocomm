@@ -3,12 +3,13 @@
 // Comme WinDev, la liste complète est chargée puis filtrée côté client
 // (arbre opérations + recherche nom/email/téléphones) — 2 929 lignes.
 import { createServerFn } from '@tanstack/react-start'
-import { asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 
 import {
   acquereur,
   acquereurPlafondRessources,
+  acquereurRevenuQuartile,
   acquereurTrancheAge,
   civilite,
   commercial,
@@ -415,3 +416,129 @@ export const deleteAcquereurFn = createServerFn({ method: 'POST' })
       )
     await db.delete(acquereur).where(eq(acquereur.id, data.id))
   })
+
+// Export « Vous écoute » (BTN_VousEcoute — REQ_AcquereurPourEnquete, fichier
+// HFOperation_Acquereurs de l'enquête de satisfaction) : une ligne par
+// commercialisation active des opérations non masquées. Colonnes, ordre et
+// en-têtes de la requête WinDev.
+// Les colonnes à NULL viennent d'anciens imports de tAcquereur, sans saisie
+// dans WinDev et quasi vides depuis 2024 : non reprises dans le schéma, elles
+// restent dans le fichier pour ne pas décaler les suivantes.
+export const getExportEnqueteFn = createServerFn({ method: 'GET' }).handler(
+  async () => {
+    await requireSession()
+    const vide = sql<null>`NULL`
+    const colonnes = {
+      Identifiant: vide,
+      Numlot: lot.numLot,
+      Typologie: lot.typeDeBien,
+      Etage: vide,
+      surface: lot.surfHabitable,
+      Patronyme: acquereur.patronyme,
+      Prenom: acquereur.prenom,
+      Adulte1DateNaissance: acquereur.adulte1DateNaissance,
+      Adulte2DateNaissance: acquereur.adulte2DateNaissance,
+      Téléphone: acquereur.telephone,
+      Email: acquereur.email,
+      AdresseActuelle: acquereur.adresseActuelle,
+      CPActuel: acquereur.cpActuel,
+      Communeactuelle: acquereur.communeActuelle,
+      Origine: typeLogementActuel.libelle,
+      Revenus_foyer_fiscal: acquereur.revenusFoyerFiscal,
+      Libelle: acquereurRevenuQuartile.libelle,
+      AnneeDeDeclaration: acquereur.anneeDeclaration,
+      NombreAdultes: acquereur.nombreAdultes,
+      NombreEnfants: acquereur.nombreEnfants,
+      EnfantAVenir: acquereur.enfantAVenir,
+      Libelle_Ac: acquereurPlafondRessources.libelle,
+      // Format(PrixDeVenteReelTTC, '0') : arrondi à l'euro
+      Formule1: sql<
+        string | null
+      >`ROUND(${commercialisation.prixVenteReelTtc})::text`,
+      TauxTVAReel: commercialisation.tauxTvaReel,
+      ApportReelADateHorsSubvention: acquereur.apportReelHorsSubvention,
+      Subvention: acquereur.subvention,
+      DateResa: commercialisation.dateResa,
+      DateSignatureContratLoc: commercialisation.dateSignatureContratLoc,
+      DateSignatureActeVEFA: commercialisation.dateSignatureActeVefa,
+      Adresse_programme: sql<string | null>`
+        CASE WHEN ${tranche.nbLogtIndiv} > 0
+          THEN ${lot.adresse} ELSE ${tranche.adresse} END`,
+      CP_programme: operation.cp,
+      Ville_programme: operation.commune,
+      Nom_programme: operation.libelle,
+      Type_de_programme: vide,
+      // SQL Server comparait sans la casse (« Appartement » dans les données)
+      Formule2: sql<string>`
+        CASE WHEN UPPER(${lot.familleDeBien}) = 'APPARTEMENT'
+          THEN 'oui' ELSE 'non' END`,
+      Formule3: sql<string>`CASE WHEN ${operation.anru} THEN 'oui' ELSE 'non' END`,
+      Type_d_acquisition: vide,
+      PrimoAccedant: acquereur.primoAccedant,
+      Modifications: vide,
+      ReservesDE: vide,
+      Date_prévisionnelle_livraison: vide,
+      Date_réelle_livraison: vide,
+      Libelle_Ac1: acquereurTrancheAge.libelle,
+      Etape: acquereur.etape,
+      Denomination: commercial.denomination,
+      EMail_Co: commercial.email,
+      // conseiller technique (IDConseillerTechnique), non repris
+      Patronyme_Pe: vide,
+      EMail_Pe: vide,
+      Adulte1CSP: acquereur.adulte1CspId,
+      Adulte2CSP: acquereur.adulte2CspId,
+      Adulte1Metier: acquereur.adulte1Metier,
+      Adulte2Metier: acquereur.adulte2Metier,
+      EnquêteA: acquereur.enqueteA,
+      EnquêteB: acquereur.enqueteB,
+      EnquêteC: acquereur.enqueteC,
+      // constantes par le filtre de la requête
+      MasquerComptable: sql<number>`0`,
+      DateAnnulation: vide,
+    }
+    const lignes = await db
+      .select(colonnes)
+      .from(commercialisation)
+      .innerJoin(acquereur, eq(commercialisation.acquereurId, acquereur.id))
+      .innerJoin(lot, eq(commercialisation.lotId, lot.id))
+      .innerJoin(tranche, eq(lot.trancheId, tranche.id))
+      .innerJoin(operation, eq(tranche.operationId, operation.id))
+      .leftJoin(
+        typeLogementActuel,
+        eq(acquereur.typeLogementActuelId, typeLogementActuel.id),
+      )
+      .leftJoin(
+        acquereurRevenuQuartile,
+        eq(acquereur.revenuQuartileId, acquereurRevenuQuartile.id),
+      )
+      .leftJoin(
+        acquereurTrancheAge,
+        eq(acquereur.trancheAgeId, acquereurTrancheAge.id),
+      )
+      .leftJoin(
+        acquereurPlafondRessources,
+        eq(acquereur.plafondRessourcesId, acquereurPlafondRessources.id),
+      )
+      .leftJoin(commercial, eq(acquereur.conseillerCommercialId, commercial.id))
+      .where(
+        and(
+          isNull(commercialisation.dateAnnulation),
+          // NULL = opération créée dans l'application, non masquée
+          sql`${operation.masquerComptable} IS NOT TRUE`,
+        ),
+      )
+      .orderBy(
+        asc(operation.libelle),
+        asc(lot.numLot),
+        asc(commercialisation.id),
+      )
+
+    // classeur écrit par le navigateur (ecrireXlsx) : les lignes suffisent
+    const entetes = Object.keys(colonnes) as Array<keyof typeof colonnes>
+    return {
+      nomFichier: 'HFOperation_Acquereurs.xlsx',
+      lignes: [entetes, ...lignes.map((l) => entetes.map((e) => l[e]))],
+    }
+  },
+)

@@ -21,13 +21,14 @@ export const construireCsv = (lignes: Array<Array<unknown>>): string =>
   '\ufeff' + lignes.map((l) => l.map(champCsv).join(';')).join('\r\n')
 
 // Client uniquement (déclenche un téléchargement navigateur)
-export const telechargerCsv = (nomFichier: string, csv: string) => {
-  const url = URL.createObjectURL(
-    new Blob([csv], { type: 'text/csv;charset=utf-8' }),
-  )
+export const telecharger = (nomFichier: string, contenu: Blob) => {
+  const url = URL.createObjectURL(contenu)
   const a = document.createElement('a')
   a.href = url
   a.download = nomFichier
   a.click()
   URL.revokeObjectURL(url)
 }
+
+export const telechargerCsv = (nomFichier: string, csv: string) =>
+  telecharger(nomFichier, new Blob([csv], { type: 'text/csv;charset=utf-8' }))

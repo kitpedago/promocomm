@@ -1,10 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs'
-import { deflateRawSync } from 'node:zlib'
+import { crc32, deflateRawSync, inflateRawSync } from 'node:zlib'
 
 import { expect, test } from 'vitest'
 
 import { CHAMPS_IMPORT_LOT } from './importlots.helpers.ts'
-import { lireXlsx } from './xlsx.ts'
+import { ecrireXlsx, lireXlsx } from './xlsx.ts'
 
 // Archive zip minimale (sans CRC : le lecteur ne le vérifie pas)
 function zip(fichiers: Record<string, string>, compresser: boolean) {
@@ -78,6 +78,30 @@ test('refuse ce qui n’est pas un classeur', async () => {
   await expect(
     lireXlsx(new TextEncoder().encode('a;b;c\n1;2;3').buffer),
   ).rejects.toThrow(/classeur Excel/)
+})
+
+test('écrit un classeur que le lecteur relit', async () => {
+  const classeur = await ecrireXlsx([
+    ['Nom', 'Prix', 'Date', 'Actif'],
+    ['A&B <été>\u0001', 154502.37, new Date('2023-03-01T00:00:00Z'), true],
+    [null, '', '035000'],
+  ])
+  const octets = new Uint8Array(await classeur.arrayBuffer())
+  // archive valide pour Excel : CRC de la première entrée ([Content_Types].xml)
+  const vue = new DataView(octets.buffer)
+  const nom = vue.getUint16(26, true)
+  const contenu = inflateRawSync(
+    octets.subarray(30 + nom, 30 + nom + vue.getUint32(18, true)),
+  )
+  expect(vue.getUint32(14, true)).toBe(crc32(contenu))
+
+  expect(await lireXlsx(octets.buffer)).toEqual([
+    ['Nom', 'Prix', 'Date', 'Actif'],
+    // caractère de contrôle retiré ; 01/03/2023 = numéro de série 44986
+    ['A&B <été>', 154502.37, 44986, 'Oui'],
+    // cellules vides non écrites ; le code postal reste du texte
+    [null, null, '035000'],
+  ])
 })
 
 // Le fichier fourni par le client fait foi pour la table de correspondance

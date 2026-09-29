@@ -42,6 +42,7 @@ import {
   getAcquereurFicheFn,
   getAcquereurNomenclaturesFn,
   getAcquereursFn,
+  getExportEnqueteFn,
   saveAcquereurFn,
 } from '#/lib/acquereurs.ts'
 import {
@@ -49,10 +50,12 @@ import {
   calculerMenage,
   trancheAgePourAges,
 } from '#/lib/acquereurs.helpers.ts'
+import { telecharger } from '#/lib/csv.ts'
 import { SELECTION_VIDE, usePref } from '#/lib/preferences.ts'
 import { enFraction, enPourcent } from '#/lib/sccv.helpers.ts'
 import { getService } from '#/lib/services'
 import { sansAccents } from '#/lib/utils.ts'
+import { ecrireXlsx } from '#/lib/xlsx.ts'
 
 import type { FicheAcquereur, LigneAcquereur } from '#/lib/acquereurs.ts'
 import type { Selection } from '#/lib/preferences.ts'
@@ -649,6 +652,14 @@ function PageAcquereurs() {
     },
   })
 
+  // BTN_VousEcoute : toutes opérations, sans tenir compte des filtres
+  const exporterEnquete = useMutation({
+    mutationFn: async () => {
+      const r = await getExportEnqueteFn()
+      telecharger(r.nomFichier, await ecrireXlsx(r.lignes))
+    },
+  })
+
   const ouvrirFiche = (id: number) => {
     void queryClient
       .fetchQuery({
@@ -743,8 +754,17 @@ function PageAcquereurs() {
               confirmation="Supprimer cet acquéreur ? (refusé s'il est dans une commercialisation)"
             />
           )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => exporterEnquete.mutate()}
+            disabled={exporterEnquete.isPending}
+            title="Exporter les acquéreurs pour l'enquête de satisfaction (Excel)"
+          >
+            {exporterEnquete.isPending ? 'Export en cours…' : 'Vous écoute'}
+          </Button>
         </div>
-        <ErreurMutation erreur={supprimer.error} />
+        <ErreurMutation erreur={supprimer.error ?? exporterEnquete.error} />
 
         <DataTable
           id="acquereurs"
