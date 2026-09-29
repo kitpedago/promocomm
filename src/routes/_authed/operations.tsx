@@ -1,6 +1,7 @@
 // Module Opérations (FEN_TABLE_Operation) — détails (notaires, architectes,
 // investisseur, masquages ; bouton Modifier pour notaires/architectes), combo
-// tranche, puis les onglets de la tranche (Stade d'avancement, Terrain,
+// tranche, puis les onglets de la tranche (Stade d'avancement — CRUD, filtre
+// domaine, synchro des dates entre tranches, factures du jalon —, Terrain,
 // Subventions, Informations diverses) et l'onglet Contentieux (par opération,
 // CRUD). Références : migration_windev/captures_ecrans/Opérations.png,
 // Opération_OngletTerrain.png, Opération_OngletInfoDiverses.png.
@@ -40,15 +41,30 @@ import {
   DialogHeader,
   DialogTitle,
 } from '#/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select'
 import { Switch } from '#/components/ui/switch'
+import { getHonorairesNomenclaturesFn } from '#/lib/honoraires.ts'
+import { synchroniserDates } from '#/lib/operations.helpers.ts'
 import {
   deleteContentieuxFn,
+  deleteFactureFn,
+  deleteStadeFn,
   getContentieuxFn,
+  getFacturesFn,
   getOperationFicheFn,
   getStadesFn,
+  getStadesFreresFn,
   getSubventionsFn,
   saveContentieuxFn,
+  saveFactureFn,
   saveOperationSimpleFn,
+  saveStadeFn,
 } from '#/lib/operations.ts'
 import { getOtlOptionsFn } from '#/lib/parametres.otl.ts'
 import {
@@ -272,6 +288,7 @@ function PageOperations() {
               <OngletsTranche
                 tranche={t}
                 operationId={d.id}
+                synchro={!!d.synchroniserDatesEntreTranche}
                 lectureSeule={lectureSeule}
               />
             )}
@@ -502,6 +519,7 @@ type Onglet = (typeof ONGLETS)[number]
 
 type LigneTranche = Fiche['tranches'][number]
 type LigneStade = Awaited<ReturnType<typeof getStadesFn>>[number]
+type LigneFacture = Awaited<ReturnType<typeof getFacturesFn>>[number]
 type LigneSubvention = Awaited<ReturnType<typeof getSubventionsFn>>[number]
 type LigneContentieux = Awaited<ReturnType<typeof getContentieuxFn>>[number]
 
@@ -552,6 +570,60 @@ const COLONNES_STADES: Array<ColumnDef<LigneStade, any>> = [
     ),
   },
   { accessorKey: 'commentaire', header: 'Commentaire', size: 240 },
+  {
+    accessorKey: 'avecAppelFondClientSuppl',
+    header: 'Appel fonds suppl.',
+    size: 130,
+    cell: (c) => (c.getValue() ? 'Oui' : '—'),
+  },
+  {
+    accessorKey: 'lienHypertexte',
+    header: 'Lien',
+    size: 200,
+    cell: (c) => {
+      const lien: string | null = c.getValue()
+      // seuls les liens web sont cliquables (chemins réseau legacy : texte)
+      return lien && /^https?:\/\//i.test(lien) ? (
+        <a
+          href={lien}
+          target="_blank"
+          rel="noreferrer"
+          className="text-[var(--gold-ink)] underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {lien}
+        </a>
+      ) : (
+        lien
+      )
+    },
+  },
+]
+
+// Table Facture du jalon sélectionné (TABLE_Facture de la capture)
+const COLONNES_FACTURES: Array<ColumnDef<LigneFacture, any>> = [
+  { accessorKey: 'numFacture', header: 'Num facture', size: 100 },
+  colDate('dateFacture', 'Date facture', 110),
+  {
+    accessorKey: 'montantHt',
+    header: 'Montant HT',
+    size: 110,
+    cell: (c) => (
+      <span className="block text-right tabular-nums">
+        {fmtEuro(c.getValue())}
+      </span>
+    ),
+  },
+  { accessorKey: 'prestataire', header: 'Prestataire', size: 140 },
+  { accessorKey: 'typeMission', header: 'Type de mission', size: 160 },
+  {
+    accessorKey: 'partiel',
+    header: 'Partiel',
+    size: 80,
+    cell: (c) => (c.getValue() ? 'Oui' : '—'),
+  },
+  { accessorKey: 'nbMois', header: 'Nb mois', size: 80 },
+  { accessorKey: 'commentaire', header: 'Commentaire', size: 220 },
 ]
 
 const COLONNES_SUBVENTIONS: Array<ColumnDef<LigneSubvention, any>> = [
@@ -649,10 +721,12 @@ const pourcent = (n: number | null | undefined) =>
 function OngletsTranche({
   tranche: t,
   operationId,
+  synchro,
   lectureSeule,
 }: {
   tranche: LigneTranche
   operationId: number
+  synchro: boolean
   lectureSeule: boolean
 }) {
   const [ongletStocke, setOnglet] = usePref<Onglet>(
@@ -662,11 +736,6 @@ function OngletsTranche({
   // un onglet renommé depuis l'enregistrement ne doit pas laisser la page vide
   const onglet = ONGLETS.includes(ongletStocke) ? ongletStocke : ONGLETS[0]
 
-  const stades = useQuery({
-    queryKey: ['stades', t.id],
-    queryFn: () => getStadesFn({ data: { trancheId: t.id } }),
-    enabled: onglet === "Stade d'avancement",
-  })
   const subventions = useQuery({
     queryKey: ['subventions', t.id],
     queryFn: () => getSubventionsFn({ data: { trancheId: t.id } }),
@@ -684,36 +753,14 @@ function OngletsTranche({
 
       <div className="min-h-0 flex-1 overflow-auto px-[18px] py-4">
         {onglet === "Stade d'avancement" && (
-          // les 40+ jalons défilent dans la table, pas la page
-          <div className="flex h-full min-h-0 flex-col gap-2">
-            <div className="flex shrink-0 flex-wrap gap-x-8 gap-y-1 text-[13px] text-[var(--ink-soft)]">
-              <span>
-                Stade actuel :{' '}
-                <span className="font-semibold text-[var(--ink)]">
-                  {t.stadeActuel ?? '—'}
-                </span>
-              </span>
-              <span>
-                Stade prochain :{' '}
-                <span className="font-semibold text-[var(--ink)]">
-                  {t.stadeProchain ?? '—'}
-                </span>
-              </span>
-            </div>
-            <DataTable
-              id="operations-stades"
-              columns={COLONNES_STADES}
-              data={stades.data ?? []}
-              unite="stades"
-              getRowId={(s) => String(s.id)}
-              defaultHidden={['montantPrevi', 'commentaire']}
-              emptyText={
-                stades.isLoading
-                  ? 'Chargement…'
-                  : 'Aucun stade sur cette tranche.'
-              }
-            />
-          </div>
+          // sélection et filtre repartent de zéro à chaque tranche
+          <OngletStades
+            key={t.id}
+            tranche={t}
+            operationId={operationId}
+            synchro={synchro}
+            lectureSeule={lectureSeule}
+          />
         )}
 
         {onglet === 'Terrain' && (
@@ -839,6 +886,636 @@ function OngletsTranche({
         )}
       </div>
     </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Onglet Stade d'avancement : table CRUD des jalons de la tranche, filtre
+// domaine, « Synchro. dates » et factures du jalon sélectionné
+// ---------------------------------------------------------------------------
+
+const TOUS = '__tous__'
+const HIDDEN_STADES = [
+  'montantPrevi',
+  'commentaire',
+  'avecAppelFondClientSuppl',
+  'lienHypertexte',
+]
+const HIDDEN_FACTURES = ['typeMission', 'partiel', 'nbMois', 'commentaire']
+
+function OngletStades({
+  tranche: t,
+  operationId,
+  synchro,
+  lectureSeule,
+}: {
+  tranche: LigneTranche
+  operationId: number
+  synchro: boolean
+  lectureSeule: boolean
+}) {
+  const queryClient = useQueryClient()
+  const [selection, setSelection] = useState<number | null>(null)
+  const [domaine, setDomaine] = useState(TOUS)
+  const [modale, setModale] = useState<LigneStade | 'creation' | null>(null)
+
+  const stades = useQuery({
+    queryKey: ['stades', t.id],
+    queryFn: () => getStadesFn({ data: { trancheId: t.id } }),
+  })
+  const tous = stades.data ?? []
+  const domaines = [
+    ...new Set(tous.map((s) => s.domaine).filter((x): x is string => !!x)),
+  ].sort()
+  const lignes =
+    domaine === TOUS ? tous : tous.filter((s) => s.domaine === domaine)
+  const selectionne = lignes.find((s) => s.id === selection)
+
+  const invalider = () => {
+    // toutes les tranches : la synchro modifie les jalons des tranches sœurs
+    void queryClient.invalidateQueries({ queryKey: ['stades'] })
+    // « Date stade Compromis » de l'onglet Terrain
+    void queryClient.invalidateQueries({
+      queryKey: ['operation-fiche', operationId],
+    })
+  }
+  const supprimer = useMutation({
+    mutationFn: (id: number) => deleteStadeFn({ data: { id } }),
+    onSuccess: () => {
+      invalider()
+      setSelection(null)
+    },
+  })
+
+  return (
+    // les 40+ jalons défilent dans la table, pas la page
+    <div className="flex h-full min-h-0 flex-col gap-2">
+      <div className="flex shrink-0 flex-wrap gap-x-8 gap-y-1 text-[13px] text-[var(--ink-soft)]">
+        <span>
+          Stade actuel :{' '}
+          <span className="font-semibold text-[var(--ink)]">
+            {t.stadeActuel ?? '—'}
+          </span>
+        </span>
+        <span>
+          Stade prochain :{' '}
+          <span className="font-semibold text-[var(--ink)]">
+            {t.stadeProchain ?? '—'}
+          </span>
+        </span>
+      </div>
+
+      <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2">
+        {!lectureSeule && (
+          <BoutonsTable
+            selection={selectionne?.id ?? null}
+            onNouveau={() => setModale('creation')}
+            onModifier={() => {
+              if (selectionne) setModale(selectionne)
+            }}
+            onSupprimer={() => {
+              if (selectionne) supprimer.mutate(selectionne.id)
+            }}
+            confirmation="Voulez-vous vraiment supprimer la ligne ?"
+          />
+        )}
+        <label className="flex items-center gap-2 text-[13px] font-medium text-[var(--ink-soft)]">
+          Filtre domaine :
+          <Select value={domaine} onValueChange={setDomaine}>
+            <SelectTrigger className="h-8 w-[170px] bg-[var(--card)] text-[13px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={TOUS}>Tous</SelectItem>
+              {domaines.map((x) => (
+                <SelectItem key={x} value={x}>
+                  {x}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </label>
+        <span
+          className={`badge-pill ml-auto font-bold ${
+            synchro
+              ? 'bg-[var(--ok-tint)] text-[var(--ink)]'
+              : 'bg-[var(--cream)] text-[var(--muted)]'
+          }`}
+          title={
+            synchro
+              ? "Synchronise les dates si le stade d'avancement le permet."
+              : 'Synchronisation des dates entre tranches désactivée pour cette opération (Paramètres > Opérations).'
+          }
+        >
+          Synchro. dates{synchro ? '' : ' : non'}
+        </span>
+      </div>
+      <ErreurMutation erreur={supprimer.error} />
+
+      <div className="flex min-h-0 flex-1 flex-col gap-4 xl:flex-row">
+        <div className="flex min-h-0 min-w-0 flex-[2] flex-col">
+          <DataTable
+            id="operations-stades"
+            columns={COLONNES_STADES}
+            data={lignes}
+            unite="stades"
+            getRowId={(s) => String(s.id)}
+            selectedRowId={selectionne ? String(selectionne.id) : null}
+            onRowClick={(s) => setSelection(s.id)}
+            defaultHidden={HIDDEN_STADES}
+            emptyText={
+              stades.isLoading
+                ? 'Chargement…'
+                : 'Aucun stade sur cette tranche.'
+            }
+          />
+        </div>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col xl:w-[480px] xl:flex-none">
+          <TableFactures
+            // sélection de facture remise à zéro à chaque jalon
+            key={selectionne?.id ?? 'aucun'}
+            stade={selectionne ?? null}
+            lectureSeule={lectureSeule}
+          />
+        </div>
+      </div>
+
+      <ModaleStade
+        trancheId={t.id}
+        ligne={modale === 'creation' ? null : modale}
+        stadesPris={tous.map((s) => s.listeAvancementId)}
+        open={modale != null}
+        onOpenChange={(o) => {
+          if (!o) setModale(null)
+        }}
+        onSuccess={invalider}
+      />
+    </div>
+  )
+}
+
+// Fiche stade — iso-fenêtre WinDev FEN_Fiche_StadeAvancement
+function ModaleStade({
+  trancheId,
+  ligne,
+  stadesPris,
+  open,
+  onOpenChange,
+  onSuccess,
+}: {
+  trancheId: number
+  ligne: LigneStade | null
+  stadesPris: Array<number | null>
+  open: boolean
+  onOpenChange: (o: boolean) => void
+  onSuccess: () => void
+}) {
+  const vierge = {
+    listeAvancementId: null as number | null,
+    datePreviComptaDebutAnnee: null as string | null,
+    datePreviMajPromo: null as string | null,
+    dateReelle: null as string | null,
+    commentaire: '',
+    lienHypertexte: '',
+    avecAppelFondClientSuppl: false,
+  }
+  const [valeurs, setValeurs] = useState(vierge)
+  // recharge la ligne à l'ouverture (création ↔ modification)
+  const [cleOuverture, setCleOuverture] = useState<string | null>(null)
+  const cle = `${ligne?.id ?? 'creation'}:${open}`
+  if (open && cle !== cleOuverture) {
+    setCleOuverture(cle)
+    setValeurs(
+      ligne
+        ? {
+            listeAvancementId: ligne.listeAvancementId,
+            datePreviComptaDebutAnnee: versInputDate(
+              ligne.datePreviComptaDebutAnnee,
+            ),
+            datePreviMajPromo: versInputDate(ligne.datePreviMajPromo),
+            dateReelle: versInputDate(ligne.dateReelle),
+            commentaire: ligne.commentaire ?? '',
+            lienHypertexte: ligne.lienHypertexte ?? '',
+            avecAppelFondClientSuppl: !!ligne.avecAppelFondClientSuppl,
+          }
+        : vierge,
+    )
+  }
+  type Valeurs = typeof vierge
+  const set =
+    <TCle extends keyof Valeurs>(k: TCle) =>
+    (v: Valeurs[TCle]) =>
+      setValeurs((s) => ({ ...s, [k]: v }))
+
+  const nomenclatures = useQuery({
+    queryKey: ['honoraires-nomenclatures'],
+    queryFn: () => getHonorairesNomenclaturesFn(),
+    staleTime: 60_000,
+    enabled: open,
+  }).data
+  // vide si l'opération ou le stade ne se synchronise pas
+  const freres = useQuery({
+    queryKey: ['stades-freres', trancheId, valeurs.listeAvancementId],
+    queryFn: () =>
+      getStadesFreresFn({
+        data: { trancheId, listeAvancementId: valeurs.listeAvancementId! },
+      }),
+    enabled: open && valeurs.listeAvancementId != null,
+  }).data
+  const avant = (freres ?? []).map((f) => ({
+    ...f,
+    datePreviMajPromo: versInputDate(f.datePreviMajPromo),
+    dateReelle: versInputDate(f.dateReelle),
+  }))
+  const apres = synchroniserDates(valeurs, avant)
+
+  const enregistrer = useMutation({
+    mutationFn: () =>
+      saveStadeFn({ data: { ...valeurs, trancheId, id: ligne?.id } }),
+    onSuccess: () => {
+      onSuccess()
+      onOpenChange(false)
+    },
+  })
+
+  // avant → après, l'après mis en évidence quand la validation le change
+  const dateSynchro = (a: string | null, b: string | null) =>
+    a === b ? (
+      fmtDate(a)
+    ) : (
+      <>
+        {fmtDate(a)} →{' '}
+        <span className="font-semibold text-[var(--gold-ink)]">
+          {fmtDate(b)}
+        </span>
+      </>
+    )
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>
+            {ligne ? "Modifier le stade d'avancement" : 'Nouveau stade'}
+          </DialogTitle>
+        </DialogHeader>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            enregistrer.mutate()
+          }}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              {ligne ? (
+                // le stade ne change pas en modification (iso-WinDev)
+                <Champ libelle="Stade d'avancement">{ligne.stade}</Champ>
+              ) : (
+                <ChampSelectId
+                  libelle="Stade d'avancement"
+                  value={valeurs.listeAvancementId}
+                  onChange={set('listeAvancementId')}
+                  options={(nomenclatures?.stades ?? []).filter(
+                    (s) => !stadesPris.includes(s.id),
+                  )}
+                />
+              )}
+            </div>
+            <ChampDate
+              libelle="Date prévi 01/N"
+              value={valeurs.datePreviComptaDebutAnnee}
+              onChange={set('datePreviComptaDebutAnnee')}
+            />
+            <ChampDate
+              libelle="Date prévi. promo"
+              value={valeurs.datePreviMajPromo}
+              onChange={set('datePreviMajPromo')}
+            />
+            <ChampDate
+              libelle="Date réelle"
+              value={valeurs.dateReelle}
+              onChange={set('dateReelle')}
+            />
+            <div className="flex items-end pb-2">
+              <ChampBascule
+                libelle="Avec appel de fonds client suppl."
+                checked={valeurs.avecAppelFondClientSuppl}
+                onChange={set('avecAppelFondClientSuppl')}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <ChampTexteLong
+                libelle="Commentaire"
+                value={valeurs.commentaire}
+                onChange={set('commentaire')}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <ChampTexte
+                libelle="Lien hypertexte"
+                value={valeurs.lienHypertexte}
+                onChange={set('lienHypertexte')}
+              />
+            </div>
+
+            {apres.length > 0 && (
+              <>
+                <SousTitre>Synchro entre tranches</SousTitre>
+                <p className="text-[13px] text-[var(--ink-soft)] sm:col-span-2">
+                  Cette tranche se synchronise avec les autres tranches de
+                  l'opération. Voici les dates des autres tranches qui seront
+                  synchronisées (la date réelle est mise à jour uniquement si
+                  elle est vide).
+                </p>
+                <table className="text-[13px] sm:col-span-2">
+                  <thead>
+                    <tr className="text-left text-[11px] font-bold tracking-wide text-[var(--ink-faded)] uppercase">
+                      <th className="py-1 pr-4">Tranche</th>
+                      <th className="py-1 pr-4">Date prévi. promo</th>
+                      <th className="py-1">Date réelle</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {apres.map((f, i) => (
+                      <tr
+                        key={f.id}
+                        className="border-t border-[var(--line-soft)] tabular-nums"
+                      >
+                        <td className="py-1 pr-4">{f.tranche}</td>
+                        <td className="py-1 pr-4">
+                          {dateSynchro(
+                            avant[i].datePreviMajPromo,
+                            f.datePreviMajPromo,
+                          )}
+                        </td>
+                        <td className="py-1">
+                          {dateSynchro(avant[i].dateReelle, f.dateReelle)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
+          </div>
+          <ErreurMutation erreur={enregistrer.error} />
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" size="sm" variant="outline">
+                Annuler
+              </Button>
+            </DialogClose>
+            <Button type="submit" size="sm" disabled={enregistrer.isPending}>
+              Valider
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Factures du jalon sélectionné (TABLE_Facture) — éditable en ligne dans
+// WinDev, CRUD par modale ici
+function TableFactures({
+  stade,
+  lectureSeule,
+}: {
+  stade: LigneStade | null
+  lectureSeule: boolean
+}) {
+  const queryClient = useQueryClient()
+  const [selection, setSelection] = useState<number | null>(null)
+  const [modale, setModale] = useState<LigneFacture | 'creation' | null>(null)
+
+  const factures = useQuery({
+    queryKey: ['factures-stade', stade?.id],
+    queryFn: () => getFacturesFn({ data: { stadeAvancementId: stade!.id } }),
+    enabled: stade != null,
+  })
+  const lignes = factures.data ?? []
+  const invalider = () =>
+    void queryClient.invalidateQueries({
+      queryKey: ['factures-stade', stade?.id],
+    })
+  const supprimer = useMutation({
+    mutationFn: (id: number) => deleteFactureFn({ data: { id } }),
+    onSuccess: () => {
+      invalider()
+      setSelection(null)
+    },
+  })
+
+  return (
+    <div className="flex h-full min-h-0 flex-col gap-2">
+      <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2">
+        <p className="text-[13px] font-semibold text-[var(--ink)]">
+          Factures{stade ? ` — ${stade.stade ?? ''}` : ''}
+        </p>
+        {!lectureSeule && stade && (
+          <BoutonsTable
+            selection={selection}
+            onNouveau={() => setModale('creation')}
+            onModifier={() => {
+              const l = lignes.find((x) => x.id === selection)
+              if (l) setModale(l)
+            }}
+            onSupprimer={() => {
+              if (selection != null) supprimer.mutate(selection)
+            }}
+            confirmation="Voulez-vous vraiment supprimer la ligne ?"
+          />
+        )}
+      </div>
+      <ErreurMutation erreur={supprimer.error} />
+      <DataTable
+        id="operations-factures"
+        columns={COLONNES_FACTURES}
+        data={lignes}
+        unite="factures"
+        getRowId={(r) => String(r.id)}
+        selectedRowId={selection != null ? String(selection) : null}
+        onRowClick={(r) => setSelection(r.id)}
+        totalFor={['montantHt']}
+        defaultHidden={HIDDEN_FACTURES}
+        emptyText={
+          !stade
+            ? 'Sélectionnez un stade pour voir ses factures.'
+            : factures.isLoading
+              ? 'Chargement…'
+              : 'Aucune facture sur ce stade.'
+        }
+      />
+      {stade && (
+        <ModaleFacture
+          stadeAvancementId={stade.id}
+          ligne={modale === 'creation' ? null : modale}
+          open={modale != null}
+          onOpenChange={(o) => {
+            if (!o) setModale(null)
+          }}
+          onSuccess={invalider}
+        />
+      )}
+    </div>
+  )
+}
+
+function ModaleFacture({
+  stadeAvancementId,
+  ligne,
+  open,
+  onOpenChange,
+  onSuccess,
+}: {
+  stadeAvancementId: number
+  ligne: LigneFacture | null
+  open: boolean
+  onOpenChange: (o: boolean) => void
+  onSuccess: () => void
+}) {
+  const vierge = {
+    numFacture: null as number | null,
+    dateFacture: null as string | null,
+    montantHt: null as number | null,
+    typeMissionId: null as number | null,
+    prestataireId: null as number | null,
+    partiel: false,
+    nbMois: null as number | null,
+    commentaire: '',
+  }
+  const [valeurs, setValeurs] = useState(vierge)
+  // recharge la ligne à l'ouverture (création ↔ modification)
+  const [cleOuverture, setCleOuverture] = useState<string | null>(null)
+  const cle = `${ligne?.id ?? 'creation'}:${open}`
+  if (open && cle !== cleOuverture) {
+    setCleOuverture(cle)
+    setValeurs(
+      ligne
+        ? {
+            numFacture: ligne.numFacture,
+            dateFacture: versInputDate(ligne.dateFacture),
+            montantHt: ligne.montantHt,
+            typeMissionId: ligne.typeMissionId,
+            prestataireId: ligne.prestataireId,
+            partiel: !!ligne.partiel,
+            nbMois: ligne.nbMois,
+            commentaire: ligne.commentaire ?? '',
+          }
+        : vierge,
+    )
+  }
+  type Valeurs = typeof vierge
+  const set =
+    <TCle extends keyof Valeurs>(k: TCle) =>
+    (v: Valeurs[TCle]) =>
+      setValeurs((s) => ({ ...s, [k]: v }))
+
+  const nomenclatures = useQuery({
+    queryKey: ['honoraires-nomenclatures'],
+    queryFn: () => getHonorairesNomenclaturesFn(),
+    staleTime: 60_000,
+    enabled: open,
+  }).data
+  // prestataires « AfficherMission », plus celui de la facture s'il ne l'est plus
+  const prestataires = [
+    ...(nomenclatures?.prestataires ?? []),
+    ...(nomenclatures?.tousPrestataires ?? []).filter(
+      (p) =>
+        p.id === ligne?.prestataireId &&
+        !nomenclatures?.prestataires.some((m) => m.id === p.id),
+    ),
+  ]
+
+  const enregistrer = useMutation({
+    mutationFn: () =>
+      saveFactureFn({
+        data: { ...valeurs, stadeAvancementId, id: ligne?.id },
+      }),
+    onSuccess: () => {
+      onSuccess()
+      onOpenChange(false)
+    },
+  })
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>
+            {ligne ? 'Modifier la facture' : 'Nouvelle facture'}
+          </DialogTitle>
+        </DialogHeader>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            enregistrer.mutate()
+          }}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <ChampNombre
+              libelle="Num facture"
+              value={valeurs.numFacture}
+              onChange={set('numFacture')}
+              step="1"
+            />
+            <ChampDate
+              libelle="Date facture"
+              value={valeurs.dateFacture}
+              onChange={set('dateFacture')}
+            />
+            <ChampNombre
+              libelle="Montant HT"
+              value={valeurs.montantHt}
+              onChange={set('montantHt')}
+            />
+            <ChampSelectId
+              libelle="Type de mission"
+              value={valeurs.typeMissionId}
+              onChange={set('typeMissionId')}
+              options={nomenclatures?.typesMission ?? []}
+            />
+            <ChampSelectId
+              libelle="Prestataire mission"
+              value={valeurs.prestataireId}
+              onChange={set('prestataireId')}
+              options={prestataires}
+            />
+            <ChampNombre
+              libelle="Nb mois"
+              value={valeurs.nbMois}
+              onChange={set('nbMois')}
+              step="1"
+            />
+            <div className="flex items-end pb-2">
+              <ChampBascule
+                libelle="Partiel"
+                checked={valeurs.partiel}
+                onChange={set('partiel')}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <ChampTexteLong
+                libelle="Commentaires"
+                value={valeurs.commentaire}
+                onChange={set('commentaire')}
+              />
+            </div>
+          </div>
+          <ErreurMutation erreur={enregistrer.error} />
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" size="sm" variant="outline">
+                Annuler
+              </Button>
+            </DialogClose>
+            <Button type="submit" size="sm" disabled={enregistrer.isPending}>
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }
 

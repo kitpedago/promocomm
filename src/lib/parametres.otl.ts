@@ -142,6 +142,7 @@ export const getOperationsOtlFn = createServerFn({ method: 'GET' }).handler(
         masquerCommercial: operation.masquerCommercial,
         masquerComptable: operation.masquerComptable,
         masquerPromo: operation.masquerPromo,
+        synchroniserDatesEntreTranche: operation.synchroniserDatesEntreTranche,
         commentaire: operation.commentaire,
         // vignette du visuel (data-URL ~220 px), jamais le blob
         miniature: operationVisuel.miniature,
@@ -262,6 +263,7 @@ interface FicheOperation {
   masquerCommercial?: boolean | null
   masquerComptable?: boolean | null
   masquerPromo?: boolean | null
+  synchroniserDatesEntreTranche?: boolean | null
   commentaire?: string | null
 }
 
@@ -296,6 +298,7 @@ export const saveOperationOtlFn = createServerFn({ method: 'POST' })
       masquerCommercial: data.masquerCommercial ?? null,
       masquerComptable: data.masquerComptable ?? null,
       masquerPromo: data.masquerPromo ?? null,
+      synchroniserDatesEntreTranche: data.synchroniserDatesEntreTranche ?? null,
       commentaire: data.commentaire || null,
     })
     // Nouvelle opération : visuel keredes.coop en tâche de fond, jamais

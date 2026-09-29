@@ -56,8 +56,8 @@ ne contient que des codes, seule la FK est reprise), `architecte` (25). Référe
 
 **Avancement et subventions (3, ajoutés le 2026-08-12)** : `liste_avancement` (65 jalons de
 référence — `DomaineStadeAvancement` n'est qu'une liste de deux codes texte, le domaine reste
-une colonne), `stade_avancement` (6 935 jalons datés par tranche ; la facture liée attend le
-module Honoraires), `subvention` (224 ; déblocages et suivi budgétaire en phase 6).
+une colonne), `stade_avancement` (6 935 jalons datés par tranche ; ses factures — table
+`facture` — s'affichent dans l'onglet Stade d'avancement des Opérations), `subvention` (224 ; déblocages et suivi budgétaire en phase 6).
 `tranche` porte au passage les blocs Terrain (opérateur / OFS-BRS / bail) et
 Informations diverses (certification, label, performance énergétique, MOE interne).
 

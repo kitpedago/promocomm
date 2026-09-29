@@ -3,7 +3,7 @@
 // tranches, lots. Les onglets Stade d'avancement / Terrain / Infos diverses
 // attendent l'ETL de la phase 3 (voir docs/plan-implementation.md).
 import { createServerFn } from '@tanstack/react-start'
-import { asc, eq, inArray, sql } from 'drizzle-orm'
+import { and, asc, count, eq, inArray, ne, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 
 import {
@@ -13,6 +13,7 @@ import {
   certification,
   contentieux,
   etudeNotaire,
+  facture,
   interlocuteurNotaire,
   label,
   listeAvancement,
@@ -20,14 +21,17 @@ import {
   operation,
   organismeSubvention,
   performanceEnergetique,
+  prestataire,
   signataire,
   stadeAvancement,
   structureJuridique,
   subvention,
   tranche,
+  typeMission,
   missionMoeInterne,
 } from '#/db/domaine.ts'
 import { db } from '#/db/index.ts'
+import { synchroniserDates } from '#/lib/operations.helpers.ts'
 import { requireEcriture, requireSession } from '#/lib/session.server.ts'
 
 const archiMandataire = alias(architecte, 'archi_mandataire')
@@ -63,6 +67,8 @@ export const getOperationFicheFn = createServerFn({ method: 'GET' })
           masquerCommercial: operation.masquerCommercial,
           masquerComptable: operation.masquerComptable,
           masquerPromo: operation.masquerPromo,
+          synchroniserDatesEntreTranche:
+            operation.synchroniserDatesEntreTranche,
           sccvHlm: structureJuridique.sccvHlm,
           // chargés d'opération (phase 3)
           chargeOpe1: sql<
@@ -206,8 +212,7 @@ export const getOperationFicheFn = createServerFn({ method: 'GET' })
     }
   })
 
-// Onglet « Stade d'avancement » d'une tranche. La facture liée (colonne Num
-// Facture de la capture) attend le module Honoraires (phase 7).
+// Onglet « Stade d'avancement » d'une tranche (REQ_StadeAvancement_Operation)
 export const getStadesFn = createServerFn({ method: 'GET' })
   .validator((data: { trancheId: number }) => data)
   .handler(async ({ data }) => {
@@ -215,6 +220,7 @@ export const getStadesFn = createServerFn({ method: 'GET' })
     return db
       .select({
         id: stadeAvancement.id,
+        listeAvancementId: stadeAvancement.listeAvancementId,
         stade: listeAvancement.libelle,
         code: listeAvancement.code,
         domaine: listeAvancement.domaine,
@@ -224,6 +230,8 @@ export const getStadesFn = createServerFn({ method: 'GET' })
         pourcentageAvancementReel: stadeAvancement.pourcentageAvancementReel,
         montantPrevi: stadeAvancement.montantPrevi,
         commentaire: stadeAvancement.commentaire,
+        lienHypertexte: stadeAvancement.lienHypertexte,
+        avecAppelFondClientSuppl: stadeAvancement.avecAppelFondClientSuppl,
       })
       .from(stadeAvancement)
       .leftJoin(
@@ -232,6 +240,251 @@ export const getStadesFn = createServerFn({ method: 'GET' })
       )
       .where(eq(stadeAvancement.trancheId, data.trancheId))
       .orderBy(asc(stadeAvancement.ordre), asc(stadeAvancement.id))
+  })
+
+const versDate = (s: string | null | undefined) => (s ? new Date(s) : null)
+
+// « Synchro. dates » (REQ_SynchroTrancheDate) : le même stade sur les autres
+// tranches de l'opération — vide si l'opération ou le stade ne se synchronise
+// pas. `exec` : la base ou la transaction en cours.
+function stadesFreres(
+  exec: Pick<typeof db, 'select'>,
+  trancheId: number,
+  listeAvancementId: number,
+) {
+  return exec
+    .select({
+      id: stadeAvancement.id,
+      tranche: tranche.libelle,
+      datePreviMajPromo: stadeAvancement.datePreviMajPromo,
+      dateReelle: stadeAvancement.dateReelle,
+    })
+    .from(stadeAvancement)
+    .innerJoin(tranche, eq(tranche.id, stadeAvancement.trancheId))
+    .innerJoin(operation, eq(operation.id, tranche.operationId))
+    .innerJoin(
+      listeAvancement,
+      eq(listeAvancement.id, stadeAvancement.listeAvancementId),
+    )
+    .where(
+      and(
+        eq(stadeAvancement.listeAvancementId, listeAvancementId),
+        ne(stadeAvancement.trancheId, trancheId),
+        eq(
+          tranche.operationId,
+          sql`(SELECT t.operation_id FROM ${tranche} t WHERE t.id = ${trancheId})`,
+        ),
+        eq(operation.synchroniserDatesEntreTranche, true),
+        eq(listeAvancement.avecSynchroEntreTranche, true),
+      ),
+    )
+    .orderBy(asc(tranche.id))
+}
+
+// Aperçu de la synchro dans la fiche stade (TABLE_SynchorTranche)
+export const getStadesFreresFn = createServerFn({ method: 'GET' })
+  .validator((data: { trancheId: number; listeAvancementId: number }) => data)
+  .handler(async ({ data }) => {
+    await requireSession()
+    return stadesFreres(db, data.trancheId, data.listeAvancementId)
+  })
+
+interface FicheStade {
+  id?: number
+  trancheId: number
+  listeAvancementId: number | null
+  datePreviComptaDebutAnnee?: string | null
+  datePreviMajPromo?: string | null
+  dateReelle?: string | null
+  commentaire?: string | null
+  lienHypertexte?: string | null
+  avecAppelFondClientSuppl?: boolean | null
+}
+
+// Bouton Valider de FEN_Fiche_StadeAvancement
+export const saveStadeFn = createServerFn({ method: 'POST' })
+  .validator((d: FicheStade) => d)
+  .handler(async ({ data }) => {
+    await requireEcriture()
+    const valeurs = {
+      datePreviComptaDebutAnnee: versDate(data.datePreviComptaDebutAnnee),
+      datePreviMajPromo: versDate(data.datePreviMajPromo),
+      dateReelle: versDate(data.dateReelle),
+      commentaire: data.commentaire || null,
+      lienHypertexte: data.lienHypertexte || null,
+      avecAppelFondClientSuppl: data.avecAppelFondClientSuppl ?? null,
+    }
+    return db.transaction(async (tx) => {
+      let cible: { id: number; trancheId: number; listeAvancementId: number }
+      if (data.id) {
+        // le stade ne change pas en modification (combo grisée dans WinDev)
+        const touchees = await tx
+          .update(stadeAvancement)
+          .set(valeurs)
+          .where(eq(stadeAvancement.id, data.id))
+          .returning({
+            id: stadeAvancement.id,
+            trancheId: stadeAvancement.trancheId,
+            listeAvancementId: stadeAvancement.listeAvancementId,
+          })
+        if (touchees.length === 0) throw new Error('Ligne introuvable')
+        const touchee = touchees[0]
+        // jalon legacy sans tranche ou sans stade : rien à synchroniser
+        if (touchee.trancheId == null || touchee.listeAvancementId == null)
+          return { id: touchee.id }
+        cible = {
+          id: touchee.id,
+          trancheId: touchee.trancheId,
+          listeAvancementId: touchee.listeAvancementId,
+        }
+      } else {
+        if (data.listeAvancementId == null)
+          throw new Error("Sélectionnez un stade d'avancement")
+        const refs = await tx
+          .select({ ordre: listeAvancement.ordre })
+          .from(listeAvancement)
+          .where(eq(listeAvancement.id, data.listeAvancementId))
+        if (refs.length === 0) throw new Error("Stade d'avancement introuvable")
+        const doublon = await tx
+          .select({ id: stadeAvancement.id })
+          .from(stadeAvancement)
+          .where(
+            and(
+              eq(stadeAvancement.trancheId, data.trancheId),
+              eq(stadeAvancement.listeAvancementId, data.listeAvancementId),
+            ),
+          )
+          .limit(1)
+        if (doublon.length > 0)
+          throw new Error('Ce stade existe déjà pour cette tranche.')
+        const [cree] = await tx
+          .insert(stadeAvancement)
+          .values({
+            ...valeurs,
+            trancheId: data.trancheId,
+            listeAvancementId: data.listeAvancementId,
+            ordre: refs[0].ordre,
+          })
+          .returning({ id: stadeAvancement.id })
+        cible = {
+          id: cree.id,
+          trancheId: data.trancheId,
+          listeAvancementId: data.listeAvancementId,
+        }
+      }
+
+      const freres = await stadesFreres(
+        tx,
+        cible.trancheId,
+        cible.listeAvancementId,
+      )
+      for (const f of synchroniserDates(valeurs, freres))
+        await tx
+          .update(stadeAvancement)
+          .set({
+            datePreviMajPromo: f.datePreviMajPromo,
+            dateReelle: f.dateReelle,
+          })
+          .where(eq(stadeAvancement.id, f.id))
+      return { id: cible.id }
+    })
+  })
+
+export const deleteStadeFn = createServerFn({ method: 'POST' })
+  .validator((d: { id: number }) => d)
+  .handler(async ({ data }) => {
+    await requireEcriture()
+    // WinDev supprimait le stade en laissant ses factures orphelines
+    const [{ n }] = await db
+      .select({ n: count() })
+      .from(facture)
+      .where(eq(facture.stadeAvancementId, data.id))
+    if (n > 0)
+      throw new Error(
+        `Suppression impossible : ${n} facture(s) rattachée(s) à ce stade.`,
+      )
+    await db.delete(stadeAvancement).where(eq(stadeAvancement.id, data.id))
+  })
+
+// ---------------------------------------------------------------------------
+// Table Facture de l'onglet « Stade d'avancement » — factures du jalon
+// sélectionné (TABLE_Facture, tFacture)
+// ---------------------------------------------------------------------------
+
+export const getFacturesFn = createServerFn({ method: 'GET' })
+  .validator((data: { stadeAvancementId: number }) => data)
+  .handler(async ({ data }) => {
+    await requireSession()
+    return db
+      .select({
+        id: facture.id,
+        typeMissionId: facture.typeMissionId,
+        typeMission: typeMission.libelle,
+        prestataireId: facture.prestataireId,
+        prestataire: prestataire.libelle,
+        numFacture: facture.numFacture,
+        dateFacture: facture.dateFacture,
+        partiel: facture.partiel,
+        montantHt: facture.montantHt,
+        nbMois: facture.nbMois,
+        commentaire: facture.commentaire,
+      })
+      .from(facture)
+      .leftJoin(typeMission, eq(typeMission.id, facture.typeMissionId))
+      .leftJoin(prestataire, eq(prestataire.id, facture.prestataireId))
+      .where(eq(facture.stadeAvancementId, data.stadeAvancementId))
+      .orderBy(asc(facture.dateFacture), asc(facture.id))
+  })
+
+interface FicheFacture {
+  id?: number
+  stadeAvancementId: number
+  typeMissionId?: number | null
+  prestataireId?: number | null
+  numFacture?: number | null
+  dateFacture?: string | null
+  partiel?: boolean | null
+  montantHt?: number | null
+  nbMois?: number | null
+  commentaire?: string | null
+}
+
+export const saveFactureFn = createServerFn({ method: 'POST' })
+  .validator((d: FicheFacture) => d)
+  .handler(async ({ data }) => {
+    await requireEcriture()
+    const valeurs = {
+      stadeAvancementId: data.stadeAvancementId,
+      typeMissionId: data.typeMissionId ?? null,
+      prestataireId: data.prestataireId ?? null,
+      numFacture: data.numFacture ?? null,
+      dateFacture: versDate(data.dateFacture),
+      partiel: data.partiel ?? null,
+      montantHt: data.montantHt ?? null,
+      nbMois: data.nbMois ?? null,
+      commentaire: data.commentaire || null,
+    }
+    if (data.id) {
+      const touchees = await db
+        .update(facture)
+        .set(valeurs)
+        .where(eq(facture.id, data.id))
+        .returning({ id: facture.id })
+      if (touchees.length === 0) throw new Error('Ligne introuvable')
+      return { id: data.id }
+    }
+    const [cree] = await db
+      .insert(facture)
+      .values(valeurs)
+      .returning({ id: facture.id })
+    return { id: cree.id }
+  })
+
+export const deleteFactureFn = createServerFn({ method: 'POST' })
+  .validator((d: { id: number }) => d)
+  .handler(async ({ data }) => {
+    await requireEcriture()
+    await db.delete(facture).where(eq(facture.id, data.id))
   })
 
 // Bloc « Subventions de la tranche » de l'onglet Informations diverses
@@ -274,8 +527,6 @@ export const getSubventionsFn = createServerFn({ method: 'GET' })
 // ---------------------------------------------------------------------------
 // Onglet « Contentieux » — table par opération (FEN_Table_Contentieux)
 // ---------------------------------------------------------------------------
-
-const versDate = (s: string | null | undefined) => (s ? new Date(s) : null)
 
 export const getContentieuxFn = createServerFn({ method: 'GET' })
   .validator((data: { operationId: number }) => data)

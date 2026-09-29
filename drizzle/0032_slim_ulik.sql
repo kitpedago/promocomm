@@ -1,0 +1,2 @@
+ALTER TABLE "facture" ADD COLUMN "prestataire_id" integer;--> statement-breakpoint
+ALTER TABLE "facture" ADD CONSTRAINT "facture_prestataire_id_prestataire_id_fk" FOREIGN KEY ("prestataire_id") REFERENCES "public"."prestataire"("id") ON DELETE no action ON UPDATE no action;

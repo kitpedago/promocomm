@@ -389,6 +389,7 @@ const STADES: Array<ConfigListe> = [
       { k: 'ordre', l: 'Ordre', t: 'entier' },
       { k: 'avecHonoGestion', l: 'Avec hono. gestion', t: 'bool' },
       { k: 'pourcentageStandard', l: '% standard', t: 'nombre' },
+      { k: 'avecSynchroEntreTranche', l: 'Synchro entre tranches', t: 'bool' },
     ],
     // liste_avancement.domaine = libellé texte (pas d'id, cf. domaine.ts)
     selects: { domaine: 'domaines-stade' },
@@ -1190,6 +1191,12 @@ function VueOtl() {
     { k: 'masquerCommercial', l: 'Masquer commercial', t: 'bool' },
     { k: 'masquerComptable', l: 'Masquer comptable', t: 'bool' },
     { k: 'masquerPromo', l: 'Masquer promo', t: 'bool' },
+    { t: 'titre', l: "Stades d'avancement" },
+    {
+      k: 'synchroniserDatesEntreTranche',
+      l: 'Synchroniser les dates entre tranches',
+      t: 'bool',
+    },
     { k: 'commentaire', l: 'Commentaire', t: 'long' },
   ]
 

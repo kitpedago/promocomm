@@ -149,9 +149,10 @@ export const copies: Array<Copy> = [
   ),
   {
     target: 'liste_avancement',
-    cols: '(id, domaine, code, libelle, ordre, avec_hono_gestion, pourcentage_standard)',
+    cols: `(id, domaine, code, libelle, ordre, avec_hono_gestion, pourcentage_standard,
+            avec_synchro_entre_tranche)`,
     select: `SELECT s."IDListeAvancement", s."Domaine", s."Code", COALESCE(s."Libelle", ''), s."Ordre",
-        s."AvecHonoGestion", s."PourcentageStandard"
+        s."AvecHonoGestion", s."PourcentageStandard", s."AvecSynchroEntreTranche"
       FROM legacy."tListeAvancement" s`,
   },
   {
@@ -459,7 +460,7 @@ export const copies: Array<Copy> = [
             possibilite_investisseur, taux_investisseur_autorise, commentaire_investisseur,
             date_validation_engagement, date_abandon, commentaires_abandon,
             masquer_commercial, masquer_comptable, masquer_promo, commentaire,
-            charge_ope1_id, charge_ope2_id)`,
+            charge_ope1_id, charge_ope2_id, synchroniser_dates_entre_tranche)`,
     select: `SELECT s."IDOperation", ${fk('IDStructureJuridique')}, s."Libelle", s."Adresse", s."CP", s."Commune",
         s."NomZAC", ${fk('IDSecteurGeographiqueDeveloppement')},
         s."SurRennesMetropole", s."ANRU", s."ANRUComment", s."IndivColl", s."AnneeDGD", s."AbreviationPourCodeReserve",
@@ -471,7 +472,8 @@ export const copies: Array<Copy> = [
         s."DateValidationEngagement", s."DateAbandon", s."CommentairesAbandon",
         s."MasquerCommercial", s."MasquerComptable", s."MasquerPromo", s."Commentaire",
         ${fkSafe('curIDPersonne_ChargeOpe1', 'tPersonne', 'IDPersonne')},
-        ${fkSafe('curIDPersonne_ChargeOpe2', 'tPersonne', 'IDPersonne')}
+        ${fkSafe('curIDPersonne_ChargeOpe2', 'tPersonne', 'IDPersonne')},
+        s."SynchroniserDatesEntreTranche"
       FROM legacy."tOperation" s`,
   },
   {
@@ -550,12 +552,14 @@ export const copies: Array<Copy> = [
   {
     target: 'stade_avancement',
     cols: `(id, tranche_id, liste_avancement_id, date_previ_compta_debut_annee, date_previ_maj_promo,
-            date_reelle, ordre, pourcentage_avancement_reel, montant_previ, commentaire)`,
+            date_reelle, ordre, pourcentage_avancement_reel, montant_previ, commentaire,
+            lien_hypertexte, avec_appel_fond_client_suppl)`,
     select: `SELECT s."IDStadeAvancement",
         ${fkSafe('IDTranche', 'tTranche', 'IDTranche')},
         ${fkSafe('IDListeAvancement', 'tListeAvancement', 'IDListeAvancement')},
         s."DatePrevComptaDebutAnnee", s."DatePrevMAJPromo", s."DateReelle",
-        s."Ordre", s."PourcentageAvancementReel", s."MontantPrevi", s."Commentaire"
+        s."Ordre", s."PourcentageAvancementReel", s."MontantPrevi", s."Commentaire",
+        s."LienHypertexte", s."AvecAppelFondClientSuppl"
       FROM legacy."tStadeAvancement" s`,
   },
   {

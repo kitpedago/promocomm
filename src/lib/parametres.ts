@@ -223,6 +223,7 @@ const REGISTRE = {
       'ordre',
       'avecHonoGestion',
       'pourcentageStandard',
+      'avecSynchroEntreTranche',
     ],
   },
   'archives-stades': {

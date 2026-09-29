@@ -291,6 +291,9 @@ export const listeAvancement = pgTable('liste_avancement', {
   // Gestion » et leur % standard, bouton Importer de FEN_TABLE_Honoraire)
   avecHonoGestion: boolean('avec_hono_gestion'),
   pourcentageStandard: real('pourcentage_standard'),
+  // « Synchro. dates » : ce stade se synchronise entre les tranches d'une
+  // opération qui l'autorise (operation.synchroniser_dates_entre_tranche)
+  avecSynchroEntreTranche: boolean('avec_synchro_entre_tranche'),
 })
 
 // Domaines des stades (legacy DomaineStadeAvancement : codes texte sans id —
@@ -571,6 +574,7 @@ export const operation = pgTable('operation', {
   masquerCommercial: boolean('masquer_commercial'),
   masquerComptable: boolean('masquer_comptable'),
   masquerPromo: boolean('masquer_promo'),
+  synchroniserDatesEntreTranche: boolean('synchroniser_dates_entre_tranche'),
   commentaire: text(),
   // chargés d'opération (phase 3) — colonnes curIDPersonne_ChargeOpe* du
   // legacy : « cur » trompeur, ce sont des champs saisis sans autre source
@@ -737,6 +741,8 @@ export const stadeAvancement = pgTable('stade_avancement', {
   pourcentageAvancementReel: real('pourcentage_avancement_reel'),
   montantPrevi: montant('montant_previ'),
   commentaire: text(),
+  lienHypertexte: text('lien_hypertexte'),
+  avecAppelFondClientSuppl: boolean('avec_appel_fond_client_suppl'),
 })
 
 // Subventions de la tranche (volet déblocages/budget en phase 6)
@@ -1650,6 +1656,8 @@ export const facture = pgTable('facture', {
     .notNull()
     .references(() => stadeAvancement.id),
   typeMissionId: integer('type_mission_id').references(() => typeMission.id),
+  // prestataire mission — propre à l'application (absent de tFacture)
+  prestataireId: integer('prestataire_id').references(() => prestataire.id),
   numFacture: integer('num_facture'),
   dateFacture: timestamp('date_facture'),
   partiel: boolean(),

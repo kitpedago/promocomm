@@ -218,6 +218,20 @@
       "when": 1790674300197,
       "tag": "0030_typical_princess_powerful",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1790674671271,
+      "tag": "0031_white_skullbuster",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1790688577645,
+      "tag": "0032_slim_ulik",
+      "breakpoints": true
     }
   ]
 }
