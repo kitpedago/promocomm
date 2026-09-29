@@ -23,10 +23,10 @@ registry `git.gd.solutions`, en HTTPS (port 443), d'où l'image est télécharg�
 
 ## Avant de commencer
 
-| Élément | Valeur |
-| --- | --- |
-| Compte | `svc0029` |
-| Dossier | `/opt/docker/promocomm` |
+| Élément    | Valeur                          |
+| ---------- | ------------------------------- |
+| Compte     | `svc0029`                       |
+| Dossier    | `/opt/docker/promocomm`         |
 | Conteneurs | `promocomm-app`, `promocomm-db` |
 
 À demander avec chaque livraison : contient-elle une migration ? Des fichiers
@@ -89,12 +89,13 @@ indique 0 échec. Le bouton de rafraîchissement permet de le relancer.
 
 ## En cas de problème
 
-| Symptôme | Cause probable | Action |
-| --- | --- | --- |
-| `update.sh` s'arrête sur `unauthorized` ou `denied` | Jeton du registry expiré | `docker login git.gd.solutions` avec le jeton `read:package`, puis relancer |
-| `update.sh` s'arrête sur une erreur réseau | `git.gd.solutions` injoignable en 443 | Vérifier la sortie Internet du serveur, puis relancer |
-| `promocomm-app` à l'état `Restarting` | Migration en échec : le serveur ne démarre pas tant qu'elle échoue | Relever l'erreur dans le journal, faire le retour arrière, transmettre l'erreur à GD Solutions |
-| Application joignable mais anomalie fonctionnelle | Défaut de la nouvelle version | Retour arrière |
+| Symptôme                                            | Cause probable                                                     | Action                                                                                         |
+| --------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `update.sh` s'arrête sur `unauthorized` ou `denied` | Jeton du registry expiré                                           | `docker login git.gd.solutions` avec le jeton `read:package`, puis relancer                    |
+| `update.sh` s'arrête sur une erreur réseau          | `git.gd.solutions` injoignable en 443                              | Vérifier la sortie Internet du serveur, puis relancer                                          |
+| `promocomm-app` à l'état `Restarting`               | Migration en échec : le serveur ne démarre pas tant qu'elle échoue | Relever l'erreur dans le journal, faire le retour arrière, transmettre l'erreur à GD Solutions |
+| Application joignable mais anomalie fonctionnelle   | Défaut de la nouvelle version                                      | Retour arrière                                                                                 |
+| `update.sh` télécharge un tag autre que `latest`    | Version figée par `PROMOCOMM_TAG` (`.env`) ou `image:` (override)  | Remettre `latest`, puis relancer `update.sh`                                                   |
 
 ## Retour arrière
 
