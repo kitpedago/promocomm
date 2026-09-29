@@ -1288,12 +1288,21 @@ function TableFactures({
   const queryClient = useQueryClient()
   const [selection, setSelection] = useState<number | null>(null)
   const [modale, setModale] = useState<LigneFacture | 'creation' | null>(null)
+  // même filtre Prestataire que les factures d'honoraires de commercialisation
+  const [prestataireFiltre, setPrestataireFiltre] = useState<number | null>(
+    null,
+  )
 
   const factures = useQuery({
     queryKey: ['factures-stade', stade?.id],
     queryFn: () => getFacturesFn({ data: { stadeAvancementId: stade!.id } }),
     enabled: stade != null,
   })
+  const nomenclatures = useQuery({
+    queryKey: ['honoraires-nomenclatures'],
+    queryFn: () => getHonorairesNomenclaturesFn(),
+    staleTime: 60_000,
+  }).data
   const lignes = factures.data ?? []
   const invalider = () =>
     void queryClient.invalidateQueries({
@@ -1309,10 +1318,21 @@ function TableFactures({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-2">
-      <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2">
+      <div className="flex shrink-0 flex-wrap items-end gap-x-4 gap-y-2">
         <p className="text-[13px] font-semibold text-[var(--ink)]">
           Factures{stade ? ` — ${stade.stade ?? ''}` : ''}
         </p>
+        <div className="w-64">
+          <ChampSelectId
+            libelle="Prestataire"
+            value={prestataireFiltre}
+            onChange={(v) => {
+              setPrestataireFiltre(v)
+              setSelection(null)
+            }}
+            options={nomenclatures?.prestataires ?? []}
+          />
+        </div>
         {!lectureSeule && stade && (
           <BoutonsTable
             selection={selection}
@@ -1332,7 +1352,11 @@ function TableFactures({
       <DataTable
         id="operations-factures"
         columns={COLONNES_FACTURES}
-        data={lignes}
+        data={
+          prestataireFiltre == null
+            ? lignes
+            : lignes.filter((f) => f.prestataireId === prestataireFiltre)
+        }
         unite="factures"
         getRowId={(r) => String(r.id)}
         selectedRowId={selection != null ? String(selection) : null}
