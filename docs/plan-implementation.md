@@ -86,7 +86,8 @@ Le cœur de l'usage quotidien, ouvert aux 7 services. **Aucune extension ETL** h
   d'annulation en texte libre (aucune valeur dans le legacy ; liste
   paramétrable à trancher avec le client). TMA : contrôles commentés dans le
   WinDev actuel (fonction neutralisée à la source) — données `tma` déjà
-  reprises, pas d'écran tant que le client n'a pas réactivé le besoin.
+  reprises, pas d'écran : le client a décidé de ne pas réactiver le besoin
+  (2026-09-29).
 
 ## Phase 3 — Suivi de production (module Opérations complet) ✅ (2026-08-13)
 
@@ -167,8 +168,8 @@ Réservé Comptabilité/Administrateur. Le plus gros morceau ETL :
   reprise morte — IDs en texte (max « 99 »), colonnes `Organisme_old` /
   `IDOperation_old`, **aucune référence dans les fenêtres ni les requêtes du
   projet WinDev**, les 291 déblocages pointent tous vers `tSubvention`
-  (IDs int, dates jusqu'en 2024 contre 2023). Recommandation : ne pas la
-  reprendre — à faire confirmer par le client. Les champs « Premier/Solde »
+  (IDs int, dates jusqu'en 2024 contre 2023). Non reprise : abandon
+  confirmé par le client le 2026-09-29. Les champs « Premier/Solde »
   notés en 2026-08-12 sont `PremierDeblocage*`/`SoldeDeblocage*` de cette
   table morte : ils disparaissent avec elle (récupérables en archive si le
   client y tient).
@@ -226,9 +227,8 @@ Réservé Comptabilité/Administrateur. Le plus gros morceau ETL :
   avec lots, un lot commercialisé sont refusés) ; **export CSV générique**
   sur toutes les tables (bouton Exporter : lignes filtrées/triées, colonnes
   visibles, séparateur « ; » + BOM pour Excel — remplace l'export Excel
-  WinDev écran par écran). **Import Excel de lots reporté** : le mapping
-  colonnes → champs vit dans la table WinDev `ChampImportLot`, absente du
-  .bak importé — à reprendre avec un .bak qui la contient.
+  WinDev écran par écran). **Import Excel de lots** livré le 2026-09-29
+  (détail dans reste-a-faire.md §2).
 - **Livré 2026-08-13 (arbre complet)** (migration 0024) : toutes les entrées
   restantes de l'arbre FEN_Param, sidebar regroupée par rubriques WinDev
   (Listes / Stades d'avancement / Système / Réserves / Subventions / Modèle de

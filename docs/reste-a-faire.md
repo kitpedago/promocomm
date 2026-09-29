@@ -1,4 +1,4 @@
-# Reste à faire (état au 2026-08-13)
+# Reste à faire (état au 2026-09-29)
 
 Toutes les phases fonctionnelles du [plan](plan-implementation.md) sont livrées
 (0 à 8 ✅, 9 🔶). Ce qui suit est **tout ce qui reste**, classé par ce qui le
@@ -7,24 +7,30 @@ externe — le développement autonome est allé au bout de ce qu'il pouvait.
 
 ## 1. Décisions à prendre avec le client
 
-| Sujet                                              | État                                                                                                                                                                                                                                                                                                | Décision attendue                                                                                                                                                                                 |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`tSubvention2`**                                 | Dossier instruit : reprise morte — IDs en texte (max « 99 »), colonnes `Organisme_old`/`IDOperation_old`, **aucune référence dans les fenêtres ni requêtes WinDev**, les 291 déblocages pointent tous vers `tSubvention` (IDs int, dates jusqu'en 2024 contre 2023).                                | Confirmer l'abandon (recommandé). Si les taux historiques `PremierDeblocage*`/`SoldeDeblocage*` (qui ne vivent que sur cette table morte) ont une valeur, les reprendre en archive lecture seule. |
-| **Motif d'annulation d'une réservation**           | ✅ Résolu le 2026-08-13 : liste « Motif annulation » dans `/parametres` (table côté app, hors ETL — survit aux réimports), semée avec les 4 motifs du combo WinDev fournis par le client, et modale « Annuler la réservation » branchée dessus (select, stockage en libellé dans la colonne texte). | —                                                                                                                                                                                                 |
-| **TMA (travaux modificatifs acquéreur)**           | Fonction **neutralisée à la source** dans le WinDev actuel (contrôles commentés dans FEN_TABLE_Commercialisation). Les données `tma` (178) sont reprises, aucun écran ne les édite.                                                                                                                 | Le besoin est-il réactivé ? Si oui : onglet TMA sur le détail du lot (les champs existent déjà au schéma).                                                                                        |
-| **Validations réactivées** (phase 4, pour mémoire) | RS obligatoire, SIRET nettoyé + avertissement 14 chiffres, total % participation ≠ 100 signalé — commentées dans le legacy, réactivées dans la reprise.                                                                                                                                             | Valider ce comportement en recette.                                                                                                                                                               |
+Toutes tranchées au 2026-09-29 — section gardée pour mémoire.
+
+| Sujet                                              | État                                                                                                                                                                                                                                                                                                         | Décision attendue |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------- |
+| **`tSubvention2`**                                 | ✅ Abandon confirmé par le client le 2026-09-29 : table non reprise (reprise morte — IDs en texte, **aucune référence dans les fenêtres ni requêtes WinDev**, les 291 déblocages pointent tous vers `tSubvention`). Les taux `PremierDeblocage*`/`SoldeDeblocage*` qu'elle seule portait ne sont pas repris. | —                 |
+| **Motif d'annulation d'une réservation**           | ✅ Résolu le 2026-08-13 : liste « Motif annulation » dans `/parametres` (table côté app, hors ETL — survit aux réimports), semée avec les 4 motifs du combo WinDev fournis par le client, et modale « Annuler la réservation » branchée dessus (select, stockage en libellé dans la colonne texte).          | —                 |
+| **TMA (travaux modificatifs acquéreur)**           | ✅ Non réactivé, décision du client le 2026-09-29. Fonction neutralisée à la source dans le WinDev actuel (contrôles commentés dans FEN_TABLE_Commercialisation). Les données `tma` (178) restent reprises pour la base miroir, aucun écran ne les édite.                                                    | —                 |
+| **Validations réactivées** (phase 4, pour mémoire) | ✅ Réactivation validée par le client le 2026-09-29 : RS obligatoire, SIRET nettoyé + avertissement 14 chiffres, total % participation ≠ 100 signalé — commentées dans le legacy, actives dans la reprise.                                                                                                   | —                 |
 
 ## 2. Bloqué par le contenu du prochain `.bak`
 
 Le `.bak` importé (2026-07-04) est en retard sur l'analyse WinDev actuelle.
 À la prochaine livraison de sauvegarde, vérifier la présence de :
 
-- **`ChampImportLot`** — mapping colonnes Excel → champs du lot ; sans elle,
-  l'**import Excel de lots** (bouton « Importer » de FEN_Param) n'est pas
-  reproductible fidèlement. Dès qu'elle arrive : reprendre la table, puis
-  implémenter l'import (fichier `.xls`, ligne 1 = entêtes, arrêt à « TOTAUX »,
-  remplace les lots de la tranche après confirmation — code WinDev documenté
-  dans `FEN_Param.wdw`, `BTN_Importer_Lot`).
+- ~~**`ChampImportLot`**~~ — couvert le 2026-09-29. La table est un fichier
+  HFSQL local de WinDev (elle n'arrivera jamais par un `.bak` SQL Server) :
+  le client l'a exportée (`migration_windev/ChampImportLot.xlsx`, 24 colonnes)
+  et elle vit en dur dans `src/lib/importlots.helpers.ts`. Import Excel des
+  lots : Paramètres > Opérations, tranches et lots, bouton « Importer des lots
+  (Excel) » de la tranche sélectionnée (`.xlsx`, ligne 1 = entêtes, arrêt à
+  « TOTAUX », remplace les lots de la tranche après confirmation). Écart
+  assumé avec WinDev, qui supprimait aussi les réservations des lots
+  remplacés : une tranche dont les lots portent des réservations, des réserves
+  SAV ou des commissions vendeur n'est pas écrasée.
 - ~~**`tHonoCommHFFacture.IDPrestataire` et `IDBaremeHonoComm`**~~ — arrivées
   avec le back du 2026-09-08 : migration 0028 (`bareme_hono_comm`, FK sur
   `hono_comm_facture`), ETL, colonnes + selects + filtre Prestataire sur les
