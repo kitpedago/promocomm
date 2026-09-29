@@ -234,6 +234,13 @@
       "breakpoints": true
     },
     {
+      "idx": 33,
+      "version": "7",
+      "when": 1790689409692,
+      "tag": "0033_suppr_alerte_sms",
+      "breakpoints": true
+    },
+    {
       "idx": 34,
       "version": "7",
       "when": 1790689497657,

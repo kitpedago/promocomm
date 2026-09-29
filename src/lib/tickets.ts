@@ -17,7 +17,7 @@ import {
   ticketCommentaire,
   ticketLecture,
 } from '#/db/schema.ts'
-import { notifierTicketSms } from '#/lib/ovh-sms.server.ts'
+import { notifierTicketMail } from '#/lib/alerte-mail.server.ts'
 import { requireAdmin, requireSession } from '#/lib/session.server.ts'
 import { SERVICES, getService, serviceEmail } from '#/lib/services'
 import {
@@ -391,14 +391,16 @@ export const createTicketFn = createServerFn({ method: 'POST' })
       .returning({ id: ticket.id })
     await insertCaptures(row.id, data.captures, who)
     await marquerLu(row.id, who.email)
-    // Alerte SMS « un ticket est publié » (Paramètres → Système → Alerte SMS) —
-    // best-effort : toute erreur est avalée par notifierTicketSms, la création
-    // du ticket n'échoue jamais à cause du SMS
-    await notifierTicketSms({
+    // Alerte mail « un ticket est publié » (Paramètres → Système → Alerte mail) —
+    // best-effort : toute erreur est avalée par notifierTicketMail. Pas
+    // d'await : un serveur SMTP injoignable ne retarde pas la création
+    void notifierTicketMail({
       id: row.id,
       type: data.type,
       gravite: data.gravite,
       titre: data.titre,
+      description: data.description,
+      page: data.page,
       auteur: who.nom,
     })
     return { id: row.id }

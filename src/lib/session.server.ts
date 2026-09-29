@@ -24,7 +24,7 @@ export async function requireEcriture() {
 }
 
 // Réservé au service Administrateur (= le dev) : qualification des tickets,
-// configuration de l'Alerte SMS…
+// configuration de l'Alerte mail…
 export async function requireAdmin() {
   const session = await requireSession()
   if (session.user.service !== 'admin')

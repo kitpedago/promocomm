@@ -1,4 +1,4 @@
-// Chiffrement au repos des SECRETS de `app_param` (identifiants OVH SMS…) :
+// Chiffrement au repos des SECRETS de `app_param` (mot de passe SMTP…) :
 // AES-256-GCM, clé dérivée d'un secret d'ENVIRONNEMENT (jamais en base) — un
 // dump BDD seul est inexploitable. Rétro-compatible (une valeur en clair
 // héritée est lue telle quelle) et idempotent (ne re-chiffre pas une valeur

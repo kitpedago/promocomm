@@ -36,8 +36,8 @@ export const importRuns = pgTable('import_runs', {
 // transform reconstruit le schéma métier à chaque réimport .bak, ces lignes
 // doivent y survivre. Forme clé/valeur : une écriture ne touche qu'une ligne,
 // deux onglets de navigateur ne s'écrasent pas.
-// Paramètres d'application clé/valeur (config Alerte SMS OVH, URL publique…).
-// Hors domaine.ts : survit aux réimports .bak. Les secrets (…Secret,
+// Paramètres d'application clé/valeur (config Alerte mail SMTP, URL publique…).
+// Hors domaine.ts : survit aux réimports .bak. Les secrets (…Secret, …MotDePasse,
 // ConsumerKey) sont chiffrés au repos par l'appli (src/lib/secrets.server.ts).
 export const appParam = pgTable('app_param', {
   param: text().primaryKey(),

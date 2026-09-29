@@ -44,3 +44,10 @@ export const db: typeof dbLocale = new Proxy(dbLocale, {
 if (process.env.MIROIR_DB && process.env.MIROIR_AUTO !== '0') {
   void import('#/lib/miroir.server.ts').then((m) => m.planifierMiroir())
 }
+
+// Relance quotidienne des tickets non livrés (alerte-mail.server.ts), même
+// import différé. Activation relue en base à chaque passage. Pas sous vitest :
+// l'import aboutirait après la fin du test.
+if (!process.env.VITEST) {
+  void import('#/lib/alerte-mail.server.ts').then((m) => m.planifierRelance())
+}

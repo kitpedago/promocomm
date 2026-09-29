@@ -14,7 +14,7 @@ import {
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 
 import { Button } from '#/components/ui/button'
-import { AlerteSmsParam } from '#/components/AlerteSmsParam'
+import { AlerteMailParam } from '#/components/AlerteMailParam'
 import { BoutonsTable, ErreurMutation } from '#/components/ChampsModale'
 import DataTable from '#/components/DataTable'
 import ModaleFiche from '#/components/ModaleFiche'
@@ -554,7 +554,7 @@ const NOTAIRES: Array<ConfigListe> = [
 
 const OTL = 'operations-tranches-lots'
 const DROITS = 'droits'
-const ALERTE_SMS = 'alerte-sms'
+const ALERTE_MAIL = 'alerte-mail'
 
 const RUBRIQUES: Array<{ titre: string; listes: Array<ConfigListe> }> = [
   { titre: 'Listes', listes: LISTES },
@@ -570,7 +570,7 @@ const TOUTES = RUBRIQUES.flatMap((r) => r.listes)
 function PageParametres() {
   const { liste } = Route.useSearch()
   const { session } = Route.useRouteContext()
-  // Alerte SMS : écran réservé au service Administrateur (comme isfectuteurs)
+  // Alerte mail : écran réservé au service Administrateur (comme isfectuteurs)
   const estAdmin = session.user.service === 'admin'
   const navigate = useNavigate({ from: Route.fullPath })
   const [slugStocke, setSlugStocke] = usePref<string>(
@@ -586,7 +586,7 @@ function PageParametres() {
   const config =
     slugActif === OTL ||
     slugActif === DROITS ||
-    (slugActif === ALERTE_SMS && estAdmin)
+    (slugActif === ALERTE_MAIL && estAdmin)
       ? null
       : (TOUTES.find((l) => l.slug === slugActif) ?? LISTES[0])
 
@@ -614,8 +614,8 @@ function PageParametres() {
     config?.titre ??
     (slugActif === DROITS
       ? 'Droits'
-      : slugActif === ALERTE_SMS
-        ? 'Alerte SMS'
+      : slugActif === ALERTE_MAIL
+        ? 'Alerte mail'
         : 'Opérations, Tranches et Lots')
 
   return (
@@ -643,7 +643,7 @@ function PageParametres() {
                 r.titre === 'Système' && boutonNav(DROITS, 'Droits'),
                 r.titre === 'Système' &&
                   estAdmin &&
-                  boutonNav(ALERTE_SMS, 'Alerte SMS'),
+                  boutonNav(ALERTE_MAIL, 'Alerte mail'),
               ].filter(Boolean)
               if (entrees.length === 0) return []
               return [
@@ -672,8 +672,8 @@ function PageParametres() {
           <ListeNomenclature key={config.slug} config={config} />
         ) : slugActif === DROITS ? (
           <VueDroits />
-        ) : slugActif === ALERTE_SMS ? (
-          <AlerteSmsParam />
+        ) : slugActif === ALERTE_MAIL ? (
+          <AlerteMailParam />
         ) : (
           <VueOtl />
         )}

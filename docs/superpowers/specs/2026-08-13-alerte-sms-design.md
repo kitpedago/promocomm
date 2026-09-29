@@ -1,5 +1,8 @@
 # Alerte SMS OVH (tickets) — design
 
+> **Remplacé le 2026-09-29** par l'alerte mail (SMTP, `src/lib/alerte-mail*.ts`) : courriel au
+> développeur à la création d'un ticket + relance quotidienne des tickets non livrés.
+
 **Date** : 2026-08-13 · **Statut** : validé · Complément du module Tickets
 (cf. 2026-08-13-tickets-nouveautes-design.md), porté d'isfectuteurs
 (`server/ovh-sms.ts`, `server/secrets.ts`, `server/alerte-sms.fn.ts`,
