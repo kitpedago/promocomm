@@ -3,15 +3,17 @@
 // (suivi résultat + suivi détaillé frais), Finances (Admin PSLA, Contrats PSLA,
 // Financements PSLA, Financements, GFA, Suivi Prêt 1 %).
 // Captures : migration_windev/captures_ecrans/ComptaFinances_*.png.
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 
-import Champ from '#/components/Champ'
 import {
   BoutonsTable,
+  ChampForm,
+  ChampSelectId,
   ErreurMutation,
   SousTitre,
+  versInputDate,
 } from '#/components/ChampsModale'
 import DataTable from '#/components/DataTable'
 import Scindeur from '#/components/Scindeur'
@@ -52,6 +54,7 @@ import {
   saveSubventionFn,
   saveSuiviTrancheFn,
 } from '#/lib/compta.ecriture.ts'
+import { dateFr, lireSaisie, voisinVertical } from '#/lib/compta.helpers.ts'
 import { getSubventionsFn } from '#/lib/operations.ts'
 import {
   selectionARejouer,
@@ -62,6 +65,7 @@ import { getService } from '#/lib/services'
 import { fmtDate, fmtEuro } from '#/lib/utils.ts'
 
 import type { DescChamp, ValeursFiche } from '#/components/ModaleFiche'
+import type { TypeSaisie } from '#/lib/compta.helpers.ts'
 import type { VueFinancement } from '#/lib/compta.ts'
 import type { ColumnDef } from '@tanstack/react-table'
 
@@ -549,6 +553,10 @@ function OngletSubventions({ trancheId }: { trancheId: number }) {
 
 type Suivi = NonNullable<Awaited<ReturnType<typeof getSuiviTrancheFn>>>
 type LigneFrais = Suivi['frais'][number]
+// colonnes de la tranche saisissables dans les grilles (montants, textes, dates)
+type CleSuivi = {
+  [K in keyof Suivi]: Suivi[K] extends number | string | Date | null ? K : never
+}[keyof Suivi]
 
 const COLONNES_FRAIS: Array<ColumnDef<LigneFrais, any>> = [
   {
@@ -578,11 +586,126 @@ const COLONNES_FRAIS: Array<ColumnDef<LigneFrais, any>> = [
   { accessorKey: 'usageFrais', header: 'Usage frais', size: 140 },
 ]
 
-// cellule € de la grille Suivi résultat
-function C({ v }: { v: number | null | undefined }) {
+// En-têtes des grilles du suivi : code couleur de FEN_Compta, teintes de la
+// charte (violet = budget, bleu = suivi en cours, vert = réel, orange → or)
+const T_VIOLET = 'bg-[var(--violet-tint)] text-[var(--ink)]'
+const T_BLEU = 'bg-[var(--info-tint)] text-[var(--ink)]'
+const T_VERT = 'bg-[var(--ok-tint)] text-[var(--ink)]'
+const T_OR = 'bg-[var(--gold-tint)] text-[var(--gold-ink)]'
+
+// Saisie directe du suivi, enregistrée à la sortie du champ (comme FEN_Compta :
+// ToFile + Save à chaque modification). Entrée valide, Échap annule ; une
+// saisie illisible n'est pas enregistrée.
+type ValeurSaisie = number | string | null
+
+function SaisieDirecte({
+  v,
+  type = 'montant',
+  saisie,
+  className = '',
+}: {
+  v: ValeurSaisie | Date | undefined
+  type?: TypeSaisie
+  saisie: (v: ValeurSaisie) => void
+  className?: string
+}) {
+  // null : hors saisie, le champ affiche la valeur enregistrée
+  const [brouillon, setBrouillon] = useState<string | null>(null)
+  const annule = useRef(false)
+  const lire = (t: string) => lireSaisie(t, type)
+  // valeur enregistrée, telle que la saisie la rendrait
+  const courante: ValeurSaisie =
+    v instanceof Date || type === 'date'
+      ? versInputDate(v as string | Date | null)
+      : (v ?? null)
+  // telle qu'elle se tape : date jj/mm/aaaa, décimales à la virgule
+  const brute =
+    courante == null
+      ? ''
+      : type === 'date'
+        ? dateFr(courante as string)
+        : type === 'texte'
+          ? String(courante)
+          : String(courante).replace('.', ',')
+  const affiche =
+    courante != null && type === 'montant' ? fmtEuro(courante as number) : brute
   return (
+    <input
+      inputMode={
+        type === 'texte'
+          ? undefined
+          : type === 'montant'
+            ? 'decimal'
+            : 'numeric'
+      }
+      placeholder={type === 'date' ? 'jj/mm/aaaa' : undefined}
+      value={brouillon ?? affiche}
+      aria-invalid={brouillon != null && lire(brouillon) === undefined}
+      onFocus={(e) => {
+        setBrouillon(brute)
+        const champ = e.currentTarget
+        // après le rendu : la valeur brute a remplacé la valeur formatée
+        requestAnimationFrame(() => champ.select())
+      }}
+      onChange={(e) => setBrouillon(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') annule.current = true
+        if (e.key === 'Enter' || e.key === 'Escape') e.currentTarget.blur()
+        if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+        // flèches : cellule du dessus / du dessous (la sortie enregistre)
+        const champ = e.currentTarget
+        const boite = (c: Element) =>
+          (c.closest('td') ?? c).getBoundingClientRect()
+        const autres = [
+          ...(champ.closest('table')?.querySelectorAll('input') ?? []),
+        ].filter((c) => c !== champ)
+        const i = voisinVertical(
+          boite(champ),
+          autres.map(boite),
+          e.key === 'ArrowUp' ? 'haut' : 'bas',
+        )
+        if (i < 0) return
+        e.preventDefault()
+        autres[i].focus()
+      }}
+      onBlur={() => {
+        const lu = annule.current ? undefined : lire(brouillon ?? '')
+        annule.current = false
+        setBrouillon(null)
+        if (lu !== undefined && lu !== courante) saisie(lu)
+      }}
+      className={`w-full rounded-sm bg-transparent px-2 py-1 outline-none focus:bg-white focus:ring-1 focus:ring-[var(--gold)] aria-invalid:ring-1 aria-invalid:ring-red-500 ${
+        type === 'texte' ? '' : 'text-right tabular-nums'
+      } ${className}`}
+    />
+  )
+}
+
+// cellule des grilles du suivi ; sans `saisie`, cellule calculée (Total)
+function C({
+  v,
+  type,
+  saisie,
+  rowSpan,
+  colSpan,
+}: {
+  v: ValeurSaisie | Date | undefined
+  type?: TypeSaisie
+  saisie?: (v: ValeurSaisie) => void
+  rowSpan?: number
+  colSpan?: number
+}) {
+  return saisie ? (
+    <td
+      rowSpan={rowSpan}
+      colSpan={colSpan}
+      className="border border-[var(--line-soft)] p-0 align-middle"
+    >
+      <SaisieDirecte v={v} type={type} saisie={saisie} />
+    </td>
+  ) : (
     <td className="border border-[var(--line-soft)] px-2 py-1 text-right tabular-nums">
-      {v != null ? fmtEuro(v) : ''}
+      {v != null ? fmtEuro(v as number) : ''}
     </td>
   )
 }
@@ -689,6 +812,21 @@ function OngletSuivi({ trancheId }: { trancheId: number }) {
     enregistrer.reset()
     setModale(m)
   }
+  // saisie directe : une colonne à la fois, totaux à jour sans attendre.
+  // Une mutation par bloc : l'erreur s'affiche sous la grille concernée.
+  const saisieDirecte = {
+    mutationFn: (v: ValeursFiche) =>
+      saveSuiviTrancheFn({ data: { ...v, id: trancheId } }),
+    onMutate: (v: ValeursFiche) =>
+      queryClient.setQueryData<Suivi | null>(
+        ['compta-suivi', trancheId],
+        (avant) => avant && { ...avant, ...v },
+      ),
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: ['compta-suivi', trancheId] }),
+  }
+  const saisir = useMutation(saisieDirecte)
+  const saisirFrais = useMutation(saisieDirecte)
   const s = suivi.data
   if (!s)
     return (
@@ -697,10 +835,21 @@ function OngletSuivi({ trancheId }: { trancheId: number }) {
       </p>
     )
 
-  const th =
-    'border border-[var(--line-soft)] bg-[var(--cream)] px-2 py-1 text-[12px] font-semibold text-[var(--ink)]'
+  const th = (teinte = 'bg-[var(--cream)] text-[var(--ink)]') =>
+    `border border-[var(--line-soft)] px-2 py-1 text-[12px] font-semibold ${teinte}`
   const rowLabel =
     'border border-[var(--line-soft)] px-2 py-1 text-left font-medium text-[var(--ink)]'
+  // cellule saisissable liée à une colonne de la tranche
+  const cellule =
+    (bloc: typeof saisir) =>
+    (
+      k: CleSuivi,
+      props?: { type?: TypeSaisie; rowSpan?: number; colSpan?: number },
+    ) => (
+      <C key={k} v={s[k]} saisie={(v) => bloc.mutate({ [k]: v })} {...props} />
+    )
+  const cel = cellule(saisir)
+  const celFrais = cellule(saisirFrais)
 
   return (
     <div className="flex flex-col gap-8">
@@ -740,70 +889,60 @@ function OngletSuivi({ trancheId }: { trancheId: number }) {
             <table className="min-w-[760px] border-collapse text-[13px]">
               <thead>
                 <tr>
-                  <th className={th} />
-                  <th className={th} colSpan={3}>
+                  <th className={th()} rowSpan={2} />
+                  <th className={th(T_VIOLET)} colSpan={3}>
                     Budget
                   </th>
-                  <th className={th} colSpan={2}>
+                  <th className={th(T_BLEU)} colSpan={2}>
                     Coût sans hono ni publicité
                   </th>
-                  <th className={th}>Quote part</th>
+                  <th className={th(T_OR)} rowSpan={2}>
+                    Quote part
+                  </th>
                 </tr>
                 <tr>
-                  <th className={th} />
-                  <th className={th}>CA HT</th>
-                  <th className={th}>Subvention</th>
-                  <th className={th}>Hono comm</th>
-                  <th className={th}>Budget</th>
-                  <th className={th}>Réel</th>
-                  <th className={th} />
+                  <th className={th(T_VIOLET)}>CA HT</th>
+                  <th className={th(T_VIOLET)}>Subvention</th>
+                  <th className={th(T_VIOLET)}>Hono comm</th>
+                  <th className={th(T_VIOLET)}>Budget</th>
+                  <th className={th(T_VERT)}>Réel</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td className={rowLabel}>PSLA</td>
-                  <C v={s.cahtPrevPsla} />
-                  <C v={s.subvPrevPsla} />
-                  <C v={s.honoCommPsla} />
-                  <C v={s.coutPrevPsla} />
-                  <C v={s.coutReelPsla} />
-                  <C v={s.quotePartPsla} />
+                  {cel('cahtPrevPsla')}
+                  {cel('subvPrevPsla')}
+                  {cel('honoCommPsla')}
+                  {cel('coutPrevPsla')}
+                  {cel('coutReelPsla')}
+                  {cel('quotePartPsla')}
                 </tr>
                 <tr>
                   <td className={rowLabel}>VEFA taux réduit</td>
-                  <C v={s.cahtPrevVefaReduit} />
-                  <C v={s.subvPrevVefaReduit} />
-                  <C v={s.honoCommVefaReduit} />
+                  {cel('cahtPrevVefaReduit')}
+                  {cel('subvPrevVefaReduit')}
+                  {cel('honoCommVefaReduit')}
                   {/* coût VEFA unique : cellule fusionnée sur les deux lignes VEFA (comme WinDev) */}
-                  <td
-                    rowSpan={2}
-                    className="border border-[var(--line-soft)] px-2 py-1 text-right align-middle tabular-nums"
-                  >
-                    {s.coutPrevVefa != null ? fmtEuro(s.coutPrevVefa) : ''}
-                  </td>
-                  <td
-                    rowSpan={2}
-                    className="border border-[var(--line-soft)] px-2 py-1 text-right align-middle tabular-nums"
-                  >
-                    {s.coutReelVefa != null ? fmtEuro(s.coutReelVefa) : ''}
-                  </td>
-                  <C v={s.quotePartVefaReduit} />
+                  {cel('coutPrevVefa', { rowSpan: 2 })}
+                  {cel('coutReelVefa', { rowSpan: 2 })}
+                  {cel('quotePartVefaReduit')}
                 </tr>
                 <tr>
                   <td className={rowLabel}>VEFA taux normal</td>
-                  <C v={s.cahtPrevVefa} />
-                  <C v={s.subvPrevVefaNormal} />
-                  <C v={s.honoCommVefaNormal} />
-                  <C v={s.quotePartVefaNormal} />
+                  {cel('cahtPrevVefa')}
+                  {cel('subvPrevVefaNormal')}
+                  {cel('honoCommVefaNormal')}
+                  {cel('quotePartVefaNormal')}
                 </tr>
                 <tr>
                   <td className={rowLabel}>Autre</td>
-                  <C v={s.cahtPrevAutre} />
-                  <C v={s.subvPrevAutre} />
-                  <C v={s.honoCommAutre} />
-                  <C v={s.coutPrevAutre} />
-                  <C v={s.coutReelAutre} />
-                  <C v={s.quotePartAutre} />
+                  {cel('cahtPrevAutre')}
+                  {cel('subvPrevAutre')}
+                  {cel('honoCommAutre')}
+                  {cel('coutPrevAutre')}
+                  {cel('coutReelAutre')}
+                  {cel('quotePartAutre')}
                 </tr>
                 <tr className="font-semibold">
                   <td className={rowLabel}>Total</td>
@@ -848,33 +987,42 @@ function OngletSuivi({ trancheId }: { trancheId: number }) {
                 </tr>
                 <tr>
                   <td className={rowLabel}>Commentaires</td>
-                  <td
-                    colSpan={3}
-                    className="border border-[var(--line-soft)] px-2 py-1"
-                  >
-                    {s.cahtPrevCommentaire}
-                  </td>
-                  <td className="border border-[var(--line-soft)] px-2 py-1">
-                    {s.coutPrevCommentaire}
-                  </td>
-                  <td className="border border-[var(--line-soft)] px-2 py-1">
-                    {s.coutReelCommentaire}
-                  </td>
-                  <td className="border border-[var(--line-soft)] px-2 py-1">
-                    {s.quotePartCommentaire}
-                  </td>
+                  {cel('cahtPrevCommentaire', { type: 'texte', colSpan: 3 })}
+                  {cel('coutPrevCommentaire', { type: 'texte' })}
+                  {cel('coutReelCommentaire', { type: 'texte' })}
+                  {cel('quotePartCommentaire', { type: 'texte' })}
                 </tr>
               </tbody>
             </table>
           </div>
 
           <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-            <Champ libelle="Répartition">{s.modeRepartQuotePart}</Champ>
-            <div />
-            <Champ libelle="LVO prévi. Nb">{s.nbLvoPrev}</Champ>
-            <Champ libelle="LVO prévi. Année">{s.nbLvoPrevAnnee}</Champ>
+            <div className="col-span-2">
+              <ChampSelectId
+                libelle="Répartition"
+                value={s.modeRepartQuotePartId}
+                onChange={(v) => saisir.mutate({ modeRepartQuotePartId: v })}
+                options={nomenclatures?.modesRepartQuotePart ?? []}
+              />
+            </div>
+            {(
+              [
+                ['nbLvoPrev', 'LVO prévi. Nb'],
+                ['nbLvoPrevAnnee', 'LVO prévi. Année'],
+              ] as const
+            ).map(([k, libelle]) => (
+              <ChampForm key={k} libelle={libelle}>
+                <SaisieDirecte
+                  v={s[k]}
+                  type="entier"
+                  saisie={(v) => saisir.mutate({ [k]: v })}
+                  className="h-9 border border-[var(--line)] text-[13px]"
+                />
+              </ChampForm>
+            ))}
           </div>
         </div>
+        <ErreurMutation erreur={saisir.error} />
       </Bloc>
 
       <Bloc titre="Suivi détaillé frais / budget">
@@ -883,31 +1031,85 @@ function OngletSuivi({ trancheId }: { trancheId: number }) {
             Modifier
           </Button>
         </div>
-        <div className="grid gap-x-8 gap-y-3 md:grid-cols-2 xl:grid-cols-4">
-          <Champ libelle="Budget — date">{fmtDate(s.fraisBudgetDate)}</Champ>
-          <Champ libelle="Actualisé — date">{fmtDate(s.fraisActuaDate)}</Champ>
-          <Champ libelle="Consommé — date">
-            {fmtDate(s.fraisConsommeDate)}
-          </Champ>
-          <Champ libelle="Réel — date">{fmtDate(s.fraisReelDate)}</Champ>
-          <Champ libelle="Budget — commentaire">
-            {s.fraisBudgetCommentaire}
-          </Champ>
-          <Champ libelle="Actualisé — commentaire">
-            {s.fraisActuaCommentaire}
-          </Champ>
-          <Champ libelle="Consommé — commentaire">
-            {s.fraisConsommeCommentaire}
-          </Champ>
-          <Champ libelle="Réel — commentaire">{s.fraisReelCommentaire}</Champ>
-          <Champ libelle="Stade budget">{s.stadeBudget}</Champ>
-          <Champ libelle="Type mission budget architecte">
-            {s.typeMissionBudgetArchitecte}
-          </Champ>
-          <Champ libelle="Date contrat architecte">
-            {fmtDate(s.dateContratArchitecte)}
-          </Champ>
+        <div className="flex flex-wrap items-start gap-8">
+          <div className="overflow-x-auto">
+            <table className="min-w-[680px] border-collapse text-[13px]">
+              <thead>
+                <tr>
+                  <th className={th()} />
+                  <th className={th(T_VIOLET)}>Budget</th>
+                  <th className={th(T_BLEU)}>Actualisé</th>
+                  <th className={th(T_BLEU)}>Consommé</th>
+                  <th className={th(T_VERT)}>Réel</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className={rowLabel}>Stade budget</td>
+                  <td className="border border-[var(--line-soft)] p-0">
+                    <select
+                      aria-label="Stade budget"
+                      value={s.listeBudgetFraisStadeId ?? ''}
+                      onChange={(e) =>
+                        saisirFrais.mutate({
+                          listeBudgetFraisStadeId: e.target.value
+                            ? Number(e.target.value)
+                            : null,
+                        })
+                      }
+                      className="w-full rounded-sm bg-transparent px-2 py-1 outline-none focus:bg-white focus:ring-1 focus:ring-[var(--gold)]"
+                    >
+                      <option value="" />
+                      {(nomenclatures?.stadesBudget ?? []).map((o) => (
+                        <option key={o.id} value={o.id}>
+                          {o.libelle}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td
+                    colSpan={3}
+                    className="border border-[var(--line-soft)]"
+                  />
+                </tr>
+                <tr>
+                  <td className={rowLabel}>Date</td>
+                  {celFrais('fraisBudgetDate', { type: 'date' })}
+                  {celFrais('fraisActuaDate', { type: 'date' })}
+                  {celFrais('fraisConsommeDate', { type: 'date' })}
+                  {celFrais('fraisReelDate', { type: 'date' })}
+                </tr>
+                <tr>
+                  <td className={rowLabel}>Commentaire</td>
+                  {celFrais('fraisBudgetCommentaire', { type: 'texte' })}
+                  {celFrais('fraisActuaCommentaire', { type: 'texte' })}
+                  {celFrais('fraisConsommeCommentaire', { type: 'texte' })}
+                  {celFrais('fraisReelCommentaire', { type: 'texte' })}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="grid gap-y-3">
+            <ChampSelectId
+              libelle="Type mission budget architecte"
+              value={s.typeMissionBudgetArchitecteId}
+              onChange={(v) =>
+                saisirFrais.mutate({ typeMissionBudgetArchitecteId: v })
+              }
+              options={nomenclatures?.typesMissionBudgetArchitecte ?? []}
+            />
+            <ChampForm libelle="Date contrat architecte">
+              <SaisieDirecte
+                v={s.dateContratArchitecte}
+                type="date"
+                saisie={(v) => saisirFrais.mutate({ dateContratArchitecte: v })}
+                className="h-9 border border-[var(--line)] text-[13px]"
+              />
+            </ChampForm>
+          </div>
         </div>
+        <ErreurMutation erreur={saisirFrais.error} />
         <DataTable
           id="compta-frais"
           columns={COLONNES_FRAIS}

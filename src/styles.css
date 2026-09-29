@@ -79,6 +79,7 @@
   --danger-tint: #faf0ed;
   --ok-tint: #e2f0e5; /* badge vert */
   --info-tint: #e3eaf6; /* badge bleu */
+  --violet-tint: #ece6f5; /* en-têtes « budget » des grilles de suivi */
 
   /* — alias hérités des premières pages (à résorber au fil de l'eau) — */
   --sea-ink: var(--ink);

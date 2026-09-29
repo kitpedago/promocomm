@@ -30,6 +30,7 @@ Tokens implémentés dans [src/styles.css](../src/styles.css) le 2026-07-05. Th�
 | `--gold-tint` / `--gold-ink`            | #FBEFD3 / #8A6413           | badges dorés                                      |
 | `--danger` / `--danger-tint`            | #B4432E / #FAF0ED           | suppression, erreurs                              |
 | `--ok-tint` / `--info-tint`             | #E2F0E5 / #E3EAF6           | badges vert / bleu                                |
+| `--violet-tint`                         | #ECE6F5                     | en-têtes « budget » des grilles de suivi (Compta) |
 
 Le thème shadcn/ui est mappé dessus : `primary` = doré (texte encre), `destructive` = #B4432E,
 `border`/`input`/`ring` charte → les composants `ui/*` sont automatiquement conformes.
