@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useRouteContext, useRouterState } from '@tanstack/react-router'
 import { Megaphone } from 'lucide-react'
 
 import { TicketNouveau } from '#/components/TicketNouveau'
 import { Button } from '#/components/ui/button'
 import { setDbModeFn } from '#/lib/dbmode.ts'
+import { getVersionFn } from '#/lib/version.ts'
 
 import BetterAuthHeader from '../integrations/better-auth/header-user.tsx'
 
@@ -15,6 +16,15 @@ export default function Header() {
   const [signaler, setSignaler] = useState(false)
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const qc = useQueryClient()
+  // Image en service et dernière migration jouée : service Administrateur
+  // seulement, le serveur revérifie (getVersionFn → requireAdmin)
+  const { session } = useRouteContext({ from: '/_authed' })
+  const version = useQuery({
+    queryKey: ['version'],
+    queryFn: () => getVersionFn(),
+    enabled: session.user.service === 'admin',
+    staleTime: Infinity,
+  })
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[var(--card)] px-5 sm:px-7">
@@ -29,6 +39,15 @@ export default function Header() {
         </Link>
 
         <div className="ml-auto flex items-center gap-2">
+          {version.data && (
+            <span
+              className="text-xs text-[var(--sea-ink-soft)]"
+              title={version.data.migration ?? 'Migration inconnue du code'}
+            >
+              {version.data.version} · migration{' '}
+              {version.data.migration?.slice(0, 4) ?? '?'}
+            </span>
+          )}
           <Button
             type="button"
             size="sm"
