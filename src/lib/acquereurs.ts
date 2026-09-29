@@ -18,6 +18,7 @@ import {
   lot,
   natureJuridique,
   operation,
+  personne,
   situationFamiliale,
   situationFamille,
   tranche,
@@ -421,18 +422,14 @@ export const deleteAcquereurFn = createServerFn({ method: 'POST' })
 // HFOperation_Acquereurs de l'enquête de satisfaction) : une ligne par
 // commercialisation active des opérations non masquées. Colonnes, ordre et
 // en-têtes de la requête WinDev.
-// Les colonnes à NULL viennent d'anciens imports de tAcquereur, sans saisie
-// dans WinDev et quasi vides depuis 2024 : non reprises dans le schéma, elles
-// restent dans le fichier pour ne pas décaler les suivantes.
 export const getExportEnqueteFn = createServerFn({ method: 'GET' }).handler(
   async () => {
     await requireSession()
-    const vide = sql<null>`NULL`
     const colonnes = {
-      Identifiant: vide,
+      Identifiant: acquereur.identifiant,
       Numlot: lot.numLot,
       Typologie: lot.typeDeBien,
-      Etage: vide,
+      Etage: acquereur.etage,
       surface: lot.surfHabitable,
       Patronyme: acquereur.patronyme,
       Prenom: acquereur.prenom,
@@ -467,25 +464,25 @@ export const getExportEnqueteFn = createServerFn({ method: 'GET' }).handler(
       CP_programme: operation.cp,
       Ville_programme: operation.commune,
       Nom_programme: operation.libelle,
-      Type_de_programme: vide,
+      Type_de_programme: acquereur.typeProgramme,
       // SQL Server comparait sans la casse (« Appartement » dans les données)
       Formule2: sql<string>`
         CASE WHEN UPPER(${lot.familleDeBien}) = 'APPARTEMENT'
           THEN 'oui' ELSE 'non' END`,
       Formule3: sql<string>`CASE WHEN ${operation.anru} THEN 'oui' ELSE 'non' END`,
-      Type_d_acquisition: vide,
+      Type_d_acquisition: acquereur.typeAcquisition,
       PrimoAccedant: acquereur.primoAccedant,
-      Modifications: vide,
-      ReservesDE: vide,
-      Date_prévisionnelle_livraison: vide,
-      Date_réelle_livraison: vide,
+      Modifications: acquereur.modifications,
+      ReservesDE: acquereur.reservesDe,
+      Date_prévisionnelle_livraison: acquereur.datePrevisionnelleLivraison,
+      Date_réelle_livraison: acquereur.dateReelleLivraison,
       Libelle_Ac1: acquereurTrancheAge.libelle,
       Etape: acquereur.etape,
       Denomination: commercial.denomination,
       EMail_Co: commercial.email,
-      // conseiller technique (IDConseillerTechnique), non repris
-      Patronyme_Pe: vide,
-      EMail_Pe: vide,
+      // conseiller technique (IDConseillerTechnique)
+      Patronyme_Pe: personne.patronyme,
+      EMail_Pe: personne.email,
       Adulte1CSP: acquereur.adulte1CspId,
       Adulte2CSP: acquereur.adulte2CspId,
       Adulte1Metier: acquereur.adulte1Metier,
@@ -495,7 +492,7 @@ export const getExportEnqueteFn = createServerFn({ method: 'GET' }).handler(
       EnquêteC: acquereur.enqueteC,
       // constantes par le filtre de la requête
       MasquerComptable: sql<number>`0`,
-      DateAnnulation: vide,
+      DateAnnulation: sql<null>`NULL`,
     }
     const lignes = await db
       .select(colonnes)
@@ -521,6 +518,7 @@ export const getExportEnqueteFn = createServerFn({ method: 'GET' }).handler(
         eq(acquereur.plafondRessourcesId, acquereurPlafondRessources.id),
       )
       .leftJoin(commercial, eq(acquereur.conseillerCommercialId, commercial.id))
+      .leftJoin(personne, eq(acquereur.conseillerTechniqueId, personne.id))
       .where(
         and(
           isNull(commercialisation.dateAnnulation),

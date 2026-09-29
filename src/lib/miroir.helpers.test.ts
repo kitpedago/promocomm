@@ -146,6 +146,11 @@ describe('inverser', () => {
       type: 'integer',
     })
   })
+  it("garde l'apostrophe d'un nom de colonne legacy", () => {
+    const r = inverser(copies.find((c) => c.target === 'acquereur')!)
+    expect(r.sql).toContain(`"type_acquisition" AS "Type d'acquisition"`)
+    expect(r.sql).toContain('COALESCE("conseiller_technique_id", 0)')
+  })
   it('inverse toutes les copies réelles du transform', () => {
     const ignorees: Array<string> = []
     for (const c of copies) {

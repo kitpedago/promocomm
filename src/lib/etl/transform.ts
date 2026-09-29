@@ -982,6 +982,8 @@ export const copies: Array<Copy> = [
             pension_autres_revenus, loyer_actuel, prix_achat, taux_tva, apport_reel_hors_subvention, subvention,
             est_ptz, multi_accedant, mensualite_financement, taux_effort, duree_financement_mois,
             conseiller_commercial_id, primo_accedant, etape, enquete_a, enquete_b, enquete_c,
+            identifiant, etage, type_programme, type_acquisition, modifications, reserves_de,
+            date_previsionnelle_livraison, date_reelle_livraison, conseiller_technique_id,
             info_pour_entreprise, commentaire, date_creation, date_modification)`,
     select: `SELECT s."IDAcquereur", s."Code", ${fk('IDCivilite')}, s."Patronyme", s."Prenom",
         ${fk('IDCivilite2')}, s."Patronyme2", s."Prenom2", ${fk('IDCivilite3')}, s."Patronyme3", s."Prenom3",
@@ -999,6 +1001,9 @@ export const copies: Array<Copy> = [
         s."PensionEtAutresRevenus", s."LoyerActuel", s."PrixDAchat", s."TauxTVA", s."ApportReelADateHorsSubvention", s."Subvention",
         s."EstPTZ", s."MultiAccedant", s."MensualiteDuFinancementClient", s."TauxEffort", s."DureeFinancementEnMois",
         ${fk('IDConseillerCommercial')}, s."PrimoAccedant", s."Etape", s."EnqueteA", s."EnqueteB", s."EnqueteC",
+        s."Identifiant", s."Etage", s."Type de programme", s."Type d'acquisition", s."Modifications", s."ReservesDE",
+        s."Date prévisionnelle livraison", s."Date réelle livraison",
+        ${fkSafe('IDConseillerTechnique', 'tPersonne', 'IDPersonne')},
         s."InfoPourEntreprise", s."Commentaire", s."DateCreation", s."DateModification"
       FROM legacy."tAcquereur" s`,
   },

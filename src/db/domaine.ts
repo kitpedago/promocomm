@@ -913,6 +913,19 @@ export const acquereur = pgTable('acquereur', {
   ),
   // texte libre legacy : « oui »/« non »/« -1 » mélangés — nettoyage post-bascule
   primoAccedant: text('primo_accedant'),
+  // anciens imports de tAcquereur, sans saisie (export « Vous écoute ») ;
+  // dates de livraison en texte libre dans le legacy
+  identifiant: text(),
+  etage: text(),
+  typeProgramme: text('type_programme'),
+  typeAcquisition: text('type_acquisition'),
+  modifications: text(),
+  reservesDe: text('reserves_de'),
+  datePrevisionnelleLivraison: text('date_previsionnelle_livraison'),
+  dateReelleLivraison: text('date_reelle_livraison'),
+  conseillerTechniqueId: integer('conseiller_technique_id').references(
+    () => personne.id,
+  ),
   // suivi enquêtes « À votre écoute » : dates et mentions libres mélangées
   etape: text(),
   enqueteA: text('enquete_a'),

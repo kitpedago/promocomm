@@ -61,17 +61,19 @@ function expressions(liste: string): Array<string> {
   const out: Array<string> = []
   let prof = 0
   let cur = ''
-  let quote = false
+  // délimiteur ouvert : ' (chaîne) ou " (identifiant, où l'apostrophe est un
+  // caractère ordinaire : "Type d'acquisition")
+  let quote = ''
   for (const ch of liste) {
-    if (ch === "'") quote = !quote
-    if (!quote) {
-      if (ch === '(') prof++
-      else if (ch === ')') prof--
-      else if (ch === ',' && prof === 0) {
-        out.push(cur)
-        cur = ''
-        continue
-      }
+    if (quote) {
+      if (ch === quote) quote = ''
+    } else if (ch === "'" || ch === '"') quote = ch
+    else if (ch === '(') prof++
+    else if (ch === ')') prof--
+    else if (ch === ',' && prof === 0) {
+      out.push(cur)
+      cur = ''
+      continue
     }
     cur += ch
   }
