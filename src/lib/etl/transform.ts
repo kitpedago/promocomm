@@ -587,6 +587,14 @@ export const copies: Array<Copy> = [
         ${fkSafe('IDListeAvancement_suivi_prochain', 'tListeAvancement', 'IDListeAvancement')},
         s."MontantHonoParLogt"
       FROM legacy."tTranche" s`,
+    horsLegacy: [
+      { col: 'annee_fin_tabbor', legacy: 'AnneeFinTabbor', type: 'integer' },
+      {
+        col: 'date_fin_commercialisation',
+        legacy: 'DateFinCommercialisation',
+        type: 'timestamp without time zone',
+      },
+    ],
   },
   {
     target: 'stade_avancement',

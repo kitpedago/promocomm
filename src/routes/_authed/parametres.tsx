@@ -1231,17 +1231,27 @@ function VueOtl() {
       l: 'Livraison contractuelle',
       t: 'date',
     },
+    { k: 'commentaire', l: 'Commentaires', t: 'long' },
+    // après le commentaire (pleine largeur) : chaque saisie reste en face de
+    // l'indicateur legacy qu'elle remplace, grisé
+    { k: 'anneeFinTabbor', l: 'Année fin Tabbor', t: 'entier' },
     {
       k: 'finTabborAnnuel',
       l: 'Fin Tabbor annuel (stade GPA atteint en N-1)',
       t: 'bool',
+      grise: true,
+    },
+    {
+      k: 'dateFinCommercialisation',
+      l: 'Date de fin de commercialisation',
+      t: 'date',
     },
     {
       k: 'finCommercialisation',
       l: 'Fin commercialisation et livraison N-1 (tranche 100 % actée et livrée en N-1)',
       t: 'bool',
+      grise: true,
     },
-    { k: 'commentaire', l: 'Commentaires', t: 'long' },
     { t: 'titre', l: 'Architectes' },
     {
       k: 'architecteMandataireId',

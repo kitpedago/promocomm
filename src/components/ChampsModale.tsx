@@ -131,15 +131,21 @@ export function ChampBascule({
   libelle,
   checked,
   onChange,
+  grise,
 }: {
   libelle: string
   checked: boolean
   onChange: (v: boolean) => void
+  grise?: boolean
 }) {
   return (
     <Label className="flex items-center gap-2 text-[13px] font-medium text-[var(--ink-soft)]">
-      <Switch checked={checked} onCheckedChange={(v) => onChange(!!v)} />
-      {libelle}
+      <Switch
+        checked={checked}
+        onCheckedChange={(v) => onChange(!!v)}
+        disabled={grise}
+      />
+      <span className={grise ? 'opacity-50' : undefined}>{libelle}</span>
     </Label>
   )
 }

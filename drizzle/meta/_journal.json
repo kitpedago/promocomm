@@ -267,6 +267,13 @@
       "when": 1790716223929,
       "tag": "0037_acquereur_colonnes_enquete",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1790718358881,
+      "tag": "0038_tranche_fin_tabbor_commercialisation",
+      "breakpoints": true
     }
   ]
 }

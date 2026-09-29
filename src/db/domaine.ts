@@ -645,6 +645,10 @@ export const tranche = pgTable('tranche', {
   // indicateurs de la fiche tranche (FEN_Fiche_Tranche), repris par la base miroir
   finCommercialisation: boolean('fin_commercialisation'),
   finTabborAnnuel: boolean('fin_tabbor_annuel'),
+  // propres à l'application : remplacent à la saisie les deux indicateurs
+  // ci-dessus, conservés en lecture seule
+  anneeFinTabbor: integer('annee_fin_tabbor'),
+  dateFinCommercialisation: timestamp('date_fin_commercialisation'),
   avecAppelFondClientDerogatoire: boolean('avec_appel_fond_client_derogatoire'),
   // synthèse d'avancement (legacy StadeCOM / StadeIDSituation / StadeDepuisLe,
   // caches entretenus par WinDev depuis tStadeAvancement — repris tels quels,

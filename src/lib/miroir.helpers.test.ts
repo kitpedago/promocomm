@@ -146,6 +146,18 @@ describe('inverser', () => {
       type: 'integer',
     })
   })
+  it('expose les fins Tabbor et commercialisation de la tranche', () => {
+    const r = inverser(copies.find((c) => c.target === 'tranche')!)
+    expect(r.table).toBe('tTranche')
+    expect(r.colonnes.slice(-2)).toEqual([
+      { legacy: 'AnneeFinTabbor', expr: '"annee_fin_tabbor"', type: 'integer' },
+      {
+        legacy: 'DateFinCommercialisation',
+        expr: '"date_fin_commercialisation"',
+        type: 'timestamp without time zone',
+      },
+    ])
+  })
   it("garde l'apostrophe d'un nom de colonne legacy", () => {
     const r = inverser(copies.find((c) => c.target === 'acquereur')!)
     expect(r.sql).toContain(`"type_acquisition" AS "Type d'acquisition"`)

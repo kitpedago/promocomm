@@ -184,6 +184,8 @@ export const getTranchesOtlFn = createServerFn({ method: 'GET' })
         dureeChantierMois: tranche.dureeChantierMois,
         finTabborAnnuel: tranche.finTabborAnnuel,
         finCommercialisation: tranche.finCommercialisation,
+        anneeFinTabbor: tranche.anneeFinTabbor,
+        dateFinCommercialisation: tranche.dateFinCommercialisation,
         avecAppelFondClientDerogatoire: tranche.avecAppelFondClientDerogatoire,
         dateConvention: tranche.dateConvention,
         dateLivraisonContractuelle: tranche.dateLivraisonContractuelle,
@@ -351,6 +353,8 @@ interface FicheTranche {
   dureeChantierMois?: number | null
   finTabborAnnuel?: boolean | null
   finCommercialisation?: boolean | null
+  anneeFinTabbor?: number | null
+  dateFinCommercialisation?: string | null
   avecAppelFondClientDerogatoire?: boolean | null
   dateConvention?: string | null
   dateLivraisonContractuelle?: string | null
@@ -403,6 +407,8 @@ export const saveTrancheOtlFn = createServerFn({ method: 'POST' })
       dureeChantierMois: data.dureeChantierMois ?? null,
       finTabborAnnuel: data.finTabborAnnuel ?? null,
       finCommercialisation: data.finCommercialisation ?? null,
+      anneeFinTabbor: data.anneeFinTabbor ?? null,
+      dateFinCommercialisation: versDate(data.dateFinCommercialisation),
       avecAppelFondClientDerogatoire:
         data.avecAppelFondClientDerogatoire ?? null,
       dateConvention: versDate(data.dateConvention),

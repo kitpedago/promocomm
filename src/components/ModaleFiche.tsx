@@ -37,6 +37,8 @@ export type DescChamp =
       t: 'texte' | 'long' | 'date' | 'nombre' | 'pourcent' | 'entier' | 'bool'
       // nombre/entier jamais vide : 0 à défaut de saisie
       zeroSiVide?: boolean
+      // bool affiché sans saisie possible ; la valeur repart inchangée
+      grise?: boolean
     }
   | {
       k: string
@@ -175,6 +177,7 @@ export default function ModaleFiche({
             libelle={c.l}
             checked={!!valeurs[c.k]}
             onChange={set(c.k)}
+            grise={c.grise}
           />
         ) : c.t === 'date' ? (
           <ChampDate
