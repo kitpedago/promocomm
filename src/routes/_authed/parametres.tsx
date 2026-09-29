@@ -17,6 +17,7 @@ import { Button } from '#/components/ui/button'
 import { AlerteMailParam } from '#/components/AlerteMailParam'
 import { BoutonsTable, ErreurMutation } from '#/components/ChampsModale'
 import DataTable from '#/components/DataTable'
+import ImportLots from '#/components/ImportLots'
 import ModaleFiche from '#/components/ModaleFiche'
 import VisuelOperation from '#/components/VisuelOperation'
 import {
@@ -922,8 +923,7 @@ function ListeNomenclature({ config }: { config: ConfigListe }) {
 
 // ---------------------------------------------------------------------------
 // « Opérations, tranches et lots » — gestion directe des trois niveaux
-// (l'import Excel de lots WinDev dépend de la table ChampImportLot, absente
-// du .bak importé — reporté)
+// (import Excel des lots d'une tranche : composant ImportLots)
 // ---------------------------------------------------------------------------
 
 function NiveauOtl({
@@ -1482,6 +1482,18 @@ function VueOtl() {
           />
         )}
 
+        {trancheId != null && (
+          <ImportLots
+            trancheId={trancheId}
+            tranche={`${operationCourante?.libelle ?? ''} | ${trancheCourante?.libelle ?? ''}`}
+            nbLotsActuels={lots.data?.length ?? 0}
+            onDone={() =>
+              void queryClient.invalidateQueries({
+                queryKey: ['otl-lots', trancheId],
+              })
+            }
+          />
+        )}
         {trancheId != null && (
           <NiveauOtl
             titre={`Lots de ${trancheCourante?.libelle ?? ''}`}
