@@ -35,6 +35,8 @@ export type DescChamp =
       l: string
       // pourcent : saisi en % (2 décimales), stocké en fraction comme le legacy
       t: 'texte' | 'long' | 'date' | 'nombre' | 'pourcent' | 'entier' | 'bool'
+      // nombre/entier jamais vide : 0 à défaut de saisie
+      zeroSiVide?: boolean
     }
   | {
       k: string
@@ -60,7 +62,7 @@ export function depuisLigne(
   const v: ValeursFiche = {}
   for (const c of champs) {
     if (c.t === 'titre' || c.t === 'onglet') continue
-    const brut = ligne?.[c.k] ?? null
+    const brut = ligne?.[c.k] ?? ('zeroSiVide' in c && c.zeroSiVide ? 0 : null)
     v[c.k] =
       c.t === 'date'
         ? versInputDate(brut as string | Date | null)

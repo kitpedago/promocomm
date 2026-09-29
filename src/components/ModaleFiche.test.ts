@@ -45,6 +45,16 @@ describe('ModaleFiche', () => {
     expect(versFiche(champs, depuisLigne(champs, null)).taux).toBeNull()
   })
 
+  it('un champ zeroSiVide vaut 0 à défaut de valeur, jamais vide', () => {
+    const champs: Array<DescChamp> = [{ ...etages, zeroSiVide: true }, montant]
+    expect(depuisLigne(champs, null)).toEqual({
+      nbEtage: 0,
+      terrainMontantHt: null,
+    })
+    expect(depuisLigne(champs, { nbEtage: null }).nbEtage).toBe(0)
+    expect(depuisLigne(champs, { nbEtage: 3 }).nbEtage).toBe(3)
+  })
+
   it('les marqueurs onglet ne produisent aucune valeur de fiche', () => {
     expect(Object.keys(depuisLigne(avecOnglets, null))).toEqual([
       'libelle',
