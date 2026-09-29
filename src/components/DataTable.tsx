@@ -97,6 +97,8 @@ export interface DataTableProps<T> {
   /** colonnes masquées par défaut (réactivables via le menu Affichage) */
   defaultHidden?: Array<string>
   emptyText?: string
+  /** petite liste : ni compteur, ni filtre, ni pagination (toutes les lignes) */
+  epuree?: boolean
 }
 
 export default function DataTable<T>({
@@ -111,6 +113,7 @@ export default function DataTable<T>({
   countFor,
   defaultHidden,
   emptyText = 'Aucun élément.',
+  epuree = false,
 }: DataTableProps<T>) {
   const base = useMemo<TableParams>(
     () => ({
@@ -142,7 +145,15 @@ export default function DataTable<T>({
   const table = useReactTable({
     data,
     columns,
-    state: { ...etatTable, pagination: { pageIndex, pageSize } },
+    // épurée : un filtre mémorisé ne doit pas masquer de lignes sans zone
+    // pour l'effacer, et tout tient sur une page
+    state: epuree
+      ? {
+          ...etatTable,
+          globalFilter: '',
+          pagination: { pageIndex: 0, pageSize: Math.max(1, data.length) },
+        }
+      : { ...etatTable, pagination: { pageIndex, pageSize } },
     onSortingChange: set('sorting'),
     onColumnVisibilityChange: set('columnVisibility'),
     onColumnOrderChange: set('columnOrder'),
@@ -238,38 +249,42 @@ export default function DataTable<T>({
     <div className="flex min-h-0 flex-1 flex-col gap-2">
       {/* barre d'outils : compteur, filtre, menu Affichage (aligné à droite) */}
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-[13px] font-semibold text-[var(--ink)]">
-          {filtreActif
-            ? `${lignesFiltrees.length} / ${data.length} ${unite}`
-            : `${lignesFiltrees.length} ${unite} au total`}
-        </span>
-        <label
-          className={`flex h-8 items-center gap-1.5 rounded-lg border bg-[var(--card)] px-2.5 transition-colors ${
-            filtreActif
-              ? 'border-[var(--gold)] bg-[var(--gold-tint)]'
-              : 'border-[var(--input-border)]'
-          }`}
-        >
-          <Search
-            className={`h-3.5 w-3.5 ${filtreActif ? 'text-[var(--gold-ink)]' : 'text-[var(--muted)]'}`}
-            aria-hidden
-          />
-          <input
-            value={params.globalFilter}
-            onChange={(e) => table.setGlobalFilter(e.target.value)}
-            placeholder="Filtrer…"
-            className="w-36 bg-transparent text-[13px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)]"
-          />
-          {filtreActif && (
-            <button
-              onClick={() => table.setGlobalFilter('')}
-              className="cursor-pointer text-xs font-bold text-[var(--gold-ink)]"
-              aria-label="Effacer le filtre"
+        {!epuree && (
+          <>
+            <span className="text-[13px] font-semibold text-[var(--ink)]">
+              {filtreActif
+                ? `${lignesFiltrees.length} / ${data.length} ${unite}`
+                : `${lignesFiltrees.length} ${unite} au total`}
+            </span>
+            <label
+              className={`flex h-8 items-center gap-1.5 rounded-lg border bg-[var(--card)] px-2.5 transition-colors ${
+                filtreActif
+                  ? 'border-[var(--gold)] bg-[var(--gold-tint)]'
+                  : 'border-[var(--input-border)]'
+              }`}
             >
-              ×
-            </button>
-          )}
-        </label>
+              <Search
+                className={`h-3.5 w-3.5 ${filtreActif ? 'text-[var(--gold-ink)]' : 'text-[var(--muted)]'}`}
+                aria-hidden
+              />
+              <input
+                value={params.globalFilter}
+                onChange={(e) => table.setGlobalFilter(e.target.value)}
+                placeholder="Filtrer…"
+                className="w-36 bg-transparent text-[13px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)]"
+              />
+              {filtreActif && (
+                <button
+                  onClick={() => table.setGlobalFilter('')}
+                  className="cursor-pointer text-xs font-bold text-[var(--gold-ink)]"
+                  aria-label="Effacer le filtre"
+                >
+                  ×
+                </button>
+              )}
+            </label>
+          </>
+        )}
 
         <button
           onClick={exporterCsv}
@@ -509,7 +524,7 @@ export default function DataTable<T>({
       </div>
 
       {/* pagination : taille de page + plage affichée + navigation */}
-      {lignesFiltrees.length > 0 && (
+      {!epuree && lignesFiltrees.length > 0 && (
         <div className="flex flex-wrap items-center gap-3 text-[13px] text-[var(--ink-soft)]">
           <label className="flex items-center gap-2">
             Lignes par page

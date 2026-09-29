@@ -13,18 +13,21 @@ export default function Scindeur({
   id,
   haut,
   bas,
+  defaut = 0.5,
 }: {
   id: string
   haut: ReactNode
   bas: ReactNode
+  /** part du volet haut tant que l'utilisateur n'a rien réglé */
+  defaut?: number
 }) {
   const conteneur = useRef<HTMLDivElement>(null)
-  const [stockee, setFraction] = usePref<number>(`scindeur:${id}`, 0.5)
+  const [stockee, setFraction] = usePref<number>(`scindeur:${id}`, defaut)
   // une valeur corrompue côté serveur ne doit pas casser la mise en page
   const fraction =
     typeof stockee === 'number' && stockee >= MIN && stockee <= MAX
       ? stockee
-      : 0.5
+      : defaut
 
   const glisser = (e: PointerEvent<HTMLDivElement>) => {
     if (!e.currentTarget.hasPointerCapture(e.pointerId)) return

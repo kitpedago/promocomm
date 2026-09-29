@@ -20,6 +20,7 @@ import DataTable from '#/components/DataTable'
 import ImportLots from '#/components/ImportLots'
 import { MiroirParam } from '#/components/MiroirParam'
 import ModaleFiche from '#/components/ModaleFiche'
+import Scindeur from '#/components/Scindeur'
 import VisuelOperation from '#/components/VisuelOperation'
 import {
   deleteNomenclatureFn,
@@ -950,6 +951,7 @@ function NiveauOtl({
   confirmation,
   unite,
   tableId,
+  tableEpuree,
   enTete,
 }: {
   titre: string
@@ -965,6 +967,7 @@ function NiveauOtl({
   confirmation: string
   unite: string
   tableId: string
+  tableEpuree?: boolean
   enTete?: (id: number | null) => ReactNode
 }) {
   const [modale, setModale] = useState<'creation' | number | null>(null)
@@ -994,7 +997,8 @@ function NiveauOtl({
     },
   })
   return (
-    <div className="flex flex-col gap-2">
+    // remplit son volet du Scindeur : c'est la table qui défile
+    <div className="flex min-h-0 flex-1 flex-col gap-2">
       <p className="text-[15px] font-bold text-[var(--ink)]">{titre}</p>
       <BoutonsTable
         selection={selection}
@@ -1023,6 +1027,7 @@ function NiveauOtl({
         selectedRowId={selection != null ? String(selection) : null}
         onRowClick={(r) => setSelection(r.id as number)}
         emptyText="Aucune ligne."
+        epuree={tableEpuree}
       />
       <ModaleFiche
         titre={ligne ? `Modifier — ${titre}` : `Nouveau — ${titre}`}
@@ -1400,8 +1405,8 @@ function VueOtl() {
 
   return (
     <section className="island-shell flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
-      <div className="flex min-h-0 flex-1 flex-col gap-8 overflow-auto px-[18px] py-4">
-        <div className="flex items-center gap-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-[18px] py-4">
+        <div className="flex shrink-0 items-center gap-3">
           <Button
             type="button"
             size="sm"
@@ -1425,123 +1430,151 @@ function VueOtl() {
             </span>
           )}
         </div>
-        <NiveauOtl
-          titre="Opérations"
-          lignes={operations.data ?? []}
-          colonnes={[
-            {
-              accessorKey: 'miniature',
-              header: 'Photo',
-              size: 64,
-              cell: (c) => {
-                const m = c.getValue() as string | null
-                return m ? (
-                  <img
-                    src={m}
-                    alt=""
-                    className="h-8 w-12 rounded object-cover"
-                  />
-                ) : (
-                  '—'
-                )
-              },
-            },
-            colT('sccv', 'Structure juridique', 220),
-            colT('libelle', 'Opération', 220),
-            colT('cp', 'CP', 80),
-            colT('commune', 'Commune', 150),
-          ]}
-          selection={operationId}
-          setSelection={(id) => {
-            setOperationId(id)
-            setTrancheId(null)
-            setLotId(null)
-          }}
-          champs={CHAMPS_OPERATION}
-          contexte={{}}
-          saveFn={saveOperationOtlFn}
-          deleteFn={deleteOperationOtlFn}
-          invalider={() =>
-            void queryClient.invalidateQueries({ queryKey: ['otl-operations'] })
-          }
-          confirmation="Supprimer cette opération ? (refusé si elle a des tranches)"
-          unite="opérations"
-          tableId="otl-operations"
-          enTete={(id) =>
-            id != null ? <VisuelOperation operationId={id} /> : null
-          }
-        />
-
-        {operationId != null && (
-          <NiveauOtl
-            titre={`Tranches de ${operationCourante?.libelle ?? ''}`}
-            lignes={tranches.data ?? []}
-            colonnes={[
-              colN('id', 'IDTranche', 90),
-              colT('libelle', 'Nom de la tranche', 200),
-              colN('nbLogtColl', 'Nb logt coll.', 100),
-              colN('nbLogtIndiv', 'Nb logt indiv.', 100),
-              colT('adresse', 'Adresse', 220),
-            ]}
-            selection={trancheId}
-            setSelection={(id) => {
-              setTrancheId(id)
-              setLotId(null)
-            }}
-            champs={CHAMPS_TRANCHE}
-            contexte={{ operationId }}
-            saveFn={saveTrancheOtlFn}
-            deleteFn={deleteTrancheOtlFn}
-            invalider={() =>
-              void queryClient.invalidateQueries({
-                queryKey: ['otl-tranches', operationId],
-              })
+        {/* trois volets, deux poignées : hauteur plancher pour que chaque
+            table garde quelques lignes sur petit écran (la page défile) */}
+        <div className="min-h-[720px] flex-1">
+          <Scindeur
+            id="otl-operations-tranches"
+            defaut={1 / 3}
+            haut={
+              <NiveauOtl
+                titre="Opérations"
+                lignes={operations.data ?? []}
+                colonnes={[
+                  {
+                    accessorKey: 'miniature',
+                    header: 'Photo',
+                    size: 64,
+                    cell: (c) => {
+                      const m = c.getValue() as string | null
+                      return m ? (
+                        <img
+                          src={m}
+                          alt=""
+                          className="h-8 w-12 rounded object-cover"
+                        />
+                      ) : (
+                        '—'
+                      )
+                    },
+                  },
+                  colT('sccv', 'Structure juridique', 220),
+                  colT('libelle', 'Opération', 220),
+                  colT('cp', 'CP', 80),
+                  colT('commune', 'Commune', 150),
+                ]}
+                selection={operationId}
+                setSelection={(id) => {
+                  setOperationId(id)
+                  setTrancheId(null)
+                  setLotId(null)
+                }}
+                champs={CHAMPS_OPERATION}
+                contexte={{}}
+                saveFn={saveOperationOtlFn}
+                deleteFn={deleteOperationOtlFn}
+                invalider={() =>
+                  void queryClient.invalidateQueries({
+                    queryKey: ['otl-operations'],
+                  })
+                }
+                confirmation="Supprimer cette opération ? (refusé si elle a des tranches)"
+                unite="opérations"
+                tableId="otl-operations"
+                enTete={(id) =>
+                  id != null ? <VisuelOperation operationId={id} /> : null
+                }
+              />
             }
-            confirmation="Supprimer cette tranche ? (refusé si elle a des lots)"
-            unite="tranches"
-            tableId="otl-tranches"
-          />
-        )}
-
-        {trancheId != null && (
-          <ImportLots
-            trancheId={trancheId}
-            tranche={`${operationCourante?.libelle ?? ''} | ${trancheCourante?.libelle ?? ''}`}
-            nbLotsActuels={lots.data?.length ?? 0}
-            onDone={() =>
-              void queryClient.invalidateQueries({
-                queryKey: ['otl-lots', trancheId],
-              })
+            bas={
+              <Scindeur
+                id="otl-tranches-lots"
+                haut={
+                  operationId != null ? (
+                    <NiveauOtl
+                      titre={`Tranches de ${operationCourante?.libelle ?? ''}`}
+                      lignes={tranches.data ?? []}
+                      colonnes={[
+                        colN('id', 'IDTranche', 90),
+                        colT('libelle', 'Nom de la tranche', 200),
+                        colN('nbLogtColl', 'Nb logt coll.', 100),
+                        colN('nbLogtIndiv', 'Nb logt indiv.', 100),
+                        colT('adresse', 'Adresse', 220),
+                      ]}
+                      selection={trancheId}
+                      setSelection={(id) => {
+                        setTrancheId(id)
+                        setLotId(null)
+                      }}
+                      champs={CHAMPS_TRANCHE}
+                      contexte={{ operationId }}
+                      saveFn={saveTrancheOtlFn}
+                      deleteFn={deleteTrancheOtlFn}
+                      invalider={() =>
+                        void queryClient.invalidateQueries({
+                          queryKey: ['otl-tranches', operationId],
+                        })
+                      }
+                      confirmation="Supprimer cette tranche ? (refusé si elle a des lots)"
+                      unite="tranches"
+                      tableId="otl-tranches"
+                      tableEpuree
+                    />
+                  ) : (
+                    <p className="text-[13px] text-[var(--muted)]">
+                      Sélectionner une opération pour afficher ses tranches.
+                    </p>
+                  )
+                }
+                bas={
+                  trancheId != null ? (
+                    <div className="flex min-h-0 flex-1 flex-col gap-2">
+                      <ImportLots
+                        trancheId={trancheId}
+                        tranche={`${operationCourante?.libelle ?? ''} | ${trancheCourante?.libelle ?? ''}`}
+                        nbLotsActuels={lots.data?.length ?? 0}
+                        onDone={() =>
+                          void queryClient.invalidateQueries({
+                            queryKey: ['otl-lots', trancheId],
+                          })
+                        }
+                      />
+                      <NiveauOtl
+                        titre={`Lots de ${trancheCourante?.libelle ?? ''}`}
+                        lignes={lots.data ?? []}
+                        colonnes={[
+                          colT('numLot', 'Num lot', 140),
+                          colT('familleDeBien', 'Famille de bien', 130),
+                          colT('typeDeBien', 'Type', 90),
+                          colN('surfHabitable', 'Surf. hab.', 90),
+                          colN('prixVenteTtc', 'Prix TTC', 110),
+                        ]}
+                        selection={lotId}
+                        setSelection={setLotId}
+                        champs={CHAMPS_LOT}
+                        contexte={{ trancheId }}
+                        saveFn={saveLotOtlFn}
+                        deleteFn={deleteLotOtlFn}
+                        invalider={() =>
+                          void queryClient.invalidateQueries({
+                            queryKey: ['otl-lots', trancheId],
+                          })
+                        }
+                        confirmation="Supprimer ce lot ? (refusé s'il est commercialisé ou a des réserves)"
+                        unite="lots"
+                        tableId="otl-lots"
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-[13px] text-[var(--muted)]">
+                      Sélectionner une tranche pour afficher ses lots.
+                    </p>
+                  )
+                }
+              />
             }
           />
-        )}
-        {trancheId != null && (
-          <NiveauOtl
-            titre={`Lots de ${trancheCourante?.libelle ?? ''}`}
-            lignes={lots.data ?? []}
-            colonnes={[
-              colT('numLot', 'Num lot', 140),
-              colT('familleDeBien', 'Famille de bien', 130),
-              colT('typeDeBien', 'Type', 90),
-              colN('surfHabitable', 'Surf. hab.', 90),
-              colN('prixVenteTtc', 'Prix TTC', 110),
-            ]}
-            selection={lotId}
-            setSelection={setLotId}
-            champs={CHAMPS_LOT}
-            contexte={{ trancheId }}
-            saveFn={saveLotOtlFn}
-            deleteFn={deleteLotOtlFn}
-            invalider={() =>
-              void queryClient.invalidateQueries({
-                queryKey: ['otl-lots', trancheId],
-              })
-            }
-            confirmation="Supprimer ce lot ? (refusé s'il est commercialisé ou a des réserves)"
-            unite="lots"
-            tableId="otl-lots"
-          />
-        )}
+        </div>
       </div>
     </section>
   )
