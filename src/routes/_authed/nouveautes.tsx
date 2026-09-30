@@ -312,6 +312,10 @@ function NouveautesPage() {
                   return (
                     <div
                       key={f.id}
+                      // double-clic = bouton Modifier (crayon)
+                      onDoubleClick={
+                        estAdmin ? () => setEditId(f.id) : undefined
+                      }
                       className={`flex items-start rounded-xl border bg-white transition ${
                         actif
                           ? 'border-[var(--gold)] shadow-[inset_3px_0_0_0_var(--gold)]'

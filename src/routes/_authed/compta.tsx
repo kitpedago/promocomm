@@ -103,6 +103,7 @@ function useComptaNomenclatures() {
 }
 
 function ZoneCrud({
+  table,
   lignes,
   selectionId,
   setSelectionId,
@@ -115,6 +116,8 @@ function ZoneCrud({
   deleteFn,
   invalider,
 }: {
+  /** id du DataTable piloté (cf. BoutonsTable) */
+  table: string
   lignes: Array<{ id: number }>
   selectionId: number | null
   setSelectionId: (id: number | null) => void
@@ -158,6 +161,7 @@ function ZoneCrud({
   return (
     <>
       <BoutonsTable
+        table={table}
         selection={selectionId}
         onNouveau={() => {
           enregistrer.reset()
@@ -455,6 +459,7 @@ function OngletSubventions({ trancheId }: { trancheId: number }) {
   return (
     <div className="flex flex-col gap-6">
       <ZoneCrud
+        table="compta-subventions"
         lignes={subventions.data ?? []}
         selectionId={subventionId}
         setSelectionId={setSubventionId}
@@ -501,6 +506,7 @@ function OngletSubventions({ trancheId }: { trancheId: number }) {
         >
           <div className="mb-2">
             <ZoneCrud
+              table="compta-deblocages-subvention"
               lignes={deblocages.data ?? []}
               selectionId={deblocageId}
               setSelectionId={setDeblocageId}
@@ -1128,6 +1134,7 @@ function OngletSuivi({ trancheId }: { trancheId: number }) {
         />
         <div className="mt-2">
           <ZoneCrud
+            table="compta-frais"
             lignes={s.frais}
             selectionId={fraisId}
             setSelectionId={setFraisId}
@@ -1362,6 +1369,7 @@ function OngletAdminPsla({ trancheId }: { trancheId: number }) {
   return (
     <div className="flex flex-col gap-2">
       <ZoneCrud
+        table="compta-admin-psla"
         lignes={psla.data ?? []}
         selectionId={pslaId}
         setSelectionId={setPslaId}
@@ -1732,6 +1740,7 @@ function OngletFinancements({
   const tableFinancements = (
     <>
       <ZoneCrud
+        table={`compta-financements-${vue}`}
         lignes={financements.data ?? []}
         selectionId={financementId}
         setSelectionId={setFinancementId}
@@ -1787,6 +1796,7 @@ function OngletFinancements({
             <Bloc titre="Déblocages du financement">
               <div className="mb-2">
                 <ZoneCrud
+                  table="compta-deblocages-fin"
                   lignes={mouvements.data?.deblocages ?? []}
                   selectionId={deblocageId}
                   setSelectionId={setDeblocageId}
@@ -1823,6 +1833,7 @@ function OngletFinancements({
             <Bloc titre="Remboursements anticipés">
               <div className="mb-2">
                 <ZoneCrud
+                  table="compta-remboursements"
                   lignes={mouvements.data?.remboursements ?? []}
                   selectionId={remboursementId}
                   setSelectionId={setRemboursementId}
@@ -2025,6 +2036,7 @@ function OngletGfa({ trancheId }: { trancheId: number }) {
   return (
     <div className="flex flex-col gap-6">
       <ZoneCrud
+        table="compta-admin-gfa"
         lignes={gfa.data ?? []}
         selectionId={gfaId}
         setSelectionId={setGfaId}
@@ -2070,6 +2082,7 @@ function OngletGfa({ trancheId }: { trancheId: number }) {
         <Bloc titre="GFA — conditions financières">
           <DataTable
             id="compta-conditions-gfa"
+            modifierDe="compta-admin-gfa"
             columns={COLONNES_CONDITIONS_GFA}
             data={gfa.data ?? []}
             unite="garanties"
@@ -2089,6 +2102,7 @@ function OngletGfa({ trancheId }: { trancheId: number }) {
           ) : (
             <div className="flex flex-col gap-2">
               <ZoneCrud
+                table="compta-reducs-gfa"
                 lignes={reducs.data ?? []}
                 selectionId={reducId}
                 setSelectionId={setReducId}

@@ -1337,6 +1337,7 @@ function BilanSccv({ sccvId }: { sccvId: number }) {
                   <SousTitre>Stock</SousTitre>
                   {!lectureSeule && (
                     <BoutonsTable
+                      table="bilan-stock"
                       selection={stockSel}
                       onNouveau={() => setStockModale('creation')}
                       onModifier={() => {
@@ -1368,6 +1369,7 @@ function BilanSccv({ sccvId }: { sccvId: number }) {
                   <SousTitre>CA HT</SousTitre>
                   {!lectureSeule && (
                     <BoutonsTable
+                      table="bilan-caht"
                       selection={cahtSel}
                       onNouveau={() => setCahtModale('creation')}
                       onModifier={() => {
@@ -1410,6 +1412,7 @@ function BilanSccv({ sccvId }: { sccvId: number }) {
             <div className="flex h-full min-h-0 flex-col gap-2">
               {!lectureSeule && (
                 <BoutonsTable
+                  table="bilan-resultats"
                   selection={resultatSel}
                   onNouveau={() => setResultatModale('creation')}
                   onModifier={() => {
@@ -1449,6 +1452,7 @@ function BilanSccv({ sccvId }: { sccvId: number }) {
             <div className="flex h-full min-h-0 flex-col gap-2">
               {!lectureSeule && (
                 <BoutonsTable
+                  table="bilan-is-non-is"
                   selection={resultatSel}
                   onNouveau={() => setResultatModale('creation')}
                   onModifier={() => {

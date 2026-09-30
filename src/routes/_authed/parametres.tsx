@@ -884,6 +884,7 @@ function ListeNomenclature({ config }: { config: ConfigListe }) {
     <section className="island-shell flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-auto px-[18px] py-4">
         <BoutonsTable
+          table={`parametres-${config.slug}`}
           selection={selection}
           onNouveau={() => {
             enregistrer.reset()
@@ -1001,6 +1002,7 @@ function NiveauOtl({
     <div className="flex min-h-0 flex-1 flex-col gap-2">
       <p className="text-[15px] font-bold text-[var(--ink)]">{titre}</p>
       <BoutonsTable
+        table={tableId}
         selection={selection}
         onNouveau={() => {
           enregistrer.reset()

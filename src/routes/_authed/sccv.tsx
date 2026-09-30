@@ -1679,6 +1679,8 @@ function DetailSccv({
                     )
                     if (p) setParticipationModale(p)
                   }}
+                  // double-clic sur un associé (cf. DataTable)
+                  data-modifier-table="sccv-participations"
                 >
                   Modifier
                 </Button>
@@ -1750,6 +1752,8 @@ function DetailSccv({
                     const c = d.comptes.find((x) => x.id === compteSelectionne)
                     if (c) setCompteModale(c)
                   }}
+                  // double-clic sur un compte (cf. DataTable)
+                  data-modifier-table="sccv-comptes"
                 >
                   Modifier
                 </Button>

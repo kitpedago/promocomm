@@ -304,6 +304,7 @@ function SavTranche({
             </p>
             {!lectureSeule && lotSel != null && (
               <BoutonsTable
+                table="sav-reserves"
                 selection={reserveSel}
                 onNouveau={() => setReserveModale('creation')}
                 onModifier={() => {

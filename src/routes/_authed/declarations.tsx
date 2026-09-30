@@ -368,6 +368,7 @@ function OngletsDeclarations({ trancheId }: { trancheId: number }) {
           <div className="flex h-full min-h-0 flex-col gap-2">
             {!lectureSeule && (
               <BoutonsTable
+                table="declarations-assurance"
                 selection={assuranceSel}
                 onNouveau={() => setAssuranceModale('creation')}
                 onModifier={() => {
@@ -399,6 +400,7 @@ function OngletsDeclarations({ trancheId }: { trancheId: number }) {
           <div className="flex h-full min-h-0 flex-col gap-2">
             {!lectureSeule && (
               <BoutonsTable
+                table="declarations-sga"
                 selection={sgaSel}
                 onNouveau={() => setSgaModale('creation')}
                 onModifier={() => {
@@ -429,6 +431,7 @@ function OngletsDeclarations({ trancheId }: { trancheId: number }) {
           <div className="flex h-full min-h-0 flex-col gap-2">
             {!lectureSeule && (
               <BoutonsTable
+                table="declarations-940"
                 selection={d940Sel}
                 onNouveau={() => setD940Modale('creation')}
                 onModifier={() => {

@@ -5,7 +5,7 @@
 // client / Logement / Financement, conseiller commercial en tête). L'onglet
 // Profil client, fouillis en 3 colonnes dans WinDev, est réorganisé en
 // sections : Identité, Coordonnées, Foyer, Adultes, Suivi.
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
@@ -671,21 +671,6 @@ function PageAcquereurs() {
       })
   }
 
-  // Double-clic = Modifier (double_click : BTN_Modifier dans WinDev) ;
-  // détection manuelle, DataTable n'expose qu'onRowClick
-  const dernierClic = useRef<{ id: number; t: number }>({ id: -1, t: 0 })
-  const gererClicLigne = (r: LigneAcquereur) => {
-    const maintenant = Date.now()
-    const estDoubleClic =
-      dernierClic.current.id === r.id &&
-      maintenant - dernierClic.current.t < 400
-    dernierClic.current = estDoubleClic
-      ? { id: -1, t: 0 }
-      : { id: r.id, t: maintenant }
-    setAcquereurId(r.id)
-    if (estDoubleClic && !lectureSeule) ouvrirFiche(r.id)
-  }
-
   const filtres = useMemo(() => {
     let liste = acquereurs.data ?? []
     if (opId != null) {
@@ -743,6 +728,7 @@ function PageAcquereurs() {
 
           {!lectureSeule && (
             <BoutonsTable
+              table="acquereurs"
               selection={acquereurId}
               onNouveau={() => setModale('creation')}
               onModifier={() => {
@@ -773,7 +759,7 @@ function PageAcquereurs() {
           unite="acquéreurs"
           getRowId={(a) => String(a.id)}
           selectedRowId={acquereurId != null ? String(acquereurId) : null}
-          onRowClick={gererClicLigne}
+          onRowClick={(r) => setAcquereurId(r.id)}
           defaultHidden={['email', 'telephone', 'portable', 'communeActuelle']}
           emptyText={
             acquereurs.isLoading ? 'Chargement…' : 'Aucun acquéreur trouvé.'

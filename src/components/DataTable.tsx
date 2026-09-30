@@ -4,7 +4,8 @@
 // compacte), compteur d'éléments, filtre mis en évidence,
 // pagination (10/20/50/100/500 max), paramètres mémorisés par table et par
 // utilisateur (table user_pref, clé « table:<id> » — cf. src/lib/preferences.ts).
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import {
   flexRender,
   getCoreRowModel,
@@ -90,6 +91,9 @@ export interface DataTableProps<T> {
   getRowId?: (row: T) => string
   selectedRowId?: string | null
   onRowClick?: (row: T) => void
+  /** table dont le bouton Modifier répond au double-clic sur une ligne, quand
+   *  ce n'est pas celle-ci (deux tables pour un même bouton) */
+  modifierDe?: string
   /** ids des colonnes numériques à sommer dans la ligne Total */
   totalFor?: Array<string>
   /** ids des colonnes dont la ligne de pied compte les valeurs renseignées */
@@ -109,12 +113,15 @@ export default function DataTable<T>({
   getRowId,
   selectedRowId,
   onRowClick,
+  modifierDe,
   totalFor,
   countFor,
   defaultHidden,
   emptyText = 'Aucun élément.',
   epuree = false,
 }: DataTableProps<T>) {
+  // ids de ligne des deux derniers clics (cf. double-clic sur une ligne)
+  const clics = useRef<[string?, string?]>([])
   const base = useMemo<TableParams>(
     () => ({
       ...DEFAUTS,
@@ -469,9 +476,35 @@ export default function DataTable<T>({
             {rows.map((row) => (
               <tr
                 key={row.id}
-                onClick={
-                  onRowClick ? () => onRowClick(row.original) : undefined
-                }
+                onClick={() => {
+                  clics.current = [clics.current[1], row.id]
+                  onRowClick?.(row.original)
+                }}
+                // Double-clic = clic sur le bouton Modifier de la table
+                // (BoutonsTable table=…, sinon attribut data-modifier-table) :
+                // absent ou grisé, rien ne se passe — droits et état restent
+                // portés par le bouton
+                onDoubleClick={(e) => {
+                  const bouton = document.querySelector<HTMLButtonElement>(
+                    `[data-modifier-table=${JSON.stringify(modifierDe ?? id)}]`,
+                  )
+                  if (
+                    !bouton ||
+                    // deux clics sur la même ligne, pas sur deux lignes d'une
+                    // table qui s'est décalée entre-temps
+                    clics.current[0] !== row.id ||
+                    // pas depuis une saisie en cellule (sélection d'un mot)
+                    (e.target as Element).closest(
+                      'input, select, textarea, button, a',
+                    )
+                  )
+                    return
+                  // sélection à bascule : le second clic vient de
+                  // désélectionner la ligne
+                  if (onRowClick && row.id !== selectedRowId)
+                    flushSync(() => onRowClick(row.original))
+                  bouton.click()
+                }}
                 className={`border-b border-[var(--line-row)] transition-colors ${
                   onRowClick ? 'cursor-pointer' : ''
                 } ${

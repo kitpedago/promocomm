@@ -637,6 +637,8 @@ function DetailLot({ lotId }: { lotId: number }) {
               onClick={() => {
                 if (selection) setCommModale(selection)
               }}
+              // double-clic sur une réservation (cf. DataTable)
+              data-modifier-table={`lot-comm-${onglet}`}
             >
               Modifier
             </Button>
@@ -690,6 +692,7 @@ function DetailLot({ lotId }: { lotId: number }) {
                 {!lectureSeule &&
                   !restreint('TABLE_VersementDepotGarantie') && (
                     <BoutonsTable
+                      table="lot-versements"
                       selection={versementSel}
                       onNouveau={() => setVersementModale('creation')}
                       onModifier={() => {

@@ -262,12 +262,15 @@ export function versInputDate(
 
 // Boutons Nouveau / Modifier / Supprimer d'une table CRUD
 export function BoutonsTable({
+  table,
   selection,
   onNouveau,
   onModifier,
   onSupprimer,
   confirmation,
 }: {
+  /** id du DataTable piloté : double-clic sur une ligne = clic sur Modifier */
+  table: string
   selection: number | null
   onNouveau: () => void
   onModifier: () => void
@@ -286,6 +289,7 @@ export function BoutonsTable({
         variant="outline"
         disabled={selection == null}
         onClick={onModifier}
+        data-modifier-table={table}
       >
         Modifier
       </Button>
