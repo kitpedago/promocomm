@@ -94,7 +94,14 @@ export const Route = createFileRoute('/_authed/operations')({
     // SSR : pas de clignotement, et l'URL reste partageable.
     const selection = selectionARejouer(context.prefs, search.op)
     if (selection) throw redirect({ to: '/operations', search: selection })
-    return { lectureSeule: context.session.user.service === 'consultation' }
+    return {
+      lectureSeule: context.session.user.service === 'consultation',
+      // TABLE_REQ_StadeAvancement_Operation.COL_DatePrevComptaDebutAnnee :
+      // visible des seuls services Comptabilité et Administrateur (iso-WinDev)
+      voitDatePreviCompta: ['compta', 'admin'].includes(
+        context.session.user.service ?? '',
+      ),
+    }
   },
   component: PageOperations,
 })
@@ -535,6 +542,12 @@ const colDate = <T,>(
   cell: (c) => <span className="tabular-nums">{fmtDate(c.getValue())}</span>,
 })
 
+const COL_DATE_PREVI_COMPTA = colDate<LigneStade>(
+  'datePreviComptaDebutAnnee',
+  'Date prévi 01/N',
+  130,
+)
+
 const COLONNES_STADES: Array<ColumnDef<LigneStade, any>> = [
   {
     accessorKey: 'stade',
@@ -547,7 +560,7 @@ const COLONNES_STADES: Array<ColumnDef<LigneStade, any>> = [
     ),
   },
   { accessorKey: 'domaine', header: 'Domaine', size: 130 },
-  colDate('datePreviComptaDebutAnnee', 'Date prévi 01/N', 130),
+  COL_DATE_PREVI_COMPTA,
   colDate('datePreviMajPromo', 'Date prévi. promo', 130),
   colDate('dateReelle', 'Date réelle', 120),
   {
@@ -902,6 +915,9 @@ const HIDDEN_STADES = [
   'avecAppelFondClientSuppl',
   'lienHypertexte',
 ]
+const COLONNES_STADES_SANS_COMPTA = COLONNES_STADES.filter(
+  (c) => c !== COL_DATE_PREVI_COMPTA,
+)
 const HIDDEN_FACTURES = ['typeMission', 'partiel', 'nbMois', 'commentaire']
 
 function OngletStades({
@@ -916,6 +932,7 @@ function OngletStades({
   lectureSeule: boolean
 }) {
   const queryClient = useQueryClient()
+  const { voitDatePreviCompta } = Route.useRouteContext()
   const [selection, setSelection] = useState<number | null>(null)
   const [domaine, setDomaine] = useState(TOUS)
   const [modale, setModale] = useState<LigneStade | 'creation' | null>(null)
@@ -1017,7 +1034,11 @@ function OngletStades({
         <div className="flex min-h-0 min-w-0 flex-[2] flex-col">
           <DataTable
             id="operations-stades"
-            columns={COLONNES_STADES}
+            columns={
+              voitDatePreviCompta
+                ? COLONNES_STADES
+                : COLONNES_STADES_SANS_COMPTA
+            }
             data={lignes}
             unite="stades"
             getRowId={(s) => String(s.id)}
