@@ -28,12 +28,66 @@ export interface Copy {
   // recalculées pour la base miroir. expr : SQL lu dans public, la table cible
   // y est désignée par son nom.
   calculees?: Array<{ legacy: string; expr: string }>
+  // Jointures ajoutées à la lecture de public, dont se servent les colonnes
+  // calculées. Leurs colonnes ne doivent pas porter un nom de la table cible
+  // (lue sans préfixe) : d'où les noms legacy entre guillemets et les cur_*.
+  jointure?: string
 }
 
 // Date d'un stade de la tranche, par code de liste_avancement (max : un code
 // en double dans une tranche ne doit pas faire échouer le chargement)
 const dateStade = (code: string, col: string) =>
   `(SELECT max(sa.${col}) FROM public.stade_avancement sa JOIN public.liste_avancement la ON la.id = sa.liste_avancement_id WHERE sa.tranche_id = "tranche".id AND la.code = '${code}')`
+
+// --- Caches du trigger WinDev Participation_update ---
+// Associés suivis en propre dans tStructureJuridique (1 → curPourcKPI,
+// 18 → curPourcKGI, 30 → curPourcMH) ; tous les autres sont regroupés.
+const AUTRES_ASSOCIES = 'NOT IN (1, 18, 30)'
+const partAssocies = (condition: string) =>
+  `COALESCE((SELECT round(sum(p.pourcentage)::numeric, 2) FROM public.participation p WHERE p.structure_juridique_id = "structure_juridique".id AND p.associe_id ${condition}), 0)`
+const autresAssocies = (texte: string) =>
+  `COALESCE((SELECT string_agg(${texte}, ', ' ORDER BY a.id) FROM public.participation p JOIN public.associe a ON a.id = p.associe_id WHERE p.structure_juridique_id = "structure_juridique".id AND p.associe_id ${AUTRES_ASSOCIES}), '')`
+const participationOperation = (col: string, condition: string, tri: string) =>
+  `COALESCE((SELECT p.${col} FROM public.participation p WHERE p.structure_juridique_id = "operation".structure_juridique_id AND p.associe_id ${condition} ORDER BY ${tri} LIMIT 1), 0)`
+
+// --- Caches du trigger WinDev Commercialisation_update ---
+// Vente courante d'un lot : sa dernière commercialisation par date de
+// réservation, si elle n'est pas annulée (la jointure l'écarte sinon). Un
+// prix non saisi repart à 0, comme l'écrivait WinDev.
+const VENTE_COURANTE_LOT: Record<string, string> = {
+  curIDCommercialisation: 'k.id',
+  curIDAcquereur: 'k.acquereur_id',
+  curIDNatureAchat: 'k.nature_achat_id',
+  curDateResa: 'k.date_resa',
+  curDateLivraison: 'k.date_livraison',
+  curPrixDeVenteReelHT: 'COALESCE(k.prix_vente_reel_ht, 0)',
+  curPrixDeVenteReelTTC: 'COALESCE(k.prix_vente_reel_ttc, 0)',
+  curTauxTVAReel: 'COALESCE(k.taux_tva_reel, 0)',
+  curRemiseClientTTC: 'COALESCE(k.remise_client_ttc, 0)',
+}
+// Compteurs d'une tranche (requêtes REQ_Stat_*) : ventes de ses logements —
+// appartements et maisons —, N étant l'année en cours. Destination 1 = PSLA.
+const venteActive = 'k.date_resa IS NOT NULL AND k.date_annulation IS NULL'
+const resaAnnee = (recul: number) =>
+  `EXTRACT(YEAR FROM k.date_resa) = EXTRACT(YEAR FROM now()) - ${recul}`
+const acteVefa =
+  'k.date_signature_acte_vefa IS NOT NULL AND k.date_annulation IS NULL'
+const leveeOption =
+  'k.date_levee_option IS NOT NULL AND k.date_annulation IS NULL'
+const VENTES_TRANCHE: Record<string, string> = {
+  NbResa: venteActive,
+  NbResa_N: `${venteActive} AND ${resaAnnee(0)}`,
+  NbResa_Nm1: `${venteActive} AND ${resaAnnee(1)}`,
+  NbResa_Nm2: `${venteActive} AND ${resaAnnee(2)}`,
+  NbResa_N_PSLA: `${venteActive} AND ${resaAnnee(0)} AND l.destination_id = 1`,
+  NbLgtPSLA: `${venteActive} AND l.destination_id = 1`,
+  NbLgtHorsPSLA: `${venteActive} AND l.destination_id IS DISTINCT FROM 1`,
+  NbActeVEFA: acteVefa,
+  NbActeVEFA_N: `${acteVefa} AND ${resaAnnee(0)}`,
+  NbLeveeOption: leveeOption,
+  NbLeveeOption_N: `${leveeOption} AND ${resaAnnee(0)}`,
+  NbPhaseLoc: `${venteActive} AND k.date_levee_option IS NULL AND l.destination_id = 1`,
+}
 
 const nomenclature = (
   target: string,
@@ -460,6 +514,19 @@ export const copies: Array<Copy> = [
         s."InterlocuteurSIE", s."DateMandatSIE",
         s."GestionnaireSCCV"
       FROM legacy."tStructureJuridique" s`,
+    calculees: [
+      { legacy: 'curPourcKPI', expr: partAssocies('= 1') },
+      { legacy: 'curPourcKGI', expr: partAssocies('= 18') },
+      { legacy: 'curPourcMH', expr: partAssocies('= 30') },
+      { legacy: 'curPourcAutre', expr: partAssocies(AUTRES_ASSOCIES) },
+      { legacy: 'curAutreNom', expr: autresAssocies('a.rs') },
+      {
+        legacy: 'curAutreNomPourc',
+        expr: autresAssocies(
+          `a.rs || ' à ' || (round(p.pourcentage::numeric, 2) * 100)::float8 || '%'`,
+        ),
+      },
+    ],
   },
   {
     target: 'participation',
@@ -517,6 +584,33 @@ export const copies: Array<Copy> = [
         s."IDCertification", s."IDLabel", s."IDPerformanceEnergetique", s."EstMOEInterne",
         s."IDTypeFoncier", s."IDApporteurFoncier", s."PourcentageKPI"
       FROM legacy."tOperation" s`,
+    calculees: [
+      // part de l'associé 1 dans la structure de l'opération, et premier des
+      // autres associés par la part (Participation_update — WinDev ne servait
+      // que la première opération d'une structure, et lisait l'associé d'une
+      // requête lancée avant son paramètre)
+      {
+        legacy: 'curPourcentageHF',
+        expr: participationOperation('pourcentage', '= 1', 'p.id'),
+      },
+      {
+        legacy: 'curIDAssocieHorsHF',
+        expr: participationOperation(
+          'associe_id',
+          '<> 1',
+          'p.pourcentage DESC NULLS LAST, p.id',
+        ),
+      },
+      // logements et tranches de l'opération (Tranche_Lot_update)
+      {
+        legacy: 'curNbLot',
+        expr: `(SELECT COALESCE(sum(COALESCE(t.nb_logt_coll, 0) + COALESCE(t.nb_logt_indiv, 0)), 0) FROM public.tranche t WHERE t.operation_id = "operation".id)`,
+      },
+      {
+        legacy: 'curNbTranche',
+        expr: `(SELECT count(*) FROM public.tranche t WHERE t.operation_id = "operation".id)`,
+      },
+    ],
   },
   {
     target: 'tranche',
@@ -641,7 +735,28 @@ export const copies: Array<Copy> = [
         legacy,
         expr: `(SELECT max(sa.${col}) FROM public.stade_avancement sa WHERE sa.tranche_id = "tranche".id AND sa.liste_avancement_id = "tranche".liste_avancement_${stade}_id)`,
       })),
+      // Compteurs du trigger Commercialisation_update
+      { legacy: 'NbLot', expr: 'st."NbLot"' },
+      { legacy: 'NbInvendus', expr: 'st."NbLot" - st."NbResa"' },
+      ...Object.keys(VENTES_TRANCHE).map((legacy) => ({
+        legacy,
+        expr:
+          legacy === 'NbPhaseLoc'
+            ? // phase locative : seulement une fois la tranche livrée
+              `st."NbPhaseLoc" * (${dateStade('LIV', 'date_reelle')} IS NOT NULL)::int`
+            : `st."${legacy}"`,
+      })),
     ],
+    jointure: `LEFT JOIN (SELECT l.tranche_id AS st_tranche, count(DISTINCT l.id) AS "NbLot", ${Object.entries(
+      VENTES_TRANCHE,
+    )
+      .map(
+        ([legacy, condition]) =>
+          `count(k.id) FILTER (WHERE ${condition}) AS "${legacy}"`,
+      )
+      .join(
+        ', ',
+      )} FROM public.lot l LEFT JOIN public.commercialisation k ON k.lot_id = l.id WHERE l.famille_de_bien IN ('APPARTEMENT', 'MAISON') GROUP BY l.tranche_id) st ON st.st_tranche = "tranche".id`,
   },
   {
     target: 'stade_avancement',
@@ -1061,6 +1176,22 @@ export const copies: Array<Copy> = [
         ${fkSafe('IDConseillerTechnique', 'tPersonne', 'IDPersonne')},
         s."InfoPourEntreprise", s."Commentaire", s."DateCreation", s."DateModification"
       FROM legacy."tAcquereur" s`,
+    // Vente courante de l'acquéreur (Commercialisation_update) : sa dernière
+    // réservation non annulée, à défaut sa dernière annulée. WinDev dépendait
+    // ici de l'ordre des saisies ; une date absente n'est plus le 30/11/1999.
+    calculees: [
+      { legacy: 'curIDLot', expr: 'COALESCE(cur.cur_lot, 0)' },
+      {
+        legacy: 'curDateResa',
+        expr: 'CASE WHEN cur.cur_annulation IS NULL THEN cur.cur_resa END',
+      },
+      { legacy: 'curDateAnnulation', expr: 'cur.cur_annulation' },
+      {
+        legacy: 'DescriptionLotCourant',
+        expr: `CASE WHEN cur.cur_acquereur IS NOT NULL AND cur.cur_annulation IS NULL THEN cur.cur_info_lot || COALESCE(' | acquéreur créé le ' || to_char("acquereur".date_creation, 'DD/MM/YYYY'), '') END`,
+      },
+    ],
+    jointure: `LEFT JOIN (SELECT DISTINCT ON (k.acquereur_id) k.acquereur_id AS cur_acquereur, k.lot_id AS cur_lot, k.date_resa AS cur_resa, k.date_annulation AS cur_annulation, COALESCE(o.libelle || ' ' || COALESCE(o.commune, '') || ' | ' || COALESCE(l.num_lot, ''), '') AS cur_info_lot FROM public.commercialisation k JOIN public.lot l ON l.id = k.lot_id LEFT JOIN public.tranche t ON t.id = l.tranche_id LEFT JOIN public.operation o ON o.id = t.operation_id WHERE k.acquereur_id IS NOT NULL ORDER BY k.acquereur_id, (k.date_annulation IS NULL) DESC, k.date_resa DESC NULLS LAST, k.id DESC) cur ON cur.cur_acquereur = "acquereur".id`,
   },
   {
     target: 'lot',
@@ -1085,6 +1216,20 @@ export const copies: Array<Copy> = [
         s."LocataireCivilite", s."LocatairePatronyme", s."LocatairePrenom", s."LocataireTelephone", s."LocatairePortable",
         s."PDL", s."PCE", s."DateLivraisonSCCV", s."Commentaire", s."Notes"
       FROM legacy."tLot" s`,
+    calculees: Object.keys(VENTE_COURANTE_LOT).map((legacy) => ({
+      legacy,
+      // références : « aucune » repart en 0, comme partout dans le miroir
+      expr: ['curIDAcquereur', 'curIDNatureAchat'].includes(legacy)
+        ? `COALESCE(cur."${legacy}", 0)`
+        : `cur."${legacy}"`,
+    })),
+    jointure: `LEFT JOIN (SELECT DISTINCT ON (k.lot_id) k.lot_id AS cur_lot, k.date_annulation AS cur_annulation, ${Object.entries(
+      VENTE_COURANTE_LOT,
+    )
+      .map(([legacy, expr]) => `${expr} AS "${legacy}"`)
+      .join(
+        ', ',
+      )} FROM public.commercialisation k ORDER BY k.lot_id, k.date_resa DESC NULLS LAST, k.id DESC) cur ON cur.cur_lot = "lot".id AND cur.cur_annulation IS NULL`,
   },
 
   // --- dimension commerciale ---

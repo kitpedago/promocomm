@@ -139,6 +139,87 @@ describe('inverser', () => {
       `SELECT "id" AS "IDFacture", "commentaire" AS "Commentaire", COALESCE("prestataire_id", 0) AS "IDPrestataire", "note" AS "Note" FROM public."facture"`,
     )
   })
+  it('joint les sous-requêtes dont se servent les colonnes calculées', () => {
+    const r = inverser({
+      target: 'lot',
+      cols: '(id)',
+      select: `SELECT s."IDlot" FROM legacy."tLot" s`,
+      jointure: 'LEFT JOIN (SELECT 1 AS n) x ON true',
+      calculees: [{ legacy: 'Nb', expr: 'x.n' }],
+    })
+    expect(r.sql).toBe(
+      `SELECT "id" AS "IDlot", x.n AS "Nb" FROM public."lot" LEFT JOIN (SELECT 1 AS n) x ON true`,
+    )
+  })
+  it('ne calcule que des colonnes connues de la table miroir', () => {
+    const ddl = readFileSync(
+      new URL('./miroir.schema.sql', import.meta.url),
+      'utf8',
+    )
+    for (const c of copies) {
+      const table = inverser(c).table
+      const colonnes =
+        new RegExp(`CREATE TABLE "${table}" \\(([^;]*)\\);`).exec(ddl)?.[1] ??
+        ''
+      for (const k of c.calculees ?? [])
+        expect(colonnes, `${table}.${k.legacy}`).toContain(`"${k.legacy}" `)
+    }
+  })
+  it('calcule les caches des triggers Commercialisation, Participation et Tranche_Lot', () => {
+    const calculees = (target: string) =>
+      (copies.find((c) => c.target === target)!.calculees ?? []).map(
+        (k) => k.legacy,
+      )
+    expect(calculees('lot')).toEqual([
+      'curIDCommercialisation',
+      'curIDAcquereur',
+      'curIDNatureAchat',
+      'curDateResa',
+      'curDateLivraison',
+      'curPrixDeVenteReelHT',
+      'curPrixDeVenteReelTTC',
+      'curTauxTVAReel',
+      'curRemiseClientTTC',
+    ])
+    expect(calculees('acquereur')).toEqual([
+      'curIDLot',
+      'curDateResa',
+      'curDateAnnulation',
+      'DescriptionLotCourant',
+    ])
+    expect(calculees('tranche')).toEqual(
+      expect.arrayContaining([
+        'NbLot',
+        'NbResa',
+        'NbInvendus',
+        'NbResa_N',
+        'NbResa_Nm1',
+        'NbResa_Nm2',
+        'NbResa_N_PSLA',
+        'NbLgtPSLA',
+        'NbLgtHorsPSLA',
+        'NbActeVEFA',
+        'NbActeVEFA_N',
+        'NbLeveeOption',
+        'NbLeveeOption_N',
+        'NbPhaseLoc',
+      ]),
+    )
+    expect(calculees('structure_juridique')).toEqual([
+      'curPourcKPI',
+      'curPourcKGI',
+      'curPourcMH',
+      'curPourcAutre',
+      'curAutreNom',
+      'curAutreNomPourc',
+    ])
+    expect(calculees('operation')).toEqual([
+      'curPourcentageHF',
+      'curIDAssocieHorsHF',
+      'curNbLot',
+      'curNbTranche',
+    ])
+  })
   it('expose le prestataire mission de la facture', () => {
     const r = inverser(copies.find((c) => c.target === 'facture')!)
     expect(r.table).toBe('tFacture')

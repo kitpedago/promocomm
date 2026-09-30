@@ -121,7 +121,7 @@ export function inverser(copy: Copy): Inversion {
       type: h.type,
     })
   colonnes.push(...calculees)
-  const sql = `SELECT ${colonnes.map((c) => `${c.expr} AS "${c.legacy}"`).join(', ')} FROM public."${copy.target}"`
+  const sql = `SELECT ${colonnes.map((c) => `${c.expr} AS "${c.legacy}"`).join(', ')} FROM public."${copy.target}"${copy.jointure ? ' ' + copy.jointure : ''}`
   return { table, colonnes, sql, ignorees }
 }
 
