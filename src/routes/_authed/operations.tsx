@@ -145,6 +145,10 @@ function PageOperations() {
   const { lectureSeule } = Route.useRouteContext()
   const navigate = useNavigate({ from: Route.fullPath })
   const [modaleContacts, setModaleContacts] = useState(false)
+  const [detailsOuverts, setDetailsOuverts] = usePref(
+    'details:operations',
+    true,
+  )
 
   const fiche = useQuery({
     queryKey: ['operation-fiche', op],
@@ -203,7 +207,13 @@ function PageOperations() {
 
             {/* Détails opérations : quatre blocs de la capture WinDev */}
             <details
-              open
+              open={detailsOuverts}
+              // `toggle` part aussi au montage d'un bloc ouvert : n'écrire
+              // que sur un vrai changement
+              onToggle={(e) => {
+                const ouvert = e.currentTarget.open
+                if (ouvert !== detailsOuverts) setDetailsOuverts(ouvert)
+              }}
               className="island-shell group mb-4 shrink-0 overflow-hidden rounded-xl"
             >
               <summary className="flex cursor-pointer list-none items-center gap-2 border-b border-[var(--line-soft)] px-[18px] py-[14px] [&::-webkit-details-marker]:hidden">
