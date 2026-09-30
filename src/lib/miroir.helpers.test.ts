@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+
 import { describe, expect, it } from 'vitest'
 
 import { copies } from '#/lib/etl/transform.ts'
@@ -191,6 +193,21 @@ describe('inverser', () => {
         'StadePreviSAV',
       ]),
     )
+  })
+  it('passe en old les dates de bail opérateur de la tranche', () => {
+    const r = inverser(copies.find((c) => c.target === 'tranche')!)
+    expect(r.sql).toContain(
+      '"terrain_bail_operateur_date_previ" AS "old_TerrainBailOperateurDatePrevi", "terrain_bail_operateur_date_reelle" AS "old_TerrainBailOperateurDateReelle"',
+    )
+    // la table miroir porte les mêmes noms, sinon son chargement échoue
+    const ddl = readFileSync(
+      new URL('./miroir.schema.sql', import.meta.url),
+      'utf8',
+    )
+    expect(ddl.match(/"(old_)?TerrainBailOperateurDate\w+"/g)).toEqual([
+      '"old_TerrainBailOperateurDatePrevi"',
+      '"old_TerrainBailOperateurDateReelle"',
+    ])
   })
   it("garde l'apostrophe d'un nom de colonne legacy", () => {
     const r = inverser(copies.find((c) => c.target === 'acquereur')!)

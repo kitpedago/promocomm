@@ -1,4 +1,6 @@
 -- Généré par npm run db:miroir -- --ddl depuis le schéma legacy (2026-09-29). Ne pas éditer.
+-- Seule retouche à la main, à refaire après un --ddl : tTranche.TerrainBailOperateurDate*
+-- renommées old_* (dates saisies dans les stades d'avancement, jalon BRS Opérateur).
 DROP TABLE IF EXISTS "AccordCadreAssurance";
 CREATE TABLE "AccordCadreAssurance" (
   "Code" character varying(255)
@@ -2659,8 +2661,8 @@ CREATE TABLE "tTranche" (
   "IDArchitecte_Mandataire" integer,
   "IDArchitecte_CoTraitant" integer,
   "AvecAppelFondClientDerogatoire" boolean,
-  "TerrainBailOperateurDatePrevi" timestamp without time zone,
-  "TerrainBailOperateurDateReelle" timestamp without time zone,
+  "old_TerrainBailOperateurDatePrevi" timestamp without time zone,
+  "old_TerrainBailOperateurDateReelle" timestamp without time zone,
   "StadeESQ" timestamp without time zone,
   "StadeDPC" timestamp without time zone,
   "StadeAO" timestamp without time zone,

@@ -44,6 +44,18 @@ const archiCotraitant = alias(architecte, 'archi_cotraitant')
 const signataireTerrain = alias(signataire, 'signataire_terrain')
 const signataireOfs = alias(signataire, 'signataire_ofs')
 
+// Date d'un jalon de la tranche, affichée pour information dans l'onglet
+// Terrain : la saisie se fait dans l'onglet Stade d'avancement
+const dateJalon = (
+  libelle: string,
+  col: 'date_reelle' | 'date_previ_maj_promo',
+) =>
+  sql<Date | null>`(
+    SELECT sa.${sql.raw(col)} FROM ${stadeAvancement} sa
+    JOIN ${listeAvancement} la ON la.id = sa.liste_avancement_id
+    WHERE sa.tranche_id = ${tranche.id} AND la.libelle ILIKE ${libelle}
+    ORDER BY 1 NULLS LAST LIMIT 1)`
+
 // Fiche d'une opération + ses tranches (libellés de nomenclature résolus).
 // Les quatre notaires sont résolus en une seule requête puis rattachés en
 // mémoire (plutôt que quatre jointures alias sur interlocuteur + étude).
@@ -141,18 +153,9 @@ export const getOperationFicheFn = createServerFn({ method: 'GET' })
         terrainOfsAcpteMontantVerse: tranche.terrainOfsAcpteMontantVerse,
         terrainOfsSignataire: signataireOfs.libelle,
         terrainOfsCommentaire: tranche.terrainOfsCommentaire,
-        terrainOfsCompromisDatePrevi: tranche.terrainOfsCompromisDatePrevi,
-        terrainOfsCompromisDateReelle: tranche.terrainOfsCompromisDateReelle,
-        terrainBailOperateurDatePrevi: tranche.terrainBailOperateurDatePrevi,
-        terrainBailOperateurDateReelle: tranche.terrainBailOperateurDateReelle,
-        autreMontant: tranche.autreMontant,
-        autreCommentaire: tranche.autreCommentaire,
-        // « Date stade Compromis » : date réelle du jalon Compromis de la tranche
-        dateStadeCompromis: sql<Date | null>`(
-          SELECT sa.date_reelle FROM ${stadeAvancement} sa
-          JOIN ${listeAvancement} la ON la.id = sa.liste_avancement_id
-          WHERE sa.tranche_id = ${tranche.id} AND la.libelle ILIKE 'compromis'
-          ORDER BY sa.date_reelle NULLS LAST LIMIT 1)`,
+        dateStadeCompromis: dateJalon('compromis', 'date_reelle'),
+        dateStadeBailPrevi: dateJalon('brs opérateur', 'date_previ_maj_promo'),
+        dateStadeBailReelle: dateJalon('brs opérateur', 'date_reelle'),
         // stades courants de la tranche (phase 3)
         stadeActuel: stadeActuel.libelle,
         stadeProchain: stadeProchain.libelle,

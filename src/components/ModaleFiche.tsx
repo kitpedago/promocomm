@@ -108,6 +108,7 @@ export default function ModaleFiche({
   enCours,
   large,
   enTete,
+  ongletInitial,
 }: {
   titre: string
   champs: Array<DescChamp>
@@ -120,6 +121,8 @@ export default function ModaleFiche({
   enCours: boolean
   large?: boolean
   enTete?: ReactNode
+  /** onglet affiché à l'ouverture (libellé) ; le premier à défaut */
+  ongletInitial?: string
 }) {
   const [valeurs, setValeurs] = useState<ValeursFiche>(() =>
     depuisLigne(champs, ligne),
@@ -129,7 +132,12 @@ export default function ModaleFiche({
   useEffect(() => {
     if (open) {
       setValeurs(depuisLigne(champs, ligne))
-      setOngletActif(0)
+      setOngletActif(
+        Math.max(
+          0,
+          onglets.findIndex((o) => o.l === ongletInitial),
+        ),
+      )
     }
   }, [open, ligne])
 

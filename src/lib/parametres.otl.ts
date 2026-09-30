@@ -208,11 +208,6 @@ export const getTranchesOtlFn = createServerFn({ method: 'GET' })
         terrainOfsSignataireId: tranche.terrainOfsSignataireId,
         terrainOfsAcptePourcPrevu: tranche.terrainOfsAcptePourcPrevu,
         terrainOfsAcpteMontantVerse: tranche.terrainOfsAcpteMontantVerse,
-        terrainOfsCompromisDatePrevi: tranche.terrainOfsCompromisDatePrevi,
-        terrainOfsCompromisDateReelle: tranche.terrainOfsCompromisDateReelle,
-        autreMontant: tranche.autreMontant,
-        terrainBailOperateurDatePrevi: tranche.terrainBailOperateurDatePrevi,
-        terrainBailOperateurDateReelle: tranche.terrainBailOperateurDateReelle,
         commentaire: tranche.commentaire,
       })
       .from(tranche)
@@ -377,11 +372,6 @@ interface FicheTranche {
   terrainOfsSignataireId?: number | null
   terrainOfsAcptePourcPrevu?: number | null
   terrainOfsAcpteMontantVerse?: number | null
-  terrainOfsCompromisDatePrevi?: string | null
-  terrainOfsCompromisDateReelle?: string | null
-  autreMontant?: number | null
-  terrainBailOperateurDatePrevi?: string | null
-  terrainBailOperateurDateReelle?: string | null
   commentaire?: string | null
 }
 
@@ -432,17 +422,6 @@ export const saveTrancheOtlFn = createServerFn({ method: 'POST' })
       terrainOfsSignataireId: data.terrainOfsSignataireId ?? null,
       terrainOfsAcptePourcPrevu: data.terrainOfsAcptePourcPrevu ?? null,
       terrainOfsAcpteMontantVerse: data.terrainOfsAcpteMontantVerse ?? 0,
-      terrainOfsCompromisDatePrevi: versDate(data.terrainOfsCompromisDatePrevi),
-      terrainOfsCompromisDateReelle: versDate(
-        data.terrainOfsCompromisDateReelle,
-      ),
-      autreMontant: data.autreMontant ?? 0,
-      terrainBailOperateurDatePrevi: versDate(
-        data.terrainBailOperateurDatePrevi,
-      ),
-      terrainBailOperateurDateReelle: versDate(
-        data.terrainBailOperateurDateReelle,
-      ),
       commentaire: data.commentaire || null,
     })
     // nouvelle tranche : stades d'avancement et suivi des frais créés d'office

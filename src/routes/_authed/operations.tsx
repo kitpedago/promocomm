@@ -28,7 +28,9 @@ import {
   SousTitre,
   versInputDate,
 } from '#/components/ChampsModale'
+import { champsTranche } from '#/components/champsTranche.ts'
 import DataTable from '#/components/DataTable'
+import ModaleFiche from '#/components/ModaleFiche'
 import Onglets from '#/components/Onglets'
 import PanneauOperations from '#/components/PanneauOperations'
 import SelecteurTranche, { libelleTranche } from '#/components/SelecteurTranche'
@@ -68,7 +70,11 @@ import {
   saveOperationSimpleFn,
   saveStadeFn,
 } from '#/lib/operations.ts'
-import { getOtlOptionsFn } from '#/lib/parametres.otl.ts'
+import {
+  getOtlOptionsFn,
+  getTranchesOtlFn,
+  saveTrancheOtlFn,
+} from '#/lib/parametres.otl.ts'
 import {
   selectionARejouer,
   useMemoriserSelection,
@@ -77,6 +83,7 @@ import {
 import { getService } from '#/lib/services'
 import { fmtDate, fmtEuro } from '#/lib/utils.ts'
 
+import type { ValeursFiche } from '#/components/ModaleFiche'
 import type { ColumnDef } from '@tanstack/react-table'
 
 interface RechercheOp {
@@ -536,6 +543,10 @@ const ONGLETS = [
   'Contentieux',
 ] as const
 type Onglet = (typeof ONGLETS)[number]
+// Subventions et Contentieux masqués : leur code reste en place
+const ONGLETS_VISIBLES: ReadonlyArray<Onglet> = ONGLETS.filter(
+  (o) => o !== 'Subventions' && o !== 'Contentieux',
+)
 
 type LigneTranche = Fiche['tranches'][number]
 type LigneStade = Awaited<ReturnType<typeof getStadesFn>>[number]
@@ -852,7 +863,11 @@ function OngletsTranche({
     ONGLETS[0],
   )
   // un onglet renommé depuis l'enregistrement ne doit pas laisser la page vide
-  const onglet = ONGLETS.includes(ongletStocke) ? ongletStocke : ONGLETS[0]
+  // … ni un onglet masqué
+  const onglet = ONGLETS_VISIBLES.includes(ongletStocke)
+    ? ongletStocke
+    : ONGLETS[0]
+  const [modaleTerrain, setModaleTerrain] = useState(false)
 
   const subventions = useQuery({
     queryKey: ['subventions', t.id],
@@ -867,7 +882,7 @@ function OngletsTranche({
 
   return (
     <section className="island-shell flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
-      <Onglets onglets={ONGLETS} actif={onglet} onChange={setOnglet} />
+      <Onglets onglets={ONGLETS_VISIBLES} actif={onglet} onChange={setOnglet} />
 
       <div className="min-h-0 flex-1 overflow-auto px-[18px] py-4">
         {onglet === "Stade d'avancement" && (
@@ -883,6 +898,25 @@ function OngletsTranche({
 
         {onglet === 'Terrain' && (
           <div className="grid gap-x-8 gap-y-6 md:grid-cols-2">
+            {!lectureSeule && (
+              <div className="md:col-span-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setModaleTerrain(true)}
+                >
+                  <Pencil className="h-3.5 w-3.5" aria-hidden />
+                  Modifier
+                </Button>
+                {modaleTerrain && (
+                  <ModaleTranche
+                    trancheId={t.id}
+                    operationId={operationId}
+                    onClose={() => setModaleTerrain(false)}
+                  />
+                )}
+              </div>
+            )}
             <Bloc titre="Terrain bilan Opérateur — Charge foncière hors BRS">
               <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                 <Champ libelle="Montant HT">
@@ -920,31 +954,19 @@ function OngletsTranche({
                 <Champ libelle="Acompte montant versé">
                   {fmtEuro(t.terrainOfsAcpteMontantVerse)}
                 </Champ>
-                <Champ libelle="Date prévi.">
-                  {fmtDate(t.terrainOfsCompromisDatePrevi)}
-                </Champ>
-                <Champ libelle="Date réelle">
-                  {fmtDate(t.terrainOfsCompromisDateReelle)}
-                </Champ>
                 <Champ libelle="Commentaire">{t.terrainOfsCommentaire}</Champ>
               </div>
             </Bloc>
 
+            {/* pour information : dates du jalon « BRS Opérateur » */}
             <Bloc titre="Bail opérateur">
               <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                 <Champ libelle="Bail opérateur date prévi">
-                  {fmtDate(t.terrainBailOperateurDatePrevi)}
+                  {fmtDate(t.dateStadeBailPrevi)}
                 </Champ>
                 <Champ libelle="Bail opérateur date réelle">
-                  {fmtDate(t.terrainBailOperateurDateReelle)}
+                  {fmtDate(t.dateStadeBailReelle)}
                 </Champ>
-              </div>
-            </Bloc>
-
-            <Bloc titre="Autre">
-              <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                <Champ libelle="Montant total">{fmtEuro(t.autreMontant)}</Champ>
-                <Champ libelle="Autre commentaires">{t.autreCommentaire}</Champ>
               </div>
             </Bloc>
           </div>
@@ -1004,6 +1026,69 @@ function OngletsTranche({
         )}
       </div>
     </section>
+  )
+}
+
+// Bouton « Modifier » de l'onglet Terrain : la fiche Tranche de Paramètres,
+// ouverte sur son onglet Terrains. Montée à l'ouverture, démontée à la
+// fermeture.
+function ModaleTranche({
+  trancheId,
+  operationId,
+  onClose,
+}: {
+  trancheId: number
+  operationId: number
+  onClose: () => void
+}) {
+  const queryClient = useQueryClient()
+  const options = useQuery({
+    queryKey: ['otl-options'],
+    queryFn: () => getOtlOptionsFn(),
+    staleTime: 300_000,
+  }).data
+  // La fiche enregistre tous ses champs : ligne relue à chaque ouverture
+  // (gcTime), puis figée (staleTime) — un rechargement en cours de saisie
+  // écraserait ce qui est tapé.
+  const tranches = useQuery({
+    queryKey: ['otl-tranches', operationId, 'fiche'],
+    queryFn: () => getTranchesOtlFn({ data: { operationId } }),
+    staleTime: Infinity,
+    gcTime: 0,
+  })
+  const ligne = tranches.data?.find((x) => x.id === trancheId) ?? null
+  const enregistrer = useMutation({
+    mutationFn: (v: ValeursFiche) =>
+      saveTrancheOtlFn({ data: { ...v, operationId, id: trancheId } }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['operation-fiche', operationId],
+      })
+      void queryClient.invalidateQueries({
+        queryKey: ['otl-tranches', operationId],
+      })
+      onClose()
+    },
+  })
+  return (
+    <>
+      <ErreurMutation erreur={tranches.error} />
+      <ModaleFiche
+        titre={`Modifier — Tranche ${ligne?.libelle ?? ''}`}
+        champs={champsTranche(options)}
+        ligne={ligne}
+        // pas de ligne = création pour ModaleFiche : attendre qu'elle soit lue
+        open={ligne != null}
+        onOpenChange={(o) => {
+          if (!o) onClose()
+        }}
+        onSubmit={(v) => enregistrer.mutate(v)}
+        erreur={enregistrer.error}
+        enCours={enregistrer.isPending}
+        large
+        ongletInitial="Terrains"
+      />
+    </>
   )
 }
 

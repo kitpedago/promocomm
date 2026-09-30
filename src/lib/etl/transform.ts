@@ -568,7 +568,7 @@ export const copies: Array<Copy> = [
         s."TerrainOFSAcpteMontantVerse", ${fkSafe('TerrainOFSCompromis_IDSignataire', 'Signataire', 'IDSignataire')},
         s."TerrainOFSComment",
         s."old_TerrainOFSCompromisDatePrevi", s."old_TerrainOFSCompromisDateReele",
-        s."TerrainBailOperateurDatePrevi", s."TerrainBailOperateurDateReelle",
+        s."old_TerrainBailOperateurDatePrevi", s."old_TerrainBailOperateurDateReelle",
         s."old_DroitAppuiAutreMnt", s."old_DroitAppuiAutreComment",
         ${fkSafe('IDCertification', 'Certification', 'IDCertification')},
         ${fkSafe('IDLabel', 'Label', 'IDLabel')},

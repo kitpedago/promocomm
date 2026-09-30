@@ -675,6 +675,9 @@ export const tranche = pgTable('tranche', {
   terrainOfsSignataireId: integer('terrain_ofs_signataire_id').references(
     () => signataire.id,
   ),
+  // Les six colonnes ci-dessous sont « old » (old_* dans la base miroir) :
+  // plus d'écran, valeurs conservées pour le miroir. Les dates se saisissent
+  // dans les stades d'avancement (jalons Compromis et BRS Opérateur).
   terrainOfsCompromisDatePrevi: timestamp('terrain_ofs_compromis_date_previ'),
   terrainOfsCompromisDateReelle: timestamp('terrain_ofs_compromis_date_reelle'),
   // … bail opérateur et bloc « Autre » (legacy DroitAppuiAutre*)
