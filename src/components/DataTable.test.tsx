@@ -78,3 +78,35 @@ describe('DataTable — double-clic sur une ligne', () => {
     expect(onModifier).not.toHaveBeenCalled()
   })
 })
+
+describe('DataTable — Exporter / Affichage', () => {
+  afterEach(cleanup)
+
+  const banc = (avecEmplacement: boolean) =>
+    render(
+      <>
+        <div data-testid="boutons">
+          {avecEmplacement && <div data-outils-table="banc" />}
+        </div>
+        <DataTable
+          id="banc"
+          columns={[{ accessorKey: 'nom', header: 'Nom' }]}
+          data={LIGNES}
+        />
+      </>,
+    )
+  const dansLesBoutons = (texte: string) =>
+    screen.getByTestId('boutons').contains(screen.getByText(texte))
+
+  it("montent dans l'emplacement réservé par BoutonsTable", () => {
+    banc(true)
+    expect(dansLesBoutons('Exporter')).toBe(true)
+    expect(dansLesBoutons('Affichage')).toBe(true)
+  })
+
+  it("restent dans la barre d'outils sans emplacement", () => {
+    banc(false)
+    expect(dansLesBoutons('Exporter')).toBe(false)
+    expect(dansLesBoutons('Affichage')).toBe(false)
+  })
+})

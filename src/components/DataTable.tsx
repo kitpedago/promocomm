@@ -4,8 +4,8 @@
 // compacte), compteur d'éléments, filtre mis en évidence,
 // pagination (10/20/50/100/500 max), paramètres mémorisés par table et par
 // utilisateur (table user_pref, clé « table:<id> » — cf. src/lib/preferences.ts).
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { flushSync } from 'react-dom'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal, flushSync } from 'react-dom'
 import {
   flexRender,
   getCoreRowModel,
@@ -39,6 +39,7 @@ import { construireCsv, telechargerCsv } from '#/lib/csv.ts'
 import { usePref } from '#/lib/preferences.ts'
 import { sansAccents } from '#/lib/utils.ts'
 
+import type { ReactNode } from 'react'
 import type {
   ColumnDef,
   ColumnSizingState,
@@ -79,6 +80,17 @@ const DEFAUTS: TableParams = {
   pageSize: 50,
   uneLigne: true,
   ligneCompacte: false,
+}
+
+// Exporter / Affichage : rendus dans l'emplacement de BoutonsTable s'il existe
+function Outils({
+  dans,
+  children,
+}: {
+  dans: Element | null
+  children: ReactNode
+}) {
+  return dans ? createPortal(children, dans) : children
 }
 
 export interface DataTableProps<T> {
@@ -122,6 +134,17 @@ export default function DataTable<T>({
 }: DataTableProps<T>) {
   // ids de ligne des deux derniers clics (cf. double-clic sur une ligne)
   const clics = useRef<[string?, string?]>([])
+  // emplacement réservé par BoutonsTable (table=<id>) : Exporter et Affichage
+  // s'y affichent, à hauteur des boutons CRUD — sans lui (lecture seule, table
+  // sans boutons), ils restent dans la barre d'outils
+  const [emplacementOutils, setEmplacementOutils] = useState<Element | null>(
+    null,
+  )
+  useLayoutEffect(() => {
+    setEmplacementOutils(
+      document.querySelector(`[data-outils-table=${JSON.stringify(id)}]`),
+    )
+  })
   const base = useMemo<TableParams>(
     () => ({
       ...DEFAUTS,
@@ -254,8 +277,11 @@ export default function DataTable<T>({
     // min-h-0/flex-1 : quand le parent borne la hauteur, c'est la table qui
     // défile (en-tête et pagination restent visibles), pas la page
     <div className="flex min-h-0 flex-1 flex-col gap-2">
-      {/* barre d'outils : compteur, filtre, menu Affichage (aligné à droite) */}
-      <div className="flex flex-wrap items-center gap-3">
+      {/* barre d'outils : compteur, filtre, menu Affichage (aligné à droite) —
+          masquée quand il n'y reste rien (épurée, outils déportés) */}
+      <div
+        className={`flex flex-wrap items-center gap-3 ${epuree && emplacementOutils ? 'hidden' : ''}`}
+      >
         {!epuree && (
           <>
             <span className="text-[13px] font-semibold text-[var(--ink)]">
@@ -293,92 +319,94 @@ export default function DataTable<T>({
           </>
         )}
 
-        <button
-          onClick={exporterCsv}
-          className="ml-auto flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--input-border)] bg-[var(--card)] px-2.5 text-[13px] font-medium text-[var(--ink-soft)] transition-colors hover:border-[var(--ink)] hover:text-[var(--ink)]"
-          title="Exporter les lignes affichées en CSV (Excel)"
-        >
-          <Download className="h-3.5 w-3.5" aria-hidden />
-          Exporter
-        </button>
-        <PopoverPrimitive.Root>
-          <PopoverPrimitive.Trigger className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--input-border)] bg-[var(--card)] px-2.5 text-[13px] font-medium text-[var(--ink-soft)] transition-colors hover:border-[var(--ink)] hover:text-[var(--ink)]">
-            <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
-            Affichage
-            <ChevronDown className="h-3 w-3" aria-hidden />
-          </PopoverPrimitive.Trigger>
-          <PopoverPrimitive.Portal>
-            <PopoverPrimitive.Content
-              align="end"
-              sideOffset={6}
-              className="z-50 w-64 rounded-xl border border-[var(--line)] bg-[var(--card)] p-2 shadow-[0_12px_32px_rgba(20,25,45,0.18)]"
-            >
-              <p className="px-2 pt-1 pb-1.5 text-[11px] font-bold tracking-wide text-[var(--ink-faded)] uppercase">
-                Colonnes
-              </p>
-              {table.getAllLeafColumns().map((col, i, cols) => (
-                <div
-                  key={col.id}
-                  className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-[var(--cream-hover)]"
-                >
-                  <Switch
-                    checked={col.getIsVisible()}
-                    onCheckedChange={(v) => col.toggleVisibility(!!v)}
-                    className="scale-75"
-                  />
-                  <span className="flex-1 truncate text-[13px] text-[var(--ink-soft)]">
-                    {typeof col.columnDef.header === 'string'
-                      ? col.columnDef.header
-                      : col.id}
-                  </span>
-                  <button
-                    onClick={() => deplacerColonne(col.id, -1)}
-                    className={`cursor-pointer rounded p-0.5 text-[var(--ink-faded)] hover:bg-[var(--line-soft)] hover:text-[var(--ink)] ${i === 0 ? 'invisible' : ''}`}
-                    aria-label={`Monter ${col.id}`}
-                  >
-                    <ArrowUp className="h-3.5 w-3.5" aria-hidden />
-                  </button>
-                  <button
-                    onClick={() => deplacerColonne(col.id, 1)}
-                    className={`cursor-pointer rounded p-0.5 text-[var(--ink-faded)] hover:bg-[var(--line-soft)] hover:text-[var(--ink)] ${i === cols.length - 1 ? 'invisible' : ''}`}
-                    aria-label={`Descendre ${col.id}`}
-                  >
-                    <ArrowDown className="h-3.5 w-3.5" aria-hidden />
-                  </button>
-                </div>
-              ))}
-              <p className="mt-1 border-t border-[var(--line-soft)] px-2 pt-2 pb-1.5 text-[11px] font-bold tracking-wide text-[var(--ink-faded)] uppercase">
-                Lignes
-              </p>
-              {(
-                [
-                  ['uneLigne', '1 seule ligne'],
-                  ['ligneCompacte', 'Ligne compacte'],
-                ] as const
-              ).map(([k, libelle]) => (
-                <label
-                  key={k}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-[var(--cream-hover)]"
-                >
-                  <Switch
-                    checked={params[k]}
-                    onCheckedChange={(v) => set(k)(!!v)}
-                    className="scale-75"
-                  />
-                  <span className="flex-1 text-[13px] text-[var(--ink-soft)]">
-                    {libelle}
-                  </span>
-                </label>
-              ))}
-              <button
-                onClick={() => setParams({ ...base })}
-                className="mt-1 w-full cursor-pointer rounded-lg border-t border-[var(--line-soft)] px-2 pt-2 pb-1 text-left text-xs font-medium text-[var(--ink-faded)] hover:text-[var(--ink)]"
+        <Outils dans={emplacementOutils}>
+          <button
+            onClick={exporterCsv}
+            className="ml-auto flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--input-border)] bg-[var(--card)] px-2.5 text-[13px] font-medium text-[var(--ink-soft)] transition-colors hover:border-[var(--ink)] hover:text-[var(--ink)]"
+            title="Exporter les lignes affichées en CSV (Excel)"
+          >
+            <Download className="h-3.5 w-3.5" aria-hidden />
+            Exporter
+          </button>
+          <PopoverPrimitive.Root>
+            <PopoverPrimitive.Trigger className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--input-border)] bg-[var(--card)] px-2.5 text-[13px] font-medium text-[var(--ink-soft)] transition-colors hover:border-[var(--ink)] hover:text-[var(--ink)]">
+              <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
+              Affichage
+              <ChevronDown className="h-3 w-3" aria-hidden />
+            </PopoverPrimitive.Trigger>
+            <PopoverPrimitive.Portal>
+              <PopoverPrimitive.Content
+                align="end"
+                sideOffset={6}
+                className="z-50 w-64 rounded-xl border border-[var(--line)] bg-[var(--card)] p-2 shadow-[0_12px_32px_rgba(20,25,45,0.18)]"
               >
-                Réinitialiser la table
-              </button>
-            </PopoverPrimitive.Content>
-          </PopoverPrimitive.Portal>
-        </PopoverPrimitive.Root>
+                <p className="px-2 pt-1 pb-1.5 text-[11px] font-bold tracking-wide text-[var(--ink-faded)] uppercase">
+                  Colonnes
+                </p>
+                {table.getAllLeafColumns().map((col, i, cols) => (
+                  <div
+                    key={col.id}
+                    className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-[var(--cream-hover)]"
+                  >
+                    <Switch
+                      checked={col.getIsVisible()}
+                      onCheckedChange={(v) => col.toggleVisibility(!!v)}
+                      className="scale-75"
+                    />
+                    <span className="flex-1 truncate text-[13px] text-[var(--ink-soft)]">
+                      {typeof col.columnDef.header === 'string'
+                        ? col.columnDef.header
+                        : col.id}
+                    </span>
+                    <button
+                      onClick={() => deplacerColonne(col.id, -1)}
+                      className={`cursor-pointer rounded p-0.5 text-[var(--ink-faded)] hover:bg-[var(--line-soft)] hover:text-[var(--ink)] ${i === 0 ? 'invisible' : ''}`}
+                      aria-label={`Monter ${col.id}`}
+                    >
+                      <ArrowUp className="h-3.5 w-3.5" aria-hidden />
+                    </button>
+                    <button
+                      onClick={() => deplacerColonne(col.id, 1)}
+                      className={`cursor-pointer rounded p-0.5 text-[var(--ink-faded)] hover:bg-[var(--line-soft)] hover:text-[var(--ink)] ${i === cols.length - 1 ? 'invisible' : ''}`}
+                      aria-label={`Descendre ${col.id}`}
+                    >
+                      <ArrowDown className="h-3.5 w-3.5" aria-hidden />
+                    </button>
+                  </div>
+                ))}
+                <p className="mt-1 border-t border-[var(--line-soft)] px-2 pt-2 pb-1.5 text-[11px] font-bold tracking-wide text-[var(--ink-faded)] uppercase">
+                  Lignes
+                </p>
+                {(
+                  [
+                    ['uneLigne', '1 seule ligne'],
+                    ['ligneCompacte', 'Ligne compacte'],
+                  ] as const
+                ).map(([k, libelle]) => (
+                  <label
+                    key={k}
+                    className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-[var(--cream-hover)]"
+                  >
+                    <Switch
+                      checked={params[k]}
+                      onCheckedChange={(v) => set(k)(!!v)}
+                      className="scale-75"
+                    />
+                    <span className="flex-1 text-[13px] text-[var(--ink-soft)]">
+                      {libelle}
+                    </span>
+                  </label>
+                ))}
+                <button
+                  onClick={() => setParams({ ...base })}
+                  className="mt-1 w-full cursor-pointer rounded-lg border-t border-[var(--line-soft)] px-2 pt-2 pb-1 text-left text-xs font-medium text-[var(--ink-faded)] hover:text-[var(--ink)]"
+                >
+                  Réinitialiser la table
+                </button>
+              </PopoverPrimitive.Content>
+            </PopoverPrimitive.Portal>
+          </PopoverPrimitive.Root>
+        </Outils>
       </div>
 
       {/* table */}

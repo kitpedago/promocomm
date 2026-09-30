@@ -268,6 +268,7 @@ export function BoutonsTable({
   onModifier,
   onSupprimer,
   confirmation,
+  outils,
 }: {
   /** id du DataTable piloté : double-clic sur une ligne = clic sur Modifier */
   table: string
@@ -276,10 +277,12 @@ export function BoutonsTable({
   onModifier: () => void
   onSupprimer: () => void
   confirmation: string
+  /** outils propres à l'écran, à gauche d'Exporter / Affichage */
+  outils?: React.ReactNode
 }) {
   const { confirmer, modale } = useConfirmation()
   return (
-    <div className="flex shrink-0 gap-2">
+    <div className="flex shrink-0 items-center gap-2">
       {modale}
       <Button size="sm" onClick={onNouveau}>
         Nouveau
@@ -307,6 +310,11 @@ export function BoutonsTable({
       >
         Supprimer
       </Button>
+      {/* Exporter / Affichage du DataTable piloté, rendus ici (cf. DataTable) */}
+      <div className="ml-auto flex items-center gap-3">
+        {outils}
+        <div data-outils-table={table} className="contents" />
+      </div>
     </div>
   )
 }

@@ -3,6 +3,7 @@
 // présents dans la tranche sont remplacés après confirmation.
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { Upload } from 'lucide-react'
 
 import { ErreurMutation } from '#/components/ChampsModale'
 import { Button } from '#/components/ui/button'
@@ -79,10 +80,12 @@ export default function ImportLots({
   const largeur = Math.max(0, ...(fichier?.lignes ?? []).map((l) => l.length))
 
   return (
-    <div className="flex items-center gap-3">
-      <Button
-        size="sm"
-        variant="outline"
+    <>
+      {resultat && (
+        <span className="text-[12px] text-[var(--muted)]">{resultat}</span>
+      )}
+      {/* même style que Exporter / Affichage (DataTable), sur la même ligne */}
+      <button
         onClick={() => {
           setFichier(null)
           setErreurLecture(null)
@@ -90,12 +93,11 @@ export default function ImportLots({
           importer.reset()
           setOpen(true)
         }}
+        className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--input-border)] bg-[var(--card)] px-2.5 text-[13px] font-medium text-[var(--ink-soft)] transition-colors hover:border-[var(--ink)] hover:text-[var(--ink)]"
       >
+        <Upload className="h-3.5 w-3.5" aria-hidden />
         Importer des lots (Excel)
-      </Button>
-      {resultat && (
-        <span className="text-[12px] text-[var(--muted)]">{resultat}</span>
-      )}
+      </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
@@ -134,7 +136,7 @@ export default function ImportLots({
                 <p className="text-[13px] font-semibold text-[var(--ink)]">
                   {prepare.lots.length} lots prêts à importer.
                   {nbLotsActuels > 0 &&
-                    ` Les ${nbLotsActuels} lots actuels de la tranche seront supprimés.`}
+                    ` Les ${nbLotsActuels} lots actuels de la tranche seront supprimés puis importés.`}
                 </p>
               )}
               <div className="max-h-[40vh] overflow-auto rounded-lg border border-[var(--line)]">
@@ -199,6 +201,6 @@ export default function ImportLots({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   )
 }

@@ -954,6 +954,7 @@ function NiveauOtl({
   tableId,
   tableEpuree,
   enTete,
+  outils,
 }: {
   titre: string
   lignes: Array<Record<string, unknown> & { id: number }>
@@ -970,6 +971,8 @@ function NiveauOtl({
   tableId: string
   tableEpuree?: boolean
   enTete?: (id: number | null) => ReactNode
+  /** outils à gauche d'Exporter / Affichage (cf. BoutonsTable) */
+  outils?: ReactNode
 }) {
   const [modale, setModale] = useState<'creation' | number | null>(null)
   const ligne =
@@ -1018,6 +1021,7 @@ function NiveauOtl({
           if (selection != null) supprimer.mutate(selection)
         }}
         confirmation={confirmation}
+        outils={outils}
       />
       <ErreurMutation erreur={supprimer.error} />
       <DataTable
@@ -1418,30 +1422,6 @@ function VueOtl() {
   return (
     <section className="island-shell flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-[18px] py-4">
-        <div className="flex shrink-0 items-center gap-3">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={backfill?.enCours}
-            onClick={() => void lancerBackfill()}
-          >
-            {backfill?.enCours
-              ? 'Recherche des visuels…'
-              : 'Rechercher les visuels manquants'}
-          </Button>
-          {backfill && (
-            <span className="text-[12px] text-[var(--muted)]">
-              {backfill.trouves} trouvé{backfill.trouves > 1 ? 's' : ''} /{' '}
-              {backfill.traites} examinée{backfill.traites > 1 ? 's' : ''}
-              {backfill.vignettes > 0 &&
-                ` · ${backfill.vignettes} vignette${backfill.vignettes > 1 ? 's' : ''}`}
-              {backfill.enCours
-                ? '…'
-                : ' — introuvables : ajouter le visuel depuis la fiche.'}
-            </span>
-          )}
-        </div>
         {/* trois volets, deux poignées : hauteur plancher pour que chaque
             table garde quelques lignes sur petit écran (la page défile) */}
         <div className="min-h-[720px] flex-1">
@@ -1493,6 +1473,33 @@ function VueOtl() {
                 confirmation="Supprimer cette opération ? (refusé si elle a des tranches)"
                 unite="opérations"
                 tableId="otl-operations"
+                outils={
+                  <>
+                    {backfill && (
+                      <span className="text-[12px] text-[var(--muted)]">
+                        {backfill.trouves} trouvé
+                        {backfill.trouves > 1 ? 's' : ''} / {backfill.traites}{' '}
+                        examinée{backfill.traites > 1 ? 's' : ''}
+                        {backfill.vignettes > 0 &&
+                          ` · ${backfill.vignettes} vignette${backfill.vignettes > 1 ? 's' : ''}`}
+                        {backfill.enCours
+                          ? '…'
+                          : ' — introuvables : ajouter le visuel depuis la fiche.'}
+                      </span>
+                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={backfill?.enCours}
+                      onClick={() => void lancerBackfill()}
+                    >
+                      {backfill?.enCours
+                        ? 'Recherche des visuels…'
+                        : 'Rechercher les visuels manquants'}
+                    </Button>
+                  </>
+                }
                 enTete={(id) =>
                   id != null ? <VisuelOperation operationId={id} /> : null
                 }
@@ -1540,43 +1547,43 @@ function VueOtl() {
                 }
                 bas={
                   trancheId != null ? (
-                    <div className="flex min-h-0 flex-1 flex-col gap-2">
-                      <ImportLots
-                        trancheId={trancheId}
-                        tranche={`${operationCourante?.libelle ?? ''} | ${trancheCourante?.libelle ?? ''}`}
-                        nbLotsActuels={lots.data?.length ?? 0}
-                        onDone={() =>
-                          void queryClient.invalidateQueries({
-                            queryKey: ['otl-lots', trancheId],
-                          })
-                        }
-                      />
-                      <NiveauOtl
-                        titre={`Lots de ${trancheCourante?.libelle ?? ''}`}
-                        lignes={lots.data ?? []}
-                        colonnes={[
-                          colT('numLot', 'Num lot', 140),
-                          colT('familleDeBien', 'Famille de bien', 130),
-                          colT('typeDeBien', 'Type', 90),
-                          colN('surfHabitable', 'Surf. hab.', 90),
-                          colN('prixVenteTtc', 'Prix TTC', 110),
-                        ]}
-                        selection={lotId}
-                        setSelection={setLotId}
-                        champs={CHAMPS_LOT}
-                        contexte={{ trancheId }}
-                        saveFn={saveLotOtlFn}
-                        deleteFn={deleteLotOtlFn}
-                        invalider={() =>
-                          void queryClient.invalidateQueries({
-                            queryKey: ['otl-lots', trancheId],
-                          })
-                        }
-                        confirmation="Supprimer ce lot ? (refusé s'il est commercialisé ou a des réserves)"
-                        unite="lots"
-                        tableId="otl-lots"
-                      />
-                    </div>
+                    <NiveauOtl
+                      outils={
+                        <ImportLots
+                          trancheId={trancheId}
+                          tranche={`${operationCourante?.libelle ?? ''} | ${trancheCourante?.libelle ?? ''}`}
+                          nbLotsActuels={lots.data?.length ?? 0}
+                          onDone={() =>
+                            void queryClient.invalidateQueries({
+                              queryKey: ['otl-lots', trancheId],
+                            })
+                          }
+                        />
+                      }
+                      titre={`Lots de ${trancheCourante?.libelle ?? ''}`}
+                      lignes={lots.data ?? []}
+                      colonnes={[
+                        colT('numLot', 'Num lot', 140),
+                        colT('familleDeBien', 'Famille de bien', 130),
+                        colT('typeDeBien', 'Type', 90),
+                        colN('surfHabitable', 'Surf. hab.', 90),
+                        colN('prixVenteTtc', 'Prix TTC', 110),
+                      ]}
+                      selection={lotId}
+                      setSelection={setLotId}
+                      champs={CHAMPS_LOT}
+                      contexte={{ trancheId }}
+                      saveFn={saveLotOtlFn}
+                      deleteFn={deleteLotOtlFn}
+                      invalider={() =>
+                        void queryClient.invalidateQueries({
+                          queryKey: ['otl-lots', trancheId],
+                        })
+                      }
+                      confirmation="Supprimer ce lot ? (refusé s'il est commercialisé ou a des réserves)"
+                      unite="lots"
+                      tableId="otl-lots"
+                    />
                   ) : (
                     <p className="text-[13px] text-[var(--muted)]">
                       Sélectionner une tranche pour afficher ses lots.
