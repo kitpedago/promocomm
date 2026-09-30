@@ -7,7 +7,7 @@
 // Opération_OngletTerrain.png, Opération_OngletInfoDiverses.png.
 import { createContext, useContext, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, Pencil } from 'lucide-react'
+import { ChevronDown, ChevronsLeft, ChevronsRight, Pencil } from 'lucide-react'
 import {
   createFileRoute,
   Link,
@@ -1040,6 +1040,10 @@ function OngletStades({
   const [selection, setSelection] = useState<number | null>(null)
   const [domaine, setDomaine] = useState(TOUS)
   const [modale, setModale] = useState<LigneStade | 'creation' | null>(null)
+  const [facturesRepliees, setFacturesRepliees] = usePref(
+    'factures-repliees:operations',
+    false,
+  )
 
   const stades = useQuery({
     queryKey: ['stades', t.id],
@@ -1224,14 +1228,31 @@ function OngletStades({
             />
           </SaisieStades>
         </div>
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col xl:w-[480px] xl:flex-none">
-          <TableFactures
-            // sélection de facture remise à zéro à chaque jalon
-            key={selectionne?.id ?? 'aucun'}
-            stade={selectionne ?? null}
-            lectureSeule={lectureSeule}
-          />
-        </div>
+        {facturesRepliees ? (
+          // même repli que le volet Opérations : bande étroite, libellé
+          // vertical (horizontale sous xl, où les tables sont empilées)
+          <button
+            type="button"
+            onClick={() => setFacturesRepliees(false)}
+            className="flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--cream)] p-1.5 text-[var(--ink-faded)] hover:bg-[var(--cream-hover)] hover:text-[var(--ink)] xl:w-9 xl:flex-col xl:py-3"
+            aria-label="Déplier les factures"
+          >
+            <ChevronsLeft className="h-4 w-4" aria-hidden />
+            <span className="text-[11px] font-bold tracking-wide uppercase xl:[writing-mode:vertical-rl]">
+              Factures
+            </span>
+          </button>
+        ) : (
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col xl:w-[480px] xl:flex-none">
+            <TableFactures
+              // sélection de facture remise à zéro à chaque jalon
+              key={selectionne?.id ?? 'aucun'}
+              stade={selectionne ?? null}
+              lectureSeule={lectureSeule}
+              onReplier={() => setFacturesRepliees(true)}
+            />
+          </div>
+        )}
       </div>
 
       <ModaleStade
@@ -1474,9 +1495,11 @@ function ModaleStade({
 function TableFactures({
   stade,
   lectureSeule,
+  onReplier,
 }: {
   stade: LigneStade | null
   lectureSeule: boolean
+  onReplier: () => void
 }) {
   const queryClient = useQueryClient()
   const [selection, setSelection] = useState<number | null>(null)
@@ -1512,7 +1535,15 @@ function TableFactures({
   return (
     <div className="flex h-full min-h-0 flex-col gap-2">
       <div className="flex shrink-0 flex-wrap items-end gap-x-4 gap-y-2">
-        <p className="text-[13px] font-semibold text-[var(--ink)]">
+        <p className="flex items-center gap-1 text-[13px] font-semibold text-[var(--ink)]">
+          <button
+            type="button"
+            onClick={onReplier}
+            className="cursor-pointer rounded-lg p-1.5 text-[var(--ink-faded)] hover:bg-[var(--cream-hover)] hover:text-[var(--ink)]"
+            aria-label="Replier les factures"
+          >
+            <ChevronsRight className="h-4 w-4" aria-hidden />
+          </button>
           Factures{stade ? ` — ${stade.stade ?? ''}` : ''}
         </p>
         <div className="w-64">
