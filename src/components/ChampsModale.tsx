@@ -269,6 +269,7 @@ export function BoutonsTable({
   onSupprimer,
   confirmation,
   outils,
+  outilsSurLigneFiltre = false,
 }: {
   /** id du DataTable piloté : double-clic sur une ligne = clic sur Modifier */
   table: string
@@ -279,6 +280,9 @@ export function BoutonsTable({
   confirmation: string
   /** outils propres à l'écran, à gauche d'Exporter / Affichage */
   outils?: React.ReactNode
+  /** ligne de boutons déjà chargée : Exporter / Affichage restent sur la ligne
+   *  du filtre du DataTable */
+  outilsSurLigneFiltre?: boolean
 }) {
   const { confirmer, modale } = useConfirmation()
   return (
@@ -313,7 +317,9 @@ export function BoutonsTable({
       {/* Exporter / Affichage du DataTable piloté, rendus ici (cf. DataTable) */}
       <div className="ml-auto flex items-center gap-3">
         {outils}
-        <div data-outils-table={table} className="contents" />
+        {!outilsSurLigneFiltre && (
+          <div data-outils-table={table} className="contents" />
+        )}
       </div>
     </div>
   )

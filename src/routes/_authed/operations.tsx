@@ -1252,6 +1252,7 @@ function OngletStades({
               if (selectionne) supprimer.mutate(selectionne.id)
             }}
             confirmation="Voulez-vous vraiment supprimer la ligne ?"
+            outilsSurLigneFiltre
           />
         )}
         <label className="flex items-center gap-2 text-[13px] font-medium text-[var(--ink-soft)]">
