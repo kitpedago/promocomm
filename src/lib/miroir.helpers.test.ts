@@ -5,7 +5,10 @@ import { describe, expect, it } from 'vitest'
 import { copies } from '#/lib/etl/transform.ts'
 
 import {
+  COMPAT_ACCESS,
+  NOMENCLATURES_FIGEES,
   PLANIF_DEFAUT,
+  alterCitext,
   colonneLegacy,
   inverser,
   normaliserPlanif,
@@ -94,6 +97,18 @@ describe('inverser', () => {
       `SELECT "id" AS "IDOperation", COALESCE("structure_juridique_id", 0) AS "IDStructureJuridique", "libelle" AS "Libelle" FROM public."operation"`,
     )
     expect(r.ignorees).toEqual([])
+  })
+  it('désigne la clé primaire : la colonne legacy reprise de id', () => {
+    const r = inverser({
+      target: 'operation',
+      cols: '(id, libelle)',
+      select: `SELECT s."IDOperation", s."Libelle" FROM legacy."tOperation" s`,
+    })
+    expect(r.cle).toBe('IDOperation')
+    // id généré à l'aller (ROW_NUMBER) : rien à désigner
+    expect(
+      inverser(copies.find((c) => c.target === 'zonage_abc')!).cle,
+    ).toBeUndefined()
   })
   it("recaste une fk convertie en texte à l'aller", () => {
     const r = inverser({
@@ -309,6 +324,49 @@ describe('inverser', () => {
       'zonage_abc.id',
       'droit.service',
     ])
+  })
+})
+
+describe('nomenclatures figées', () => {
+  it('visent des tables du miroir, hors copies, avec leurs colonnes', () => {
+    const ddl = readFileSync(
+      new URL('./miroir.schema.sql', import.meta.url),
+      'utf8',
+    )
+    for (const [table, rows] of Object.entries(NOMENCLATURES_FIGEES)) {
+      expect(
+        copies.some((c) => inverser(c).table === table),
+        table,
+      ).toBe(false)
+      const def = ddl.match(
+        new RegExp(`CREATE TABLE "${table}" \\(([^;]*)\\);`),
+      )
+      expect(def, table).not.toBeNull()
+      for (const col of Object.keys(rows[0]))
+        expect(def![1], `${table}.${col}`).toContain(`"${col}" `)
+    }
+  })
+})
+
+describe('compatibilité Access', () => {
+  it('compare et décale une date par un entier en jours depuis le 01/01/1900', () => {
+    expect(COMPAT_ACCESS).toContain(
+      `access_date_gt(timestamp, integer) RETURNS boolean LANGUAGE sql IMMUTABLE AS $$ SELECT $1 > timestamp '1900-01-01' + $2 * interval '1 day' $$;`,
+    )
+    expect(COMPAT_ACCESS).toContain(
+      `access_date_moins(timestamp, integer) RETURNS timestamp LANGUAGE sql IMMUTABLE AS $$ SELECT $1 - $2 * interval '1 day' $$;`,
+    )
+    expect(COMPAT_ACCESS).toContain(
+      `access_bool_eq(boolean, integer) RETURNS boolean LANGUAGE sql IMMUTABLE AS $$ SELECT $1 = ($2 <> 0) $$;`,
+    )
+    expect(alterCitext('tLot', ['Numlot', 'FamilleDeBien'])).toBe(
+      `ALTER TABLE public."tLot" ALTER COLUMN "Numlot" TYPE citext, ALTER COLUMN "FamilleDeBien" TYPE citext`,
+    )
+    // rejouable : chaque opérateur est retiré avant d'être recréé
+    for (const op of ['<', '<=', '>', '>=', '=', '<>', '+', '-'])
+      expect(COMPAT_ACCESS).toContain(
+        `DROP OPERATOR IF EXISTS ${op} (timestamp, integer);\nCREATE OPERATOR ${op} (`,
+      )
   })
 })
 

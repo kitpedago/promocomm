@@ -14,6 +14,9 @@ export interface ColonneMiroir {
 export interface Inversion {
   table: string
   colonnes: Array<ColonneMiroir>
+  // colonne legacy reprise de `id` : clé primaire de la table miroir. Sans
+  // clé, Access refuse certaines jointures sur tables liées (erreur 3219).
+  cle?: string
   sql: string
   // colonnes publiques dont l'expression legacy n'est pas inversible
   ignorees: Array<string>
@@ -122,8 +125,86 @@ export function inverser(copy: Copy): Inversion {
     })
   colonnes.push(...calculees)
   const sql = `SELECT ${colonnes.map((c) => `${c.expr} AS "${c.legacy}"`).join(', ')} FROM public."${copy.target}"${copy.jointure ? ' ' + copy.jointure : ''}`
-  return { table, colonnes, sql, ignorees }
+  const cle = colonnes.find((c) => c.expr === '"id"')?.legacy
+  return { table, colonnes, cle, sql, ignorees }
 }
+
+// --- Compatibilité Access ---
+// Access envoie telles quelles au serveur ses opérations entre une date et un
+// entier (`[DateImmat] > 0`, `[LIV_Reelle] - 180`). SQL Server les acceptait
+// (entier = nombre de jours depuis le 01/01/1900), PostgreSQL non : opérateurs
+// ajoutés à la base miroir. De même pour un booléen lu en Oui/Non (option
+// « Bools as Char » décochée dans la source ODBC) : Access le compare à 0 ou
+// 1, comme un bit SQL Server. Rejouable à chaque passage.
+const OPERATEURS_DATE: Record<string, string> = {
+  '<': 'lt',
+  '<=': 'le',
+  '>': 'gt',
+  '>=': 'ge',
+  '=': 'eq',
+  '<>': 'ne',
+  '+': 'plus',
+  '-': 'moins',
+}
+const operateur = (
+  op: string,
+  fonction: string,
+  gauche: string,
+  retour: string,
+  corps: string,
+) =>
+  [
+    `CREATE OR REPLACE FUNCTION ${fonction}(${gauche}, integer) RETURNS ${retour} LANGUAGE sql IMMUTABLE AS $$ SELECT ${corps} $$;`,
+    `DROP OPERATOR IF EXISTS ${op} (${gauche}, integer);`,
+    `CREATE OPERATOR ${op} (LEFTARG = ${gauche}, RIGHTARG = integer, FUNCTION = ${fonction});`,
+  ].join('\n')
+export const COMPAT_ACCESS = [
+  ...Object.entries(OPERATEURS_DATE).map(([op, nom]) =>
+    op === '+' || op === '-'
+      ? operateur(
+          op,
+          `access_date_${nom}`,
+          'timestamp',
+          'timestamp',
+          `$1 ${op} $2 * interval '1 day'`,
+        )
+      : operateur(
+          op,
+          `access_date_${nom}`,
+          'timestamp',
+          'boolean',
+          `$1 ${op} timestamp '1900-01-01' + $2 * interval '1 day'`,
+        ),
+  ),
+  operateur('=', 'access_bool_eq', 'boolean', 'boolean', '$1 = ($2 <> 0)'),
+  operateur('<>', 'access_bool_ne', 'boolean', 'boolean', '$1 <> ($2 <> 0)'),
+].join('\n')
+
+// Nomenclatures sans table dans l'application (codes en dur côté public), donc
+// hors de `copies` : contenu figé, repris du SQL Server d'origine. Première
+// colonne = clé.
+export const NOMENCLATURES_FIGEES: Record<
+  string,
+  Array<Record<string, unknown>>
+> = {
+  Periodicite: [{ CodePeriodicite: 'ANNUEL' }, { CodePeriodicite: 'TRIM' }],
+  SurfaceNature: [
+    { IDSurfaceNature: 1, Libelle: 'SHAB' },
+    { IDSurfaceNature: 2, Libelle: 'Terrain' },
+  ],
+  tListeTypeEvenement: [
+    { IDListeTypeEvenement: 1, Libelle: 'Sur réservation' },
+    { IDListeTypeEvenement: 2, Libelle: 'Sur acte signé' },
+    { IDListeTypeEvenement: 3, Libelle: 'Sur annulation' },
+  ],
+}
+
+// Textes courts insensibles à la casse, comme la collation French_CI_AS du
+// SQL Server d'origine : en varchar, `[FamilleDeBien] = "parking"` ne trouve
+// plus « PARKING » depuis Access, sans erreur. Access lit un citext en texte
+// court (255).
+export const alterCitext = (table: string, colonnes: Array<string>) =>
+  `ALTER TABLE public."${table}" ${colonnes.map((c) => `ALTER COLUMN "${c}" TYPE citext`).join(', ')}`
 
 /**
  * Coupe sur place les textes plus longs que leur colonne miroir (varchar(n),

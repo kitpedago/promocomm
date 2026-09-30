@@ -21,7 +21,10 @@ import { appParam } from '#/db/schema.ts'
 import { copies } from '#/lib/etl/transform.ts'
 import { construireInsert, taillePaquet } from '#/lib/importprod.helpers.ts'
 import {
+  COMPAT_ACCESS,
+  NOMENCLATURES_FIGEES,
   PLANIF_DEFAUT,
+  alterCitext,
   inverser,
   normaliserPlanif,
   prochainPassage,
@@ -262,6 +265,7 @@ export async function rafraichirMiroir(
 
   try {
     await miroir.query(await readFile(await cheminDdl(), 'utf8'))
+    await miroir.query(COMPAT_ACCESS)
     const lecteur = await accorderLecture(miroir)
     const limites = new Map<string, Record<string, number>>()
     const longueurs = await miroir.query<{ t: string; c: string; n: number }>(
@@ -271,6 +275,15 @@ export async function rafraichirMiroir(
     )
     for (const { t, c, n } of longueurs.rows)
       limites.set(t, { ...limites.get(t), [c]: n })
+    // longueurs relevées, tables encore vides : textes courts en citext.
+    // Extension absente du serveur : le miroir reste sensible à la casse.
+    try {
+      await miroir.query('CREATE EXTENSION IF NOT EXISTS citext')
+      for (const [t, cols] of limites)
+        await miroir.query(alterCitext(t, Object.keys(cols)))
+    } catch (e) {
+      log(`Textes sensibles à la casse (citext indisponible) : ${message(e)}`)
+    }
     let lignes = 0
     const echecs: ResultatMiroir['echecs'] = []
     for (const c of copies) {
@@ -306,9 +319,33 @@ export async function rafraichirMiroir(
               ? ` (${coupes} valeurs coupées à la longueur SQL Server)`
               : ''),
         )
+        // le DDL vient de recréer la table sans clé ; posée après le
+        // chargement, un refus laisse les données en place
+        if (inv.cle)
+          await miroir.query(
+            `ALTER TABLE public."${inv.table}" ADD PRIMARY KEY ("${inv.cle}")`,
+          )
       } catch (e) {
         echecs.push({ table: inv.table, erreur: message(e).slice(0, 200) })
         log(`${inv.table}: ERREUR ${message(e)}`)
+      }
+    }
+    for (const [table, rows] of Object.entries(NOMENCLATURES_FIGEES)) {
+      try {
+        const colonnes = Object.keys(rows[0]).map((nom) => ({
+          nom,
+          json: false,
+        }))
+        const { sql, params } = construireInsert(table, colonnes, rows)
+        await miroir.query(sql, params)
+        await miroir.query(
+          `ALTER TABLE public."${table}" ADD PRIMARY KEY ("${colonnes[0].nom}")`,
+        )
+        lignes += rows.length
+        log(`${table}: ${rows.length} lignes (nomenclature figée)`)
+      } catch (e) {
+        echecs.push({ table, erreur: message(e).slice(0, 200) })
+        log(`${table}: ERREUR ${message(e)}`)
       }
     }
     return { tables: copies.length, lignes, echecs, lecteur }
