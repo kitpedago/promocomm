@@ -331,7 +331,7 @@ export const saveStadeFn = createServerFn({ method: 'POST' })
         const touchee = touchees[0]
         // jalon legacy sans tranche ou sans stade : rien à synchroniser
         if (touchee.trancheId == null || touchee.listeAvancementId == null)
-          return { id: touchee.id }
+          return { id: touchee.id, tranchesSynchronisees: 0 }
         cible = {
           id: touchee.id,
           trancheId: touchee.trancheId,
@@ -386,7 +386,8 @@ export const saveStadeFn = createServerFn({ method: 'POST' })
             dateReelle: f.dateReelle,
           })
           .where(eq(stadeAvancement.id, f.id))
-      return { id: cible.id }
+      // annoncé par la saisie en ligne, qui n'a pas l'aperçu de la fiche
+      return { id: cible.id, tranchesSynchronisees: freres.length }
     })
   })
 

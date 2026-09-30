@@ -5,7 +5,7 @@
 // Subventions, Informations diverses) et l'onglet Contentieux (par opération,
 // CRUD). Références : migration_windev/captures_ecrans/Opérations.png,
 // Opération_OngletTerrain.png, Opération_OngletInfoDiverses.png.
-import { useState } from 'react'
+import { createContext, useContext, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, Pencil } from 'lucide-react'
 import {
@@ -49,6 +49,8 @@ import {
   SelectValue,
 } from '#/components/ui/select'
 import { Switch } from '#/components/ui/switch'
+import { useToast } from '#/components/ui/toast'
+import { dateFr, lireSaisie } from '#/lib/compta.helpers.ts'
 import { getHonorairesNomenclaturesFn } from '#/lib/honoraires.ts'
 import { synchroniserDates } from '#/lib/operations.helpers.ts'
 import {
@@ -548,6 +550,98 @@ const COL_DATE_PREVI_COMPTA = colDate<LigneStade>(
   130,
 )
 
+// Saisie en ligne des dates prévi. promo et réelle de la table des stades :
+// Tab passe d'un champ à l'autre, la ligne s'enregistre quand on la quitte
+// (table en saisie WinDev).
+type ChampDateStade = 'datePreviMajPromo' | 'dateReelle'
+type DatesStade = Record<ChampDateStade, string | null>
+
+const datesDe = (l: LigneStade): DatesStade => ({
+  datePreviMajPromo: versInputDate(l.datePreviMajPromo),
+  dateReelle: versInputDate(l.dateReelle),
+})
+
+// absent : lecture seule
+const SaisieStades = createContext<{
+  /** dates saisies que la table n'a pas encore rechargées, par id de stade */
+  brouillons: Partial<Record<number, DatesStade>>
+  sortirChamp: (
+    ligne: LigneStade,
+    dates: DatesStade,
+    quitteLigne: boolean,
+  ) => void
+} | null>(null)
+
+function CelluleDateStade({
+  ligne,
+  champ,
+  libelle,
+}: {
+  ligne: LigneStade
+  champ: ChampDateStade
+  libelle: string
+}) {
+  const saisie = useContext(SaisieStades)
+  // null : hors saisie, le champ affiche la date de la ligne
+  const [texte, setTexte] = useState<string | null>(null)
+  const annule = useRef(false)
+  if (!saisie)
+    return <span className="tabular-nums">{fmtDate(ligne[champ])}</span>
+  const dates = saisie.brouillons[ligne.id] ?? datesDe(ligne)
+  // telle qu'elle se tape : jj/mm/aaaa
+  const brute = dateFr(dates[champ])
+  return (
+    <input
+      aria-label={`${libelle} — ${ligne.stade ?? ''}`}
+      inputMode="numeric"
+      placeholder="jj/mm/aaaa"
+      value={texte ?? brute}
+      aria-invalid={texte != null && lireSaisie(texte, 'date') === undefined}
+      onFocus={(e) => {
+        setTexte(brute)
+        const c = e.currentTarget
+        // après le rendu, comme la saisie directe du suivi compta
+        requestAnimationFrame(() => c.select())
+      }}
+      onChange={(e) => setTexte(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') annule.current = true
+        if (e.key === 'Enter' || e.key === 'Escape') e.currentTarget.blur()
+      }}
+      onBlur={(e) => {
+        // saisie illisible : la date reste celle d'avant
+        const lue = texte == null ? undefined : lireSaisie(texte, 'date')
+        saisie.sortirChamp(
+          ligne,
+          // Échap : toute la ligne revient aux dates enregistrées
+          annule.current
+            ? datesDe(ligne)
+            : lue === undefined
+              ? dates
+              : { ...dates, [champ]: lue },
+          !e.currentTarget.closest('tr')?.contains(e.relatedTarget),
+        )
+        annule.current = false
+        setTexte(null)
+      }}
+      className="w-full rounded-sm bg-transparent tabular-nums outline-none placeholder:text-[var(--muted)] focus:bg-white focus:ring-1 focus:ring-[var(--gold)] focus:ring-inset aria-invalid:ring-1 aria-invalid:ring-red-500 aria-invalid:ring-inset"
+    />
+  )
+}
+
+const colDateSaisie = (
+  id: ChampDateStade,
+  header: string,
+  size: number,
+): ColumnDef<LigneStade, any> => ({
+  accessorKey: id,
+  header,
+  size,
+  cell: (c) => (
+    <CelluleDateStade ligne={c.row.original} champ={id} libelle={header} />
+  ),
+})
+
 const COLONNES_STADES: Array<ColumnDef<LigneStade, any>> = [
   {
     accessorKey: 'stade',
@@ -561,8 +655,8 @@ const COLONNES_STADES: Array<ColumnDef<LigneStade, any>> = [
   },
   { accessorKey: 'domaine', header: 'Domaine', size: 130 },
   COL_DATE_PREVI_COMPTA,
-  colDate('datePreviMajPromo', 'Date prévi. promo', 130),
-  colDate('dateReelle', 'Date réelle', 120),
+  colDateSaisie('datePreviMajPromo', 'Date prévi. promo', 130),
+  colDateSaisie('dateReelle', 'Date réelle', 120),
   {
     accessorKey: 'pourcentageAvancementReel',
     header: '% avanc.',
@@ -965,9 +1059,72 @@ function OngletStades({
     },
   })
 
+  const { notifier, toast } = useToast()
+  const [brouillons, setBrouillons] = useState<
+    Partial<Record<number, DatesStade>>
+  >({})
+  // sortie de ligne : même enregistrement que la fiche (synchro entre tranches
+  // comprise), les autres champs repartant tels qu'affichés
+  const enregistrerDates = useMutation({
+    mutationFn: ({ ligne, dates }: { ligne: LigneStade; dates: DatesStade }) =>
+      saveStadeFn({
+        data: {
+          id: ligne.id,
+          trancheId: t.id,
+          listeAvancementId: ligne.listeAvancementId,
+          datePreviComptaDebutAnnee: versInputDate(
+            ligne.datePreviComptaDebutAnnee,
+          ),
+          commentaire: ligne.commentaire,
+          lienHypertexte: ligne.lienHypertexte,
+          avecAppelFondClientSuppl: ligne.avecAppelFondClientSuppl,
+          ...dates,
+        },
+      }),
+    onSuccess: ({ tranchesSynchronisees: n }, { ligne }) =>
+      notifier({
+        texte: `${ligne.stade ?? 'Stade'} : dates enregistrées${
+          n > 0
+            ? ` (synchro sur ${n} autre${n > 1 ? 's' : ''} tranche${n > 1 ? 's' : ''})`
+            : ''
+        }.`,
+      }),
+    onError: (e, { ligne }) =>
+      notifier({
+        texte: `${ligne.stade ?? 'Stade'} : ${e.message || 'erreur à l’enregistrement.'}`,
+        erreur: true,
+      }),
+    onSettled: async (_resultat, _erreur, { ligne }) => {
+      void queryClient.invalidateQueries({
+        queryKey: ['operation-fiche', operationId],
+      })
+      // le brouillon reste affiché jusqu'au rechargement de la table : ni
+      // retour fugitif à l'ancienne date, ni date refusée laissée à l'écran
+      await queryClient.invalidateQueries({ queryKey: ['stades'] })
+      setBrouillons((b) => ({ ...b, [ligne.id]: undefined }))
+    },
+  })
+  const sortirChamp = (
+    ligne: LigneStade,
+    dates: DatesStade,
+    quitteLigne: boolean,
+  ) => {
+    const avant = datesDe(ligne)
+    const modifiee =
+      dates.datePreviMajPromo !== avant.datePreviMajPromo ||
+      dates.dateReelle !== avant.dateReelle
+    setBrouillons((b) => ({
+      ...b,
+      // ligne quittée sans modification : rien à garder ni à enregistrer
+      [ligne.id]: modifiee || !quitteLigne ? dates : undefined,
+    }))
+    if (modifiee && quitteLigne) enregistrerDates.mutate({ ligne, dates })
+  }
+
   return (
     // les 40+ jalons défilent dans la table, pas la page
     <div className="flex h-full min-h-0 flex-col gap-2">
+      {toast}
       <div className="flex shrink-0 flex-wrap gap-x-8 gap-y-1 text-[13px] text-[var(--ink-soft)]">
         <span>
           Stade actuel :{' '}
@@ -986,6 +1143,7 @@ function OngletStades({
       <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2">
         {!lectureSeule && (
           <BoutonsTable
+            table="operations-stades"
             selection={selectionne?.id ?? null}
             onNouveau={() => setModale('creation')}
             onModifier={() => {
@@ -1032,25 +1190,29 @@ function OngletStades({
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 xl:flex-row">
         <div className="flex min-h-0 min-w-0 flex-[2] flex-col">
-          <DataTable
-            id="operations-stades"
-            columns={
-              voitDatePreviCompta
-                ? COLONNES_STADES
-                : COLONNES_STADES_SANS_COMPTA
-            }
-            data={lignes}
-            unite="stades"
-            getRowId={(s) => String(s.id)}
-            selectedRowId={selectionne ? String(selectionne.id) : null}
-            onRowClick={(s) => setSelection(s.id)}
-            defaultHidden={HIDDEN_STADES}
-            emptyText={
-              stades.isLoading
-                ? 'Chargement…'
-                : 'Aucun stade sur cette tranche.'
-            }
-          />
+          <SaisieStades
+            value={lectureSeule ? null : { brouillons, sortirChamp }}
+          >
+            <DataTable
+              id="operations-stades"
+              columns={
+                voitDatePreviCompta
+                  ? COLONNES_STADES
+                  : COLONNES_STADES_SANS_COMPTA
+              }
+              data={lignes}
+              unite="stades"
+              getRowId={(s) => String(s.id)}
+              selectedRowId={selectionne ? String(selectionne.id) : null}
+              onRowClick={(s) => setSelection(s.id)}
+              defaultHidden={HIDDEN_STADES}
+              emptyText={
+                stades.isLoading
+                  ? 'Chargement…'
+                  : 'Aucun stade sur cette tranche.'
+              }
+            />
+          </SaisieStades>
         </div>
         <div className="flex min-h-0 min-w-0 flex-1 flex-col xl:w-[480px] xl:flex-none">
           <TableFactures
@@ -1356,6 +1518,7 @@ function TableFactures({
         </div>
         {!lectureSeule && stade && (
           <BoutonsTable
+            table="operations-factures"
             selection={selection}
             onNouveau={() => setModale('creation')}
             onModifier={() => {
@@ -1602,6 +1765,7 @@ function OngletContentieux({
     <div className="flex h-full min-h-0 flex-col gap-2">
       {!lectureSeule && (
         <BoutonsTable
+          table="operations-contentieux"
           selection={selection}
           onNouveau={() => setModale('creation')}
           onModifier={() => {
