@@ -1620,7 +1620,9 @@ function TableFactures({
   return (
     <div className="flex h-full min-h-0 flex-col gap-2">
       <div className="flex shrink-0 flex-wrap items-end gap-x-4 gap-y-2">
-        <p className="flex items-center gap-1 text-[13px] font-semibold text-[var(--ink)]">
+        {/* volet étroit (xl) : titre seul sur sa ligne, Prestataire dessous,
+            quel que soit le stade sélectionné */}
+        <p className="flex items-center gap-1 text-[13px] font-semibold text-[var(--ink)] xl:w-full">
           <button
             type="button"
             onClick={onReplier}
