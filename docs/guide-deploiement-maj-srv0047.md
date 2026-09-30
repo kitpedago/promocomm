@@ -29,59 +29,40 @@ registry `git.gd.solutions`, en HTTPS (port 443), d'où l'image est télécharg�
 | Dossier    | `/opt/docker/promocomm`         |
 | Conteneurs | `promocomm-app`, `promocomm-db` |
 
-À demander avec chaque livraison : contient-elle une migration ? Des fichiers
-de déploiement ont-ils changé (voir le cas particulier en fin de document) ?
+À demander avec chaque livraison : des fichiers de déploiement ont-ils changé
+(voir le cas particulier en fin de document) ?
 
 ## Procédure
 
-### 1. Mettre de côté la version en place
+### 1. Mettre à jour
 
 ```sh
 cd /opt/docker/promocomm
-docker tag "$(docker inspect --format '{{.Image}}' promocomm-app)" git.gd.solutions/gducos/promocomm:precedent
-```
-
-La commande étiquette l'image du conteneur en service. Sans cette étiquette, l'ancienne image est supprimée par la mise à jour et le
-retour arrière n'est plus possible depuis le serveur seul.
-
-### 2. Sauvegarder la base
-
-Obligatoire si la livraison contient une migration, conseillé sinon.
-
-```sh
-docker exec promocomm-db sh -c 'pg_dump -Fc -U "$POSTGRES_USER" "$POSTGRES_DB"' > promocomm-$(date +%F-%H%M).dump
-ls -lh promocomm-*.dump
-```
-
-Le fichier ne doit pas être vide.
-
-### 3. Mettre à jour
-
-```sh
 ./update.sh
 ```
 
-Le script télécharge l'image, recrée le conteneur, supprime les images
-devenues inutiles et affiche l'état des conteneurs.
+Le script enchaîne, et s'arrête à la première erreur en nommant l'étape :
 
-### 4. Contrôler
+1. téléchargement de la nouvelle image ;
+2. sauvegarde de la base dans `promocomm-<date>-<heure>.dump` ;
+3. redémarrage du conteneur (les migrations sont jouées à ce moment) ;
+4. étiquetage de l'image remplacée en `precedent`, pour le retour arrière ;
+5. contrôle : attente, deux minutes au plus, que l'application réponde ;
+6. suppression des images devenues inutiles.
 
-```sh
-docker compose logs --tail=50 promocomm-app
-docker compose ps
+Dernière ligne attendue :
+
+```
+Mise à jour terminée, version <sha>, sauvegarde promocomm-<date>-<heure>.dump
 ```
 
-Dans le journal, deux lignes attendues, dans cet ordre :
+Terminer par une connexion à l'application depuis un navigateur.
 
-```
-[✓] migrations applied successfully!
-➜ Listening on: http://localhost:3000/ (all interfaces)
-```
+Le script peut être relancé sans danger après correction de la cause d'un
+arrêt. Chaque passage laisse un fichier `.dump` : supprimer les plus anciens de
+temps en temps.
 
-`docker compose ps` doit afficher `promocomm-app` à l'état `Up`, pas
-`Restarting`. Terminer par une connexion à l'application depuis un navigateur.
-
-### 5. Base miroir
+### 2. Base miroir
 
 Si la base miroir est activée, un rafraîchissement part automatiquement au
 démarrage. Sur la page `/admin/miroir`, vérifier que « Dernier passage »
@@ -93,7 +74,8 @@ indique 0 échec. Le bouton de rafraîchissement permet de le relancer.
 | --------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
 | `update.sh` s'arrête sur `unauthorized` ou `denied` | Jeton du registry expiré                                           | `docker login git.gd.solutions` avec le jeton `read:package`, puis relancer                    |
 | `update.sh` s'arrête sur une erreur réseau          | `git.gd.solutions` injoignable en 443                              | Vérifier la sortie Internet du serveur, puis relancer                                          |
-| `promocomm-app` à l'état `Restarting`               | Migration en échec : le serveur ne démarre pas tant qu'elle échoue | Relever l'erreur dans le journal, faire le retour arrière, transmettre l'erreur à GD Solutions |
+| `update.sh` s'arrête sur `sauvegarde de la base`    | `promocomm-db` arrêté ou disque plein                              | `docker compose ps`, `df -h .`, puis relancer ; rien n'a encore été modifié                    |
+| `update.sh` s'arrête sur `contrôle`                 | Migration en échec : le serveur ne démarre pas tant qu'elle échoue | Relever l'erreur dans le journal affiché, faire le retour arrière, la transmettre à GD Solutions |
 | Application joignable mais anomalie fonctionnelle   | Défaut de la nouvelle version                                      | Retour arrière                                                                                 |
 | `update.sh` télécharge un tag autre que `latest`    | Version figée par `PROMOCOMM_TAG` (`.env`) ou `image:` (override)  | Remettre `latest`, puis relancer `update.sh`                                                   |
 

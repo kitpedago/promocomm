@@ -62,8 +62,7 @@ colonne, changement de type) se prépare avec un dump préalable (section 4).
 
 ```sh
 cd /opt/docker/promocomm
-./update.sh                          # pull de l'image, up -d, prune, état
-docker compose logs --tail=50 promocomm-app   # migrations puis serveur à l'écoute
+./update.sh                          # pull de l'image, dump, up -d, contrôle, prune
 ```
 
 Coupure de service : quelques secondes (redémarrage du conteneur app). La base ne bouge pas.
