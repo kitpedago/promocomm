@@ -99,9 +99,12 @@ export function inverser(copy: Copy): Inversion {
 
   const colonnes: Array<ColonneMiroir> = []
   const ignorees: Array<string> = []
+  const calculees = copy.calculees ?? []
   pubs.forEach((pub, i) => {
     const c = colonneLegacy(exprs[i])
     if (!c) return ignorees.push(pub)
+    // une colonne calculée remplace sa recopie (tTranche.StadeCOM)
+    if (calculees.some((k) => k.legacy === c.legacy)) return
     colonnes.push({
       legacy: c.legacy,
       expr: c.fk
@@ -117,6 +120,7 @@ export function inverser(copy: Copy): Inversion {
       expr: h.fk ? `COALESCE("${h.col}", 0)` : `"${h.col}"`,
       type: h.type,
     })
+  colonnes.push(...calculees)
   const sql = `SELECT ${colonnes.map((c) => `${c.expr} AS "${c.legacy}"`).join(', ')} FROM public."${copy.target}"`
   return { table, colonnes, sql, ignorees }
 }

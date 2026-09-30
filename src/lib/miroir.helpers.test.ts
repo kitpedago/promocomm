@@ -149,7 +149,7 @@ describe('inverser', () => {
   it('expose les fins Tabbor et commercialisation de la tranche', () => {
     const r = inverser(copies.find((c) => c.target === 'tranche')!)
     expect(r.table).toBe('tTranche')
-    expect(r.colonnes.slice(-2)).toEqual([
+    expect(r.colonnes.filter((c) => c.type)).toEqual([
       { legacy: 'AnneeFinTabbor', expr: '"annee_fin_tabbor"', type: 'integer' },
       {
         legacy: 'DateFinCommercialisation',
@@ -157,6 +157,40 @@ describe('inverser', () => {
         type: 'timestamp without time zone',
       },
     ])
+  })
+  it('recalcule les caches de stade de la tranche (triggers WinDev)', () => {
+    const r = inverser(copies.find((c) => c.target === 'tranche')!)
+    const noms = r.colonnes.map((c) => c.legacy)
+    // aucune colonne en double : StadeCOM calculé remplace la recopie de stade_com
+    expect(new Set(noms).size).toBe(noms.length)
+    expect(r.sql).not.toContain('"stade_com"')
+    expect(r.sql).toContain(`la.code = 'COM') AS "StadeCOM"`)
+    expect(noms).toEqual(
+      expect.arrayContaining(['StadeLIV', 'StadePreviLIV', 'StadePreviCOM']),
+    )
+    expect(r.sql).toContain(
+      `(SELECT max(sa.date_previ_maj_promo) FROM public.stade_avancement sa JOIN public.liste_avancement la ON la.id = sa.liste_avancement_id WHERE sa.tranche_id = "tranche".id AND la.code = 'LIV') AS "StadePreviLIV"`,
+    )
+  })
+  it('déduit situation et dates des stades courants des caches de la tranche', () => {
+    const r = inverser(copies.find((c) => c.target === 'tranche')!)
+    expect(r.sql).toContain(
+      `(SELECT si.libelle FROM public.situation si WHERE si.id = "tranche".situation_id) AS "StadeCode"`,
+    )
+    expect(r.sql).toContain(
+      `(SELECT max(sa.date_reelle) FROM public.stade_avancement sa WHERE sa.tranche_id = "tranche".id AND sa.liste_avancement_id = "tranche".liste_avancement_actuel_id) AS "DateStadeActuel"`,
+    )
+    expect(r.sql).toContain(
+      `(SELECT max(sa.date_previ_maj_promo) FROM public.stade_avancement sa WHERE sa.tranche_id = "tranche".id AND sa.liste_avancement_id = "tranche".liste_avancement_suivi_prochain_id) AS "DateStadeSuiviProchain"`,
+    )
+    expect(r.colonnes.map((c) => c.legacy)).toEqual(
+      expect.arrayContaining([
+        'DateStadeProchain',
+        'DateStadeSuiviActuel',
+        'StadeSAV',
+        'StadePreviSAV',
+      ]),
+    )
   })
   it("garde l'apostrophe d'un nom de colonne legacy", () => {
     const r = inverser(copies.find((c) => c.target === 'acquereur')!)

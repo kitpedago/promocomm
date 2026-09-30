@@ -24,7 +24,16 @@ export interface Copy {
     type: string
     fk?: boolean
   }>
+  // Colonnes legacy que WinDev entretenait par trigger : absentes de `public`,
+  // recalculées pour la base miroir. expr : SQL lu dans public, la table cible
+  // y est désignée par son nom.
+  calculees?: Array<{ legacy: string; expr: string }>
 }
+
+// Date d'un stade de la tranche, par code de liste_avancement (max : un code
+// en double dans une tranche ne doit pas faire échouer le chargement)
+const dateStade = (code: string, col: string) =>
+  `(SELECT max(sa.${col}) FROM public.stade_avancement sa JOIN public.liste_avancement la ON la.id = sa.liste_avancement_id WHERE sa.tranche_id = "tranche".id AND la.code = '${code}')`
 
 const nomenclature = (
   target: string,
@@ -594,6 +603,44 @@ export const copies: Array<Copy> = [
         legacy: 'DateFinCommercialisation',
         type: 'timestamp without time zone',
       },
+    ],
+    // Caches tTranche du trigger WinDev StadeAvancement_update que `tranche`
+    // ne stocke pas. Ceux qu'elle stocke (situation, stades actuel et
+    // prochain) sont recopiés plus haut : recalculerStades les entretient.
+    calculees: [
+      // Stade<Code> / StadePrevi<Code> : date réelle / prévi promo du stade de
+      // ce code (liste gtabStade de WinDev ; SAV n'existe pas à ce jour)
+      ...[
+        'ESQ',
+        'DPC',
+        'AO',
+        'COM',
+        'OS',
+        'RECEP',
+        'LIV',
+        'LIVC',
+        'SAV',
+        'GPA',
+      ].flatMap((code) => [
+        { legacy: `Stade${code}`, expr: dateStade(code, 'date_reelle') },
+        {
+          legacy: `StadePrevi${code}`,
+          expr: dateStade(code, 'date_previ_maj_promo'),
+        },
+      ]),
+      {
+        legacy: 'StadeCode',
+        expr: `(SELECT si.libelle FROM public.situation si WHERE si.id = "tranche".situation_id)`,
+      },
+      ...[
+        ['DateStadeActuel', 'date_reelle', 'actuel'],
+        ['DateStadeProchain', 'date_previ_maj_promo', 'prochain'],
+        ['DateStadeSuiviActuel', 'date_reelle', 'suivi_actuel'],
+        ['DateStadeSuiviProchain', 'date_previ_maj_promo', 'suivi_prochain'],
+      ].map(([legacy, col, stade]) => ({
+        legacy,
+        expr: `(SELECT max(sa.${col}) FROM public.stade_avancement sa WHERE sa.tranche_id = "tranche".id AND sa.liste_avancement_id = "tranche".liste_avancement_${stade}_id)`,
+      })),
     ],
   },
   {

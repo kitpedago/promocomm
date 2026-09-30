@@ -33,6 +33,7 @@ import {
 import { db } from '#/db/index.ts'
 import { synchroniserDates } from '#/lib/operations.helpers.ts'
 import { requireEcriture, requireSession } from '#/lib/session.server.ts'
+import { recalculerStades } from '#/lib/tranche.server.ts'
 
 const archiMandataire = alias(architecte, 'archi_mandataire')
 const chargeOpe1 = alias(personne, 'charge_ope1')
@@ -255,6 +256,7 @@ function stadesFreres(
   return exec
     .select({
       id: stadeAvancement.id,
+      trancheId: tranche.id,
       tranche: tranche.libelle,
       datePreviMajPromo: stadeAvancement.datePreviMajPromo,
       dateReelle: stadeAvancement.dateReelle,
@@ -386,6 +388,10 @@ export const saveStadeFn = createServerFn({ method: 'POST' })
             dateReelle: f.dateReelle,
           })
           .where(eq(stadeAvancement.id, f.id))
+      await recalculerStades(tx, [
+        cible.trancheId,
+        ...freres.map((f) => f.trancheId),
+      ])
       // annoncé par la saisie en ligne, qui n'a pas l'aperçu de la fiche
       return { id: cible.id, tranchesSynchronisees: freres.length }
     })
@@ -404,7 +410,16 @@ export const deleteStadeFn = createServerFn({ method: 'POST' })
       throw new Error(
         `Suppression impossible : ${n} facture(s) rattachée(s) à ce stade.`,
       )
-    await db.delete(stadeAvancement).where(eq(stadeAvancement.id, data.id))
+    await db.transaction(async (tx) => {
+      const supprimes = await tx
+        .delete(stadeAvancement)
+        .where(eq(stadeAvancement.id, data.id))
+        .returning({ trancheId: stadeAvancement.trancheId })
+      await recalculerStades(
+        tx,
+        supprimes.flatMap((s) => s.trancheId ?? []),
+      )
+    })
   })
 
 // ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 // Cycle de vie d'une tranche : ce que WinDev faisait par trigger
-// (COL_Trigger.wdg, Tranche_Ajout) à la création, et son pendant à la
-// suppression.
+// (COL_Trigger.wdg) — Tranche_Ajout à la création et son pendant à la
+// suppression, StadeAvancement_update à chaque écriture d'un stade.
 import { and, asc, eq, isNull } from 'drizzle-orm'
 
 import {
@@ -11,6 +11,39 @@ import {
   tranche,
 } from '#/db/domaine.ts'
 import { db } from '#/db/index.ts'
+import { cachesStades } from '#/lib/operations.helpers.ts'
+
+// À appeler après toute écriture d'un stade : caches d'avancement des tranches
+// touchées (stade COM, situation, stades actuel et prochain). `exec` : la base
+// ou la transaction en cours.
+export async function recalculerStades(
+  exec: Pick<typeof db, 'select' | 'update'>,
+  trancheIds: Iterable<number>,
+) {
+  for (const trancheId of new Set(trancheIds)) {
+    const stades = await exec
+      .select({
+        id: stadeAvancement.id,
+        listeAvancementId: listeAvancement.id,
+        code: listeAvancement.code,
+        avecSuivi: listeAvancement.avecSuivi,
+        ordre: stadeAvancement.ordre,
+        datePreviMajPromo: stadeAvancement.datePreviMajPromo,
+        dateReelle: stadeAvancement.dateReelle,
+      })
+      .from(stadeAvancement)
+      // comme dans WinDev, un jalon sans ligne de liste ne compte pas
+      .innerJoin(
+        listeAvancement,
+        eq(listeAvancement.id, stadeAvancement.listeAvancementId),
+      )
+      .where(eq(stadeAvancement.trancheId, trancheId))
+    await exec
+      .update(tranche)
+      .set(cachesStades(stades))
+      .where(eq(tranche.id, trancheId))
+  }
+}
 
 // Nouvelle tranche : ses stades d'avancement (ceux marqués « Inclure à la
 // création d'une tranche », dans l'ordre de la liste) — la base du planning —
@@ -29,6 +62,7 @@ export async function initialiserTranche(trancheId: number) {
         ordre: s.ordre,
       })),
     )
+  await recalculerStades(db, [trancheId])
   const categories = await db
     .select({ id: categorieFrais.id })
     .from(categorieFrais)
