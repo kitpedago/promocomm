@@ -2,8 +2,9 @@
 // investisseur, masquages ; bouton Modifier pour notaires/architectes), combo
 // tranche, puis les onglets de la tranche (Stade d'avancement — CRUD, filtre
 // domaine, synchro des dates entre tranches, factures du jalon —, Terrain,
-// Subventions, Informations diverses) et l'onglet Contentieux (par opération,
-// CRUD). Références : migration_windev/captures_ecrans/Opérations.png,
+// Informations diverses — avec les subventions de la tranche en consultation)
+// et l'onglet Contentieux (par opération, CRUD). Références :
+// migration_windev/captures_ecrans/Opérations.png,
 // Opération_OngletTerrain.png, Opération_OngletInfoDiverses.png.
 import { createContext, useContext, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -538,14 +539,13 @@ function ModaleOperationSimple({
 const ONGLETS = [
   "Stade d'avancement",
   'Terrain',
-  'Subventions',
   'Informations diverses',
   'Contentieux',
 ] as const
 type Onglet = (typeof ONGLETS)[number]
-// Subventions et Contentieux masqués : leur code reste en place
+// Contentieux masqué : son code reste en place
 const ONGLETS_VISIBLES: ReadonlyArray<Onglet> = ONGLETS.filter(
-  (o) => o !== 'Subventions' && o !== 'Contentieux',
+  (o) => o !== 'Contentieux',
 )
 
 type LigneTranche = Fiche['tranches'][number]
@@ -755,6 +755,8 @@ const COLONNES_FACTURES: Array<ColumnDef<LigneFacture, any>> = [
   { accessorKey: 'commentaire', header: 'Commentaire', size: 220 },
 ]
 
+// Subventions de la tranche (TABLE_Subvention de FEN_Promotion) : consultation,
+// la saisie est dans Compta & Finances
 const COLONNES_SUBVENTIONS: Array<ColumnDef<LigneSubvention, any>> = [
   { accessorKey: 'categorie', header: 'Catégorie subvention', size: 170 },
   { accessorKey: 'organisme', header: 'Organisme', size: 220 },
@@ -770,44 +772,10 @@ const COLONNES_SUBVENTIONS: Array<ColumnDef<LigneSubvention, any>> = [
     ),
   },
   {
-    accessorKey: 'montantAgrement',
-    header: 'Montant agréé',
-    size: 120,
-    cell: (c) => (
-      <span className="block text-right tabular-nums">
-        {fmtEuro(c.getValue())}
-      </span>
-    ),
+    accessorKey: 'budgetPreviCommentaire',
+    header: 'Commentaire budget prévi',
+    size: 240,
   },
-  {
-    accessorKey: 'montantProvisoire',
-    header: 'Montant provisoire',
-    size: 130,
-    cell: (c) => (
-      <span className="block text-right tabular-nums">
-        {fmtEuro(c.getValue())}
-      </span>
-    ),
-  },
-  {
-    accessorKey: 'montantDefinitif',
-    header: 'Montant définitif',
-    size: 130,
-    cell: (c) => (
-      <span className="block text-right tabular-nums">
-        {fmtEuro(c.getValue())}
-      </span>
-    ),
-  },
-  { accessorKey: 'numConvention', header: 'N° convention', size: 130 },
-  colDate('dateCaducite', 'Caducité'),
-  {
-    accessorKey: 'finDeSuivi',
-    header: 'Fin de suivi',
-    size: 100,
-    cell: (c) => (c.getValue() ? 'Oui' : '—'),
-  },
-  { accessorKey: 'commentaire', header: 'Commentaire', size: 240 },
 ]
 
 // Onglet Contentieux — colonnes de FEN_Table_Contentieux (par opération)
@@ -867,12 +835,13 @@ function OngletsTranche({
   const onglet = ONGLETS_VISIBLES.includes(ongletStocke)
     ? ongletStocke
     : ONGLETS[0]
-  const [modaleTerrain, setModaleTerrain] = useState(false)
+  // fiche Tranche ouverte par le bouton Modifier de Terrain / Infos diverses
+  const [modale, setModale] = useState<'Terrains' | 'Détails' | null>(null)
 
   const subventions = useQuery({
     queryKey: ['subventions', t.id],
     queryFn: () => getSubventionsFn({ data: { trancheId: t.id } }),
-    enabled: onglet === 'Subventions',
+    enabled: onglet === 'Informations diverses',
   })
   const litiges = useQuery({
     queryKey: ['contentieux', operationId],
@@ -883,6 +852,14 @@ function OngletsTranche({
   return (
     <section className="island-shell flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
       <Onglets onglets={ONGLETS_VISIBLES} actif={onglet} onChange={setOnglet} />
+      {modale && (
+        <ModaleTranche
+          trancheId={t.id}
+          operationId={operationId}
+          ongletInitial={modale}
+          onClose={() => setModale(null)}
+        />
+      )}
 
       <div className="min-h-0 flex-1 overflow-auto px-[18px] py-4">
         {onglet === "Stade d'avancement" && (
@@ -903,18 +880,11 @@ function OngletsTranche({
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => setModaleTerrain(true)}
+                  onClick={() => setModale('Terrains')}
                 >
                   <Pencil className="h-3.5 w-3.5" aria-hidden />
                   Modifier
                 </Button>
-                {modaleTerrain && (
-                  <ModaleTranche
-                    trancheId={t.id}
-                    operationId={operationId}
-                    onClose={() => setModaleTerrain(false)}
-                  />
-                )}
               </div>
             )}
             <Bloc titre="Terrain bilan Opérateur — Charge foncière hors BRS">
@@ -972,25 +942,6 @@ function OngletsTranche({
           </div>
         )}
 
-        {onglet === 'Subventions' && (
-          // la table gère son propre défilement, comme l'onglet Stades
-          <div className="flex h-full min-h-0 flex-col">
-            <DataTable
-              id="operations-subventions"
-              columns={COLONNES_SUBVENTIONS}
-              data={subventions.data ?? []}
-              unite="subventions"
-              getRowId={(s) => String(s.id)}
-              defaultHidden={['numConvention', 'dateCaducite', 'commentaire']}
-              emptyText={
-                subventions.isLoading
-                  ? 'Chargement…'
-                  : 'Aucune subvention sur cette tranche.'
-              }
-            />
-          </div>
-        )}
-
         {onglet === 'Contentieux' && (
           <OngletContentieux
             operationId={operationId}
@@ -1001,25 +952,60 @@ function OngletsTranche({
         )}
 
         {onglet === 'Informations diverses' && (
-          <div className="grid gap-x-8 gap-y-6 md:grid-cols-2">
-            <Bloc titre="Certification & Label">
-              <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                <Champ libelle="Certification">{t.certification}</Champ>
-                <Champ libelle="Label">{t.label}</Champ>
-                <Champ libelle="Performance énergétique">
-                  {t.performanceEnergetique}
-                </Champ>
-              </div>
-            </Bloc>
-            <Bloc titre="MOE">
-              <div className="flex flex-col gap-3">
-                <Case libelle="Est MOE interne" actif={t.estMoeInterne} />
-                <Champ libelle="Mission MOE interne">
-                  {t.missionMoeInterne}
-                </Champ>
-                <Champ libelle="Commentaires avancement">
-                  {t.commentaireAvancement}
-                </Champ>
+          // gauche : certification, MOE, commentaires ; droite : subventions
+          <div className="grid h-full min-h-0 gap-x-8 gap-y-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+            <div className="flex flex-col gap-6">
+              {!lectureSeule && (
+                <div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setModale('Détails')}
+                  >
+                    <Pencil className="h-3.5 w-3.5" aria-hidden />
+                    Modifier
+                  </Button>
+                </div>
+              )}
+              <Bloc titre="Certification & Label">
+                <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                  <Champ libelle="Certification">{t.certification}</Champ>
+                  <Champ libelle="Label">{t.label}</Champ>
+                  <Champ libelle="Performance énergétique">
+                    {t.performanceEnergetique}
+                  </Champ>
+                </div>
+              </Bloc>
+              <Bloc titre="MOE">
+                <div className="flex flex-col gap-3">
+                  <Case libelle="Est MOE interne" actif={t.estMoeInterne} />
+                  <Champ libelle="Mission MOE interne">
+                    {t.missionMoeInterne}
+                  </Champ>
+                </div>
+              </Bloc>
+              {/* champ grisé dans FEN_Promotion, absent de la fiche Tranche :
+                  repris en consultation */}
+              <Bloc titre="Commentaires avancement">
+                <p className="text-[13px] whitespace-pre-wrap text-[var(--ink)]">
+                  {t.commentaireAvancement ?? '—'}
+                </p>
+              </Bloc>
+            </div>
+            <Bloc titre="Subventions de la tranche">
+              <div className="flex min-h-0 flex-1 flex-col">
+                <DataTable
+                  id="operations-subventions"
+                  columns={COLONNES_SUBVENTIONS}
+                  data={subventions.data ?? []}
+                  unite="subventions"
+                  getRowId={(s) => String(s.id)}
+                  emptyText={
+                    subventions.isLoading
+                      ? 'Chargement…'
+                      : 'Aucune subvention sur cette tranche.'
+                  }
+                />
               </div>
             </Bloc>
           </div>
@@ -1029,16 +1015,18 @@ function OngletsTranche({
   )
 }
 
-// Bouton « Modifier » de l'onglet Terrain : la fiche Tranche de Paramètres,
-// ouverte sur son onglet Terrains. Montée à l'ouverture, démontée à la
-// fermeture.
+// Bouton « Modifier » des onglets Terrain et Informations diverses : la fiche
+// Tranche de Paramètres, ouverte sur l'onglet Terrains ou Détails. Montée à
+// l'ouverture, démontée à la fermeture.
 function ModaleTranche({
   trancheId,
   operationId,
+  ongletInitial,
   onClose,
 }: {
   trancheId: number
   operationId: number
+  ongletInitial: 'Terrains' | 'Détails'
   onClose: () => void
 }) {
   const queryClient = useQueryClient()
@@ -1086,7 +1074,7 @@ function ModaleTranche({
         erreur={enregistrer.error}
         enCours={enregistrer.isPending}
         large
-        ongletInitial="Terrains"
+        ongletInitial={ongletInitial}
       />
     </>
   )
