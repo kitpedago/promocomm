@@ -141,7 +141,15 @@ const REGISTRE = {
     champs: ['nomEtude', 'adresse', 'cp', 'commune', 'email', 'commentaire'],
   },
   fonctions: { table: fonction, champs: ['libelle'] },
-  'gestionnaires-sccv': { table: gestionnaireSccv, champs: ['libelle'] },
+  'gestionnaires-sccv': {
+    table: gestionnaireSccv,
+    champs: [
+      'libelle',
+      'libelleCourt',
+      'suffixeFacturationElectronique',
+      'logicielFacturationElectronique',
+    ],
+  },
   labels: { table: label, champs: ['libelle'] },
   'missions-moe-interne': { table: missionMoeInterne, champs: ['libelle'] },
   'motifs-remuneration': {
@@ -307,6 +315,32 @@ export const getNomenclatureFn = createServerFn({ method: 'GET' })
     >
   })
 
+// Suffixe de facturation électronique : accolé au SIREN pour former l'adresse
+// de facturation (module /facturation), 25 caractères au plus et unique (index
+// gestionnaire_sccv_suffixe_idx ; contrôle ici pour un message en clair).
+// Vide → NULL, l'index unique laisse passer plusieurs NULL.
+async function validerGestionnaireSccv(
+  valeurs: Record<string, unknown>,
+  id?: number,
+) {
+  const suffixe = String(valeurs.suffixeFacturationElectronique ?? '').trim()
+  valeurs.suffixeFacturationElectronique = suffixe || null
+  if (!suffixe) return
+  if (suffixe.length > 25)
+    throw new Error(
+      'Le suffixe de facturation électronique dépasse 25 caractères',
+    )
+  const doublon = await db
+    .select({ id: gestionnaireSccv.id, libelle: gestionnaireSccv.libelle })
+    .from(gestionnaireSccv)
+    .where(eq(gestionnaireSccv.suffixeFacturationElectronique, suffixe))
+    .then((l) => l.find((g) => g.id !== id))
+  if (doublon)
+    throw new Error(
+      `Suffixe de facturation électronique déjà utilisé par ${doublon.libelle}`,
+    )
+}
+
 export const saveNomenclatureFn = createServerFn({ method: 'POST' })
   .validator(
     (d: { slug: string; id?: number; valeurs: Record<string, unknown> }) => d,
@@ -317,6 +351,8 @@ export const saveNomenclatureFn = createServerFn({ method: 'POST' })
     // liste blanche : seuls les champs déclarés passent
     const valeurs: Record<string, unknown> = {}
     for (const c of champs) valeurs[c] = data.valeurs[c] ?? null
+    if (data.slug === 'gestionnaires-sccv')
+      await validerGestionnaireSccv(valeurs, data.id)
     if (data.id) {
       const touchees = await db
         .update(table)

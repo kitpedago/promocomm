@@ -80,6 +80,8 @@ interface ConfigListe {
   champs: Array<DescChamp>
   /** slug d'une autre liste fournissant les options d'un champ select */
   selects?: Partial<Record<string, SlugNomenclature>>
+  /** champs texte proposant en saisie les valeurs déjà présentes dans la liste */
+  suggestions?: Array<string>
 }
 
 // L'arbre FEN_Param, aplati (mêmes intitulés)
@@ -232,7 +234,22 @@ const LISTES: Array<ConfigListe> = [
     slug: 'gestionnaires-sccv',
     titre: 'Gestionnaire SCCV',
     unite: 'gestionnaire',
-    champs: LIBELLE,
+    champs: [
+      ...LIBELLE,
+      { k: 'libelleCourt', l: 'Libellé court', t: 'texte' },
+      {
+        k: 'suffixeFacturationElectronique',
+        l: 'Suffixe facturation électronique (25 car. max, unique)',
+        t: 'texte',
+      },
+      {
+        k: 'logicielFacturationElectronique',
+        l: 'Logiciel facturation électronique',
+        t: 'texte',
+      },
+    ],
+    // logiciel : liste auto-alimentée des valeurs déjà saisies
+    suggestions: ['logicielFacturationElectronique'],
   },
   { slug: 'labels', titre: 'Labels', unite: 'label', champs: LIBELLE },
   {
@@ -787,6 +804,15 @@ function ListeNomenclature({ config }: { config: ConfigListe }) {
         libelle: String(o.libelle ?? o.rs ?? o.nomEtude ?? o.code ?? o.id),
       }))
       return { ...c, options: opts }
+    }
+    if (c.t === 'texte' && config.suggestions?.includes(c.k)) {
+      const valeurs = (lignes.data ?? [])
+        .map((l) => l[c.k])
+        .filter((v): v is string => typeof v === 'string' && v.trim() !== '')
+      return {
+        ...c,
+        suggestions: [...new Set(valeurs)].sort((a, b) => a.localeCompare(b)),
+      }
     }
     return c
   })

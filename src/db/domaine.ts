@@ -12,6 +12,7 @@ import {
   real,
   text,
   timestamp,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core'
 
 const id = () => integer().primaryKey().generatedByDefaultAsIdentity()
@@ -182,10 +183,26 @@ export const structureJuridiqueStade = pgTable('structure_juridique_stade', {
   libelle: text().notNull(),
 })
 
-export const gestionnaireSccv = pgTable('gestionnaire_sccv', {
-  id: id(),
-  libelle: text().notNull(),
-})
+// Compta d'une SCCV. Les colonnes de facturation électronique (module
+// /facturation) n'existent pas dans le legacy : libellé court affiché à la
+// place du libellé, suffixe (≤ 25 caractères, unique) accolé au SIREN pour
+// former l'adresse de facturation, logiciel (texte libre, suggestions des
+// valeurs déjà saisies).
+export const gestionnaireSccv = pgTable(
+  'gestionnaire_sccv',
+  {
+    id: id(),
+    libelle: text().notNull(),
+    libelleCourt: text('libelle_court'),
+    suffixeFacturationElectronique: text('suffixe_facturation_electronique'),
+    logicielFacturationElectronique: text('logiciel_facturation_electronique'),
+  },
+  (t) => [
+    uniqueIndex('gestionnaire_sccv_suffixe_idx').on(
+      t.suffixeFacturationElectronique,
+    ),
+  ],
+)
 
 export const partenariat = pgTable('partenariat', {
   id: id(),

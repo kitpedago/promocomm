@@ -1,11 +1,15 @@
 // Server functions du module SCCV (FEN_TABLE_StructureJuridique +
 // FEN_Fiche_StructureJuridique) — phase 4, premier module en CRUD complet.
 import { createServerFn } from '@tanstack/react-start'
-import { and, asc, eq, ilike, isNotNull, isNull, sql } from 'drizzle-orm'
+import { and, asc, count, eq, ilike, isNotNull, isNull, sql } from 'drizzle-orm'
+import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core'
 
 import {
   associe,
   banque,
+  bilanCaht,
+  bilanResultat,
+  bilanStock,
   civilite,
   compteBanque,
   gestionnaireSccv,
@@ -55,11 +59,16 @@ export const getSccvListeFn = createServerFn({ method: 'GET' })
         ? isNotNull(structureJuridique.dateLiquidation)
         : isNull(structureJuridique.dateLiquidation),
     ]
-    if (data.stadeId) conditions.push(eq(structureJuridique.stadeId, data.stadeId))
+    if (data.stadeId)
+      conditions.push(eq(structureJuridique.stadeId, data.stadeId))
     if (data.comptableId)
-      conditions.push(eq(structureJuridique.personneComptableId, data.comptableId))
+      conditions.push(
+        eq(structureJuridique.personneComptableId, data.comptableId),
+      )
     if (data.gestionnaireId)
-      conditions.push(eq(structureJuridique.gestionnaireSccvId, data.gestionnaireId))
+      conditions.push(
+        eq(structureJuridique.gestionnaireSccvId, data.gestionnaireId),
+      )
     if (data.contient && data.contient.length >= 3)
       conditions.push(ilike(structureJuridique.rs, `%${data.contient}%`))
     return db
@@ -80,7 +89,9 @@ export const getSccvListeFn = createServerFn({ method: 'GET' })
         datePlanningCloture: structureJuridique.datePlanningCloture,
         dateLiquidation: structureJuridique.dateLiquidation,
         dateLiberationCapital: structureJuridique.dateLiberationCapital,
-        comptable: sql<string | null>`${personne.patronyme} || ' ' || COALESCE(${personne.prenom}, '')`,
+        comptable: sql<
+          string | null
+        >`${personne.patronyme} || ' ' || COALESCE(${personne.prenom}, '')`,
         stade: structureJuridiqueStade.libelle,
         hfsga: structureJuridique.hfsga,
         capital: structureJuridique.capital,
@@ -90,7 +101,10 @@ export const getSccvListeFn = createServerFn({ method: 'GET' })
         gestionnaire: gestionnaireSccv.libelle,
       })
       .from(structureJuridique)
-      .leftJoin(personne, eq(structureJuridique.personneComptableId, personne.id))
+      .leftJoin(
+        personne,
+        eq(structureJuridique.personneComptableId, personne.id),
+      )
       .leftJoin(
         structureJuridiqueStade,
         eq(structureJuridique.stadeId, structureJuridiqueStade.id),
@@ -128,7 +142,9 @@ export const getSccvDetailFn = createServerFn({ method: 'GET' })
           id: participation.id,
           associeId: participation.associeId,
           // libellé combo WinDev : « RS (HLM|Non HLM) »
-          associe: sql<string | null>`${associe.rs} || CASE WHEN ${associe.estHlm} THEN ' (HLM)' ELSE ' (Non HLM)' END`,
+          associe: sql<
+            string | null
+          >`${associe.rs} || CASE WHEN ${associe.estHlm} THEN ' (HLM)' ELSE ' (Non HLM)' END`,
           pourcentage: participation.pourcentage,
           convTreso: participation.convTreso,
           motifRemunerationAssocieId: participation.motifRemunerationAssocieId,
@@ -232,7 +248,10 @@ export const getSccvNomenclaturesFn = createServerFn({ method: 'GET' }).handler(
       indexTauxListe,
       interlocuteursSie,
     ] = await Promise.all([
-      db.select().from(structureJuridiqueStade).orderBy(asc(structureJuridiqueStade.libelle)),
+      db
+        .select()
+        .from(structureJuridiqueStade)
+        .orderBy(asc(structureJuridiqueStade.libelle)),
       db
         .select({
           id: personne.id,
@@ -250,12 +269,27 @@ export const getSccvNomenclaturesFn = createServerFn({ method: 'GET' }).handler(
         })
         .from(associe)
         .orderBy(asc(associe.rs)),
-      db.select({ id: banque.id, libelle: banque.libelle }).from(banque).orderBy(asc(banque.libelle)),
+      db
+        .select({ id: banque.id, libelle: banque.libelle })
+        .from(banque)
+        .orderBy(asc(banque.libelle)),
       db.select().from(typeCompteBanque).orderBy(asc(typeCompteBanque.libelle)),
-      db.select().from(utilisationCompte).orderBy(asc(utilisationCompte.libelle)),
-      db.select({ id: sie.id, libelle: sie.libelle }).from(sie).orderBy(asc(sie.libelle)),
-      db.select({ id: civilite.id, libelle: civilite.libelle }).from(civilite).orderBy(asc(civilite.libelle)),
-      db.select().from(motifRemunerationAssocie).orderBy(asc(motifRemunerationAssocie.libelle)),
+      db
+        .select()
+        .from(utilisationCompte)
+        .orderBy(asc(utilisationCompte.libelle)),
+      db
+        .select({ id: sie.id, libelle: sie.libelle })
+        .from(sie)
+        .orderBy(asc(sie.libelle)),
+      db
+        .select({ id: civilite.id, libelle: civilite.libelle })
+        .from(civilite)
+        .orderBy(asc(civilite.libelle)),
+      db
+        .select()
+        .from(motifRemunerationAssocie)
+        .orderBy(asc(motifRemunerationAssocie.libelle)),
       db.select().from(indexTaux).orderBy(asc(indexTaux.libelle)),
       // REQ_InterlocuteurSIE : suggestions = valeurs distinctes existantes
       db
@@ -337,7 +371,9 @@ export const saveSccvFn = createServerFn({ method: 'POST' })
       partenariatId: data.partenariatId ?? null,
       dateDebutActivite: versDate(data.dateDebutActivite),
       dateImmat: versDate(data.dateImmat),
-      dateBilanDebutPremierExercice: versDate(data.dateBilanDebutPremierExercice),
+      dateBilanDebutPremierExercice: versDate(
+        data.dateBilanDebutPremierExercice,
+      ),
       dateBilanFinPremierExercice: versDate(data.dateBilanFinPremierExercice),
       dateModifCloture: data.dateModifCloture || null,
       datePlanningCloture: data.datePlanningCloture || null,
@@ -484,4 +520,49 @@ export const deleteCompteBanqueFn = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     await requireDroit(FEN_SCCV, 'ONG_Choix', 3)
     await db.delete(compteBanque).where(eq(compteBanque.id, data.id))
+  })
+
+// Suppression d'une SCCV. Le BTN_Supprimer WinDev était invisible et son code
+// renvoyait à SQL Server (« Supprimer directement dans la base ») : ici la
+// suppression est faite dans l'application. Refusée si des opérations ou des
+// bilans la référencent ; ses associés et comptes bancaires partent avec elle.
+export const deleteSccvFn = createServerFn({ method: 'POST' })
+  .validator((d: { id: number }) => d)
+  .handler(async ({ data }) => {
+    // pas de ligne BTN_Supprimer dans la table droit : mêmes services que la
+    // modification (Comptabilité, Administrateur)
+    await requireDroit(FEN_SCCV, 'BTN_Modifier')
+    const nb = async (
+      table: PgTable & { structureJuridiqueId: AnyPgColumn },
+    ) => {
+      const [{ n }] = await db
+        .select({ n: count() })
+        .from(table)
+        .where(eq(table.structureJuridiqueId, data.id))
+      return n
+    }
+    const nbOperations = await nb(operation)
+    if (nbOperations > 0)
+      throw new Error(
+        `Suppression impossible : ${nbOperations} opération(s) rattachée(s) à cette SCCV.`,
+      )
+    const nbBilans =
+      (await nb(bilanStock)) + (await nb(bilanCaht)) + (await nb(bilanResultat))
+    if (nbBilans > 0)
+      throw new Error(
+        `Suppression impossible : ${nbBilans} ligne(s) de bilan rattachée(s) à cette SCCV.`,
+      )
+    await db.transaction(async (tx) => {
+      await tx
+        .delete(participation)
+        .where(eq(participation.structureJuridiqueId, data.id))
+      await tx
+        .delete(compteBanque)
+        .where(eq(compteBanque.structureJuridiqueId, data.id))
+      const supprimees = await tx
+        .delete(structureJuridique)
+        .where(eq(structureJuridique.id, data.id))
+        .returning({ id: structureJuridique.id })
+      if (supprimees.length === 0) throw new Error('Fiche introuvable')
+    })
   })

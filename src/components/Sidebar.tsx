@@ -8,6 +8,7 @@ import {
   House,
   Landmark,
   Percent,
+  Receipt,
   Settings,
   Sparkles,
   Store,
@@ -33,6 +34,7 @@ const MODULE_ICONS: Record<Module, LucideIcon> = {
   bilan: ChartColumn,
   honoraires: Percent,
   declarations: FileText,
+  facturation: Receipt,
 }
 
 // état actif stylé via data-status="active" posé par <Link>
@@ -49,6 +51,7 @@ const ROUTES_IMPLEMENTEES = {
   bilan: '/bilan',
   honoraires: '/honoraires',
   declarations: '/declarations',
+  facturation: '/facturation',
   sav: '/sav',
   parametres: '/parametres',
 } as const satisfies Partial<Record<Module, string>>

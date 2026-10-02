@@ -223,10 +223,18 @@ export function sccvARejouer(
   return estIdPositif(sccv) ? sccv : undefined
 }
 
-/** Aligne la SCCV mémorisée sur l'URL. Seul écrivain de la clé `sccv`. */
+/**
+ * Aligne la SCCV mémorisée sur l'URL. Seul écrivain de la clé `sccv`. Rend
+ * `oublier`, pour une SCCV supprimée : `null` et non `undefined`, qui ne se
+ * sérialise pas en JSON (verifierEntree le refuse).
+ */
 export function useMemoriserSccv(sccv: number | undefined) {
-  const [memorisee, setSccv] = usePref<number | undefined>('sccv', undefined)
+  const [memorisee, setSccv] = usePref<number | null | undefined>(
+    'sccv',
+    undefined,
+  )
   useEffect(() => {
     if (sccv != null && sccv !== memorisee) setSccv(sccv)
   })
+  return () => setSccv(null)
 }

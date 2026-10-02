@@ -24,6 +24,7 @@ le réimport .bak ne touche que `legacy` + les 30 tables du domaine, jamais l'au
 | Bilan             |     —     |      ✅      |      —       |        —        |       ✅       |     —     |       —        |
 | Honoraires        |     —     |      ✅      |      —       |        —        |       ✅       |     —     |       ✅       |
 | Déclarations      |    ✅     |      ✅      |      —       |        —        |       ✅       |     —     |       ✅       |
+| Facturation élec. |     —     |      ✅      |      —       |        —        |       ✅       |     —     |       —        |
 
 « Consultation » se connecte **sans mot de passe** (comme dans WinDev : `bWithPassword=False`).
 

@@ -4,7 +4,7 @@
 // et les 4 modales d'édition (fiche, participation, compte bancaire, centre
 // des impôts).
 // Référence : docs/plan-implementation.md (module SCCV).
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   keepPreviousData,
   useMutation,
@@ -15,6 +15,7 @@ import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
 
 import Champ from '#/components/Champ'
+import { BoutonsTable } from '#/components/ChampsModale'
 import DataTable from '#/components/DataTable'
 import Onglets from '#/components/Onglets'
 import Scindeur from '#/components/Scindeur'
@@ -44,6 +45,7 @@ import { sccvARejouer, useMemoriserSccv, usePref } from '#/lib/preferences.ts'
 import {
   deleteCompteBanqueFn,
   deleteParticipationFn,
+  deleteSccvFn,
   getSccvDetailFn,
   getSccvListeFn,
   getSccvNomenclaturesFn,
@@ -769,7 +771,7 @@ function ModaleFicheSccv({
 function PageSccv() {
   const { sccv } = Route.useSearch()
   // l'URL fait foi : un lien partagé `?sccv=99` devient la SCCV mémorisée
-  useMemoriserSccv(sccv)
+  const oublierSccv = useMemoriserSccv(sccv)
   const { lectureSeule } = Route.useRouteContext()
   const restreint = useDroits(FEN_SCCV)
   const navigate = useNavigate({ from: Route.fullPath })
@@ -806,29 +808,28 @@ function PageSccv() {
   const ficheEnEdition =
     modaleFiche && modaleFiche !== 'creation' ? modaleFiche : null
 
-  // Double-clic sur une ligne (détection manuelle : deux clics rapprochés
-  // sur le même id — DataTable n'expose qu'onRowClick)
-  const dernierClic = useRef<{ id: number; t: number }>({ id: -1, t: 0 })
-  const gererClicLigne = (r: LigneSccv) => {
-    const maintenant = Date.now()
-    const estDoubleClic =
-      dernierClic.current.id === r.id &&
-      maintenant - dernierClic.current.t < 400
-    dernierClic.current = estDoubleClic
-      ? { id: -1, t: 0 }
-      : { id: r.id, t: maintenant }
-    void navigate({ search: { sccv: r.id } })
-    if (estDoubleClic && !lectureSeule && !restreint('BTN_Modifier')) {
-      void queryClient
-        .fetchQuery({
-          queryKey: ['sccv-detail', r.id],
-          queryFn: () => getSccvDetailFn({ data: { sccvId: r.id } }),
-        })
-        .then((detail) => {
-          if (detail) setModaleFiche(detail.fiche)
-        })
-    }
+  // Modifier (bouton, ou double-clic sur une ligne via BoutonsTable) : la
+  // fiche complète vient du détail, pas de la ligne de la liste
+  const ouvrirFiche = (id: number) => {
+    void queryClient
+      .fetchQuery({
+        queryKey: ['sccv-detail', id],
+        queryFn: () => getSccvDetailFn({ data: { sccvId: id } }),
+      })
+      .then((detail) => {
+        if (detail) setModaleFiche(detail.fiche)
+      })
   }
+  const supprimer = useMutation({
+    mutationFn: (id: number) => deleteSccvFn({ data: { id } }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['sccv-liste'] })
+      // sinon le rejeu de la SCCV mémorisée (beforeLoad) ramènerait sur la
+      // fiche supprimée
+      oublierSccv()
+      void navigate({ search: {} })
+    },
+  })
 
   const tableSccv = (
     <DataTable
@@ -838,7 +839,7 @@ function PageSccv() {
       unite="SCCV"
       getRowId={(r) => String(r.id)}
       selectedRowId={sccv != null ? String(sccv) : null}
-      onRowClick={gererClicLigne}
+      onRowClick={(r) => void navigate({ search: { sccv: r.id } })}
       defaultHidden={DEFAUT_MASQUEES}
       emptyText={liste.isLoading ? 'Chargement…' : 'Aucune SCCV trouvée.'}
     />
@@ -903,17 +904,25 @@ function PageSccv() {
             </button>
           )}
         </label>
-
-        {!lectureSeule && !restreint('BTN_Nouveau') && (
-          <Button
-            size="sm"
-            className="ml-auto"
-            onClick={() => setModaleFiche('creation')}
-          >
-            Nouvelle SCCV
-          </Button>
-        )}
       </div>
+
+      {!lectureSeule && !restreint('BTN_Modifier') && (
+        <div className="mb-3 shrink-0">
+          <BoutonsTable
+            table="sccv"
+            selection={sccv ?? null}
+            onNouveau={() => setModaleFiche('creation')}
+            onModifier={() => {
+              if (sccv != null) ouvrirFiche(sccv)
+            }}
+            onSupprimer={() => {
+              if (sccv != null) supprimer.mutate(sccv)
+            }}
+            confirmation="Supprimer cette SCCV, avec ses associés et ses comptes bancaires ? (refusé si elle a des opérations ou des bilans)"
+          />
+          <ErreurMutation erreur={supprimer.error} />
+        </div>
+      )}
 
       {sccv == null ? (
         tableSccv

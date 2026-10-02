@@ -2,6 +2,7 @@
 // « un composant unique par type de contrôle » de docs/plan-implementation.md).
 // Extraits du pattern sccv.tsx/bilan.tsx à la 3ᵉ duplication (Déclarations).
 import { useState } from 'react'
+import { Popover } from 'radix-ui'
 import { Button } from '#/components/ui/button'
 import { useConfirmation } from '#/components/ui/confirmation'
 import { Input } from '#/components/ui/input'
@@ -67,20 +68,61 @@ export function ChampTexte({
   value,
   onChange,
   list,
+  suggestions,
 }: {
   libelle: string
   value: string
   onChange: (v: string) => void
   list?: string
+  // valeurs proposées sous le champ (saisie libre) — liste rendue par l'app,
+  // le popup natif datalist s'affiche au mauvais endroit (Chromium, écrans
+  // à mise à l'échelle différente)
+  suggestions?: ReadonlyArray<string>
 }) {
+  const [focus, setFocus] = useState(false)
+  const motif = value.trim().toLowerCase()
+  const propositions = focus
+    ? (suggestions ?? []).filter(
+        (o) => o.toLowerCase().includes(motif) && o !== value,
+      )
+    : []
   return (
     <ChampForm libelle={libelle}>
-      <Input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        list={list}
-        className="h-9 text-[13px]"
-      />
+      <Popover.Root open={propositions.length > 0}>
+        <Popover.Anchor asChild>
+          <Input
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onFocus={() => setFocus(true)}
+            onBlur={() => setFocus(false)}
+            list={list}
+            className="h-9 text-[13px]"
+          />
+        </Popover.Anchor>
+        <Popover.Portal>
+          <Popover.Content
+            align="start"
+            sideOffset={4}
+            onOpenAutoFocus={(e) => e.preventDefault()}
+            className="pointer-events-auto z-50 max-h-40 w-[var(--radix-popover-trigger-width)] overflow-y-auto rounded-md border border-[var(--line)] bg-[var(--card)] py-1 text-[13px] shadow-md"
+          >
+            {propositions.map((o) => (
+              <button
+                key={o}
+                type="button"
+                className="block w-full cursor-pointer px-3 py-1 text-left hover:bg-[var(--gold-tint)]"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  onChange(o)
+                  setFocus(false)
+                }}
+              >
+                {o}
+              </button>
+            ))}
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
     </ChampForm>
   )
 }

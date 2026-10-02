@@ -39,6 +39,8 @@ export type DescChamp =
       zeroSiVide?: boolean
       // bool affiché sans saisie possible ; la valeur repart inchangée
       grise?: boolean
+      // texte : valeurs proposées à la saisie (liste sous le champ), saisie libre
+      suggestions?: Array<string>
     }
   | {
       k: string
@@ -211,12 +213,14 @@ export default function ModaleFiche({
             />
           </div>
         ) : (
-          <ChampTexte
-            key={c.k}
-            libelle={c.l}
-            value={(valeurs[c.k] as string | null) ?? ''}
-            onChange={(v) => set(c.k)(v || null)}
-          />
+          <div key={c.k}>
+            <ChampTexte
+              libelle={c.l}
+              value={(valeurs[c.k] as string | null) ?? ''}
+              onChange={(v) => set(c.k)(v || null)}
+              suggestions={c.suggestions}
+            />
+          </div>
         ),
       )}
     </div>

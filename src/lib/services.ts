@@ -16,6 +16,8 @@ export const MODULES = [
   'compta',
   'honoraires',
   'declarations',
+  // module propre à l'application (sans équivalent WinDev)
+  'facturation',
 ] as const
 export type Module = (typeof MODULES)[number]
 
@@ -32,6 +34,7 @@ export const MODULE_LABELS: Record<Module, string> = {
   bilan: 'Bilan',
   honoraires: 'Honoraires',
   declarations: 'Déclarations',
+  facturation: 'Facturation électronique',
 }
 
 export interface Service {
@@ -63,6 +66,7 @@ export const SERVICES: ReadonlyArray<Service> = [
       'bilan',
       'honoraires',
       'declarations',
+      'facturation',
     ],
   },
   {

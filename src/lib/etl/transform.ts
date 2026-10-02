@@ -438,7 +438,32 @@ export const copies: Array<Copy> = [
     'tStructureJuridique_Stade',
     'IDStructureJuridique_Stade',
   ),
-  nomenclature('gestionnaire_sccv', 'GestionnaireSCCV', 'IDGestionnaireSCCV'),
+  {
+    // colonnes de facturation électronique propres à l'application
+    // (module /facturation), ajoutées à la base miroir
+    ...nomenclature(
+      'gestionnaire_sccv',
+      'GestionnaireSCCV',
+      'IDGestionnaireSCCV',
+    ),
+    horsLegacy: [
+      {
+        col: 'libelle_court',
+        legacy: 'LibelleCourt',
+        type: 'character varying(255)',
+      },
+      {
+        col: 'suffixe_facturation_electronique',
+        legacy: 'SuffixeFacturationElectronique',
+        type: 'character varying(25)',
+      },
+      {
+        col: 'logiciel_facturation_electronique',
+        legacy: 'LogicielFacturationElectronique',
+        type: 'character varying(255)',
+      },
+    ],
+  },
   nomenclature('partenariat', 'Partenariat', 'IDPartenariat'),
   nomenclature('index_taux', 'tIndextaux', 'IDIndextaux'),
   nomenclature(

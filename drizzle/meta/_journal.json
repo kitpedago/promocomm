@@ -281,6 +281,13 @@
       "when": 1790781945586,
       "tag": "0039_recalcul_stades_tranche",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1790948456442,
+      "tag": "0040_gestionnaire_sccv_facturation_electronique",
+      "breakpoints": true
     }
   ]
 }
