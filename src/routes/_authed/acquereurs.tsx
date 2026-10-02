@@ -1,14 +1,21 @@
 // Module Acquéreurs (FEN_Table_Acquereur + FEN_Fiche_Acquereur) — CRUD complet.
 // Référence : migration_windev/captures_ecrans/Acquéreurs.png (liste : arbre de
-// filtre par opération, recherche nom/email/téléphones ≥ 3 car., « lot
-// courant » calculé) et Fiche_Acquéreurs_*.png (fiche : 3 onglets Profil
+// filtre par opération, « lot courant » calculé ; la recherche nom/email/
+// téléphones ≥ 3 car. est couverte par le filtre du DataTable, qui cherche
+// aussi dans les colonnes masquées) et Fiche_Acquéreurs_*.png (fiche : 3 onglets Profil
 // client / Logement / Financement, conseiller commercial en tête). L'onglet
 // Profil client, fouillis en 3 colonnes dans WinDev, est réorganisé en
 // sections : Identité, Coordonnées, Foyer, Adultes, Suivi.
-import { useEffect, useMemo, useState } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { Search } from 'lucide-react'
 
 import {
   BoutonsTable,
@@ -37,6 +44,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '#/components/ui/dialog'
+import { useToast } from '#/components/ui/toast'
 import {
   deleteAcquereurFn,
   getAcquereurFicheFn,
@@ -44,6 +52,7 @@ import {
   getAcquereursFn,
   getExportEnqueteFn,
   saveAcquereurFn,
+  saveEnqueteFn,
 } from '#/lib/acquereurs.ts'
 import {
   calculerAge,
@@ -54,10 +63,13 @@ import { telecharger } from '#/lib/csv.ts'
 import { SELECTION_VIDE, usePref } from '#/lib/preferences.ts'
 import { enFraction, enPourcent } from '#/lib/sccv.helpers.ts'
 import { getService } from '#/lib/services'
-import { sansAccents } from '#/lib/utils.ts'
 import { ecrireXlsx } from '#/lib/xlsx.ts'
 
-import type { FicheAcquereur, LigneAcquereur } from '#/lib/acquereurs.ts'
+import type {
+  ChampEnquete,
+  FicheAcquereur,
+  LigneAcquereur,
+} from '#/lib/acquereurs.ts'
 import type { Selection } from '#/lib/preferences.ts'
 import type { ColumnDef } from '@tanstack/react-table'
 
@@ -72,6 +84,69 @@ export const Route = createFileRoute('/_authed/acquereurs')({
 
 type FicheBrute = NonNullable<Awaited<ReturnType<typeof getAcquereurFicheFn>>>
 type Nomenclatures = Awaited<ReturnType<typeof getAcquereurNomenclaturesFn>>
+
+// Saisie directe des enquêtes A/B/C (colonnes jaunes de la table WinDev) :
+// texte libre, la cellule s'enregistre quand on la quitte, Entrée/Échap la
+// quittent. Absent : lecture seule.
+const SaisieEnquete = createContext<
+  ((id: number, champ: ChampEnquete, valeur: string | null) => void) | null
+>(null)
+
+function CelluleEnquete({
+  ligne,
+  champ,
+  libelle,
+}: {
+  ligne: LigneAcquereur
+  champ: ChampEnquete
+  libelle: string
+}) {
+  const saisir = useContext(SaisieEnquete)
+  // null : hors saisie, la cellule affiche la valeur de la ligne
+  const [texte, setTexte] = useState<string | null>(null)
+  const annule = useRef(false)
+  const valeur = ligne[champ] ?? ''
+  if (!saisir) return <>{valeur}</>
+  return (
+    <input
+      aria-label={`${libelle} — ${ligne.nomComplet ?? ''}`}
+      value={texte ?? valeur}
+      onFocus={(e) => {
+        setTexte(valeur)
+        const c = e.currentTarget
+        requestAnimationFrame(() => c.select())
+      }}
+      onChange={(e) => setTexte(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') annule.current = true
+        if (e.key === 'Enter' || e.key === 'Escape') e.currentTarget.blur()
+      }}
+      onBlur={() => {
+        const saisie = annule.current ? null : texte
+        annule.current = false
+        setTexte(null)
+        if (saisie == null) return
+        const lue = saisie.trim() || null
+        if (lue !== (ligne[champ] ?? null)) saisir(ligne.id, champ, lue)
+      }}
+      className="w-full rounded-sm bg-transparent outline-none focus:bg-white focus:ring-1 focus:ring-[var(--gold)] focus:ring-inset"
+    />
+  )
+}
+
+const colEnquete = (
+  id: ChampEnquete,
+  header: string,
+): ColumnDef<LigneAcquereur, any> => ({
+  accessorKey: id,
+  header,
+  size: 130,
+  // en-tête vert pâle des colonnes jaunes (saisie en ligne) de WinDev
+  meta: { classeEntete: 'bg-[var(--ok-tint)] text-[var(--ink)]' },
+  cell: (c) => (
+    <CelluleEnquete ligne={c.row.original} champ={id} libelle={header} />
+  ),
+})
 
 const COLONNES: Array<ColumnDef<LigneAcquereur, any>> = [
   {
@@ -103,9 +178,13 @@ const COLONNES: Array<ColumnDef<LigneAcquereur, any>> = [
     cell: (c) => c.getValue() || '—',
   },
   { accessorKey: 'email', header: 'Email', size: 220 },
+  { accessorKey: 'email2', header: 'Email 2', size: 220 },
   { accessorKey: 'telephone', header: 'Téléphone 1', size: 120 },
   { accessorKey: 'portable', header: 'Téléphone 2', size: 120 },
   { accessorKey: 'communeActuelle', header: 'Commune actuelle', size: 160 },
+  colEnquete('enqueteA', 'Enquête A'),
+  colEnquete('enqueteB', 'Enquête B'),
+  colEnquete('enqueteC', 'Enquête C'),
 ]
 
 // ---------------------------------------------------------------------------
@@ -629,7 +708,6 @@ function PageAcquereurs() {
   // filtre local seulement — la dernière opération reste mémorisée pour les
   // autres pages
   const [opId, setOpId] = useState<number | null>(null)
-  const [recherche, setRecherche] = useState('')
   const [acquereurId, setAcquereurId] = useState<number | null>(null)
   const [modale, setModale] = useState<'creation' | FicheBrute | null>(null)
 
@@ -660,6 +738,39 @@ function PageAcquereurs() {
     },
   })
 
+  // saisie directe des enquêtes : la ligne est mise à jour tout de suite dans
+  // la liste (pas de rechargement des ~3 000 lignes), rétablie si refus
+  const { notifier, toast } = useToast()
+  const saisirEnquete = useMutation({
+    mutationFn: (d: {
+      id: number
+      champ: ChampEnquete
+      valeur: string | null
+    }) => saveEnqueteFn({ data: d }),
+    onMutate: async (d) => {
+      await queryClient.cancelQueries({ queryKey: ['acquereurs'] })
+      const avant = queryClient.getQueryData<Array<LigneAcquereur>>([
+        'acquereurs',
+      ])
+      queryClient.setQueryData<Array<LigneAcquereur>>(['acquereurs'], (l) =>
+        l?.map((a) => (a.id === d.id ? { ...a, [d.champ]: d.valeur } : a)),
+      )
+      return { avant }
+    },
+    onError: (e, _d, ctx) => {
+      queryClient.setQueryData(['acquereurs'], ctx?.avant)
+      notifier({
+        texte: e.message || 'Enquête : erreur à l’enregistrement.',
+        erreur: true,
+      })
+    },
+    onSuccess: (_r, d) => {
+      void queryClient.invalidateQueries({
+        queryKey: ['acquereur-fiche', d.id],
+      })
+    },
+  })
+
   const ouvrirFiche = (id: number) => {
     void queryClient
       .fetchQuery({
@@ -672,20 +783,11 @@ function PageAcquereurs() {
   }
 
   const filtres = useMemo(() => {
-    let liste = acquereurs.data ?? []
-    if (opId != null) {
-      liste = liste.filter((a) => a.operationIds?.includes(opId))
-    }
-    const q = sansAccents(recherche.trim())
-    if (q.length >= 3) {
-      liste = liste.filter((a) =>
-        sansAccents(
-          `${a.nomComplet ?? ''} ${a.email ?? ''} ${a.email2 ?? ''} ${a.telephone ?? ''} ${a.portable ?? ''}`,
-        ).includes(q),
-      )
-    }
-    return liste
-  }, [acquereurs.data, opId, recherche])
+    const liste = acquereurs.data ?? []
+    return opId == null
+      ? liste
+      : liste.filter((a) => a.operationIds?.includes(opId))
+  }, [acquereurs.data, opId])
 
   return (
     <div className="flex min-h-[calc(100vh-61px)] items-stretch">
@@ -705,21 +807,9 @@ function PageAcquereurs() {
           Acquéreurs
         </h1>
 
+        {/* ligne 1 : boutons ; ligne 2 : compteur + filtre du DataTable (cherche
+            aussi dans les colonnes masquées : email, téléphones, enquêtes) */}
         <div className="mb-4 flex flex-wrap items-center gap-4">
-          <label className="flex w-fit max-w-full items-center gap-2">
-            <span className="text-[13px] font-medium text-[var(--ink-soft)]">
-              Filtrer sur le nom, email, Téléphone 1 et 2
-            </span>
-            <span className="flex h-8 items-center gap-1.5 rounded-lg border border-[var(--input-border)] bg-[var(--card)] px-2.5">
-              <Search className="h-3.5 w-3.5 text-[var(--muted)]" aria-hidden />
-              <input
-                value={recherche}
-                onChange={(e) => setRecherche(e.target.value)}
-                placeholder="Au moins 3 carac."
-                className="w-44 bg-transparent text-[13px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)]"
-              />
-            </span>
-          </label>
           {opId != null && (
             <Button size="sm" variant="outline" onClick={() => setOpId(null)}>
               Toutes les opérations
@@ -751,20 +841,39 @@ function PageAcquereurs() {
           </Button>
         </div>
         <ErreurMutation erreur={supprimer.error ?? exporterEnquete.error} />
+        {toast}
 
-        <DataTable
-          id="acquereurs"
-          columns={COLONNES}
-          data={filtres}
-          unite="acquéreurs"
-          getRowId={(a) => String(a.id)}
-          selectedRowId={acquereurId != null ? String(acquereurId) : null}
-          onRowClick={(r) => setAcquereurId(r.id)}
-          defaultHidden={['email', 'telephone', 'portable', 'communeActuelle']}
-          emptyText={
-            acquereurs.isLoading ? 'Chargement…' : 'Aucun acquéreur trouvé.'
+        <SaisieEnquete
+          value={
+            lectureSeule
+              ? null
+              : (id, champ, valeur) =>
+                  saisirEnquete.mutate({ id, champ, valeur })
           }
-        />
+        >
+          <DataTable
+            id="acquereurs"
+            columns={COLONNES}
+            data={filtres}
+            unite="acquéreurs"
+            getRowId={(a) => String(a.id)}
+            selectedRowId={acquereurId != null ? String(acquereurId) : null}
+            onRowClick={(r) => setAcquereurId(r.id)}
+            defaultHidden={[
+              'email',
+              'email2',
+              'telephone',
+              'portable',
+              'communeActuelle',
+              'enqueteA',
+              'enqueteB',
+              'enqueteC',
+            ]}
+            emptyText={
+              acquereurs.isLoading ? 'Chargement…' : 'Aucun acquéreur trouvé.'
+            }
+          />
+        </SaisieEnquete>
       </div>
 
       <ModaleAcquereur

@@ -95,6 +95,9 @@ export const getAcquereursFn = createServerFn({ method: 'GET' }).handler(
         telephone: acquereur.telephone,
         portable: acquereur.portable,
         communeActuelle: acquereur.communeActuelle,
+        enqueteA: acquereur.enqueteA,
+        enqueteB: acquereur.enqueteB,
+        enqueteC: acquereur.enqueteC,
         operationIds: opsAcquereur.operationIds,
       })
       .from(acquereur)
@@ -416,6 +419,31 @@ export const deleteAcquereurFn = createServerFn({ method: 'POST' })
         'Cet acquéreur est dans au moins 1 commercialisation, suppression impossible.',
       )
     await db.delete(acquereur).where(eq(acquereur.id, data.id))
+  })
+
+// Saisie directe des enquêtes A/B/C dans la table (colonnes jaunes WinDev) :
+// texte libre, une cellule à la fois, sans repasser par la fiche complète
+export const CHAMPS_ENQUETE = ['enqueteA', 'enqueteB', 'enqueteC'] as const
+export type ChampEnquete = (typeof CHAMPS_ENQUETE)[number]
+
+export const saveEnqueteFn = createServerFn({ method: 'POST' })
+  .validator(
+    (d: { id: number; champ: ChampEnquete; valeur: string | null }) => {
+      if (!CHAMPS_ENQUETE.includes(d.champ)) throw new Error('Champ inconnu')
+      return d
+    },
+  )
+  .handler(async ({ data }) => {
+    await requireEcriture()
+    const touchees = await db
+      .update(acquereur)
+      .set({
+        [data.champ]: data.valeur?.trim() || null,
+        dateModification: new Date(),
+      })
+      .where(eq(acquereur.id, data.id))
+      .returning({ id: acquereur.id })
+    if (touchees.length === 0) throw new Error('Fiche introuvable')
   })
 
 // Export « Vous écoute » (BTN_VousEcoute — REQ_AcquereurPourEnquete, fichier
