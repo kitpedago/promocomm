@@ -16,7 +16,8 @@ export const MODULES = [
   'compta',
   'honoraires',
   'declarations',
-  // module propre à l'application (sans équivalent WinDev)
+  // propre à l'application (sans équivalent WinDev) : pas de page, c'est le
+  // droit de voir l'onglet Facturation électronique d'Opérations
   'facturation',
 ] as const
 export type Module = (typeof MODULES)[number]

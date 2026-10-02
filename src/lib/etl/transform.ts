@@ -494,6 +494,9 @@ export const copies: Array<Copy> = [
     select: `SELECT s."IDPersonne", s."Patronyme", s."Prenom", s."EstPresent",
         ${fk('IDFonction')}, ${fk('IDEquipePersonne')}, s."EMail"
       FROM legacy."tPersonne" s`,
+    horsLegacy: [
+      { col: 'est_exterieur', legacy: 'EstExterieur', type: 'boolean' },
+    ],
   },
   {
     target: 'banque',

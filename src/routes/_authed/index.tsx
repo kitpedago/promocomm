@@ -1,10 +1,7 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
-import { Receipt } from 'lucide-react'
+import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 
-import { buttonVariants } from '#/components/ui/button'
 import { getDashboardFn } from '#/lib/dashboard.ts'
-import { getService } from '#/lib/services'
 
 // Tableau de bord — widgets de FEN_Menu (capture TableauDeBord.png) ;
 // les tuiles des modules sont portées par le menu latéral (Sidebar)
@@ -195,10 +192,6 @@ function useColonnes() {
 
 function Home() {
   const data = Route.useLoaderData()
-  const { session } = Route.useRouteContext()
-  const avecFacturation = getService(session.user.service)?.modules.includes(
-    'facturation',
-  )
   const { droite, placer } = useColonnes()
   // id en cours de glisser : ref plutôt que dataTransfer (Firefox n'expose pas
   // les données pendant dragover), pas d'état pour ne pas re-rendre.
@@ -236,15 +229,6 @@ function Home() {
             PromoComm
           </h1>
         </div>
-        {avecFacturation && (
-          <Link
-            to="/facturation"
-            className={buttonVariants({ variant: 'outline', size: 'sm' })}
-          >
-            <Receipt className="h-4 w-4" aria-hidden />
-            Facturation électronique
-          </Link>
-        )}
       </div>
       <div className="grid items-start gap-6 xl:grid-cols-2">
         {colonne(false)}

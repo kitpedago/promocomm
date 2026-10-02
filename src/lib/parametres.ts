@@ -192,6 +192,7 @@ const REGISTRE = {
       'fonctionId',
       'equipePersonneId',
       'email',
+      'estExterieur',
     ],
   },
   prestataires: { table: prestataire, champs: ['libelle', 'afficherMission'] },

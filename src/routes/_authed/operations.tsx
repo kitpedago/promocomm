@@ -2,8 +2,9 @@
 // investisseur, masquages ; bouton Modifier pour notaires/architectes), combo
 // tranche, puis les onglets de la tranche (Stade d'avancement — CRUD, filtre
 // domaine, synchro des dates entre tranches, factures du jalon —, Terrain,
-// Informations diverses — avec les subventions de la tranche en consultation)
-// et l'onglet Contentieux (par opération, CRUD). Références :
+// Informations diverses — avec les subventions de la tranche en consultation),
+// l'onglet Contentieux (par opération, CRUD) et l'onglet Facturation
+// électronique (Comptabilité, Administrateur ; composant dédié). Références :
 // migration_windev/captures_ecrans/Opérations.png,
 // Opération_OngletTerrain.png, Opération_OngletInfoDiverses.png.
 import { createContext, useContext, useRef, useState } from 'react'
@@ -31,6 +32,7 @@ import {
 } from '#/components/ChampsModale'
 import { champsTranche } from '#/components/champsTranche.ts'
 import DataTable from '#/components/DataTable'
+import FacturationElectronique from '#/components/FacturationElectronique'
 import ModaleFiche from '#/components/ModaleFiche'
 import Onglets from '#/components/Onglets'
 import PanneauOperations from '#/components/PanneauOperations'
@@ -111,6 +113,8 @@ export const Route = createFileRoute('/_authed/operations')({
       voitDatePreviCompta: ['compta', 'admin'].includes(
         context.session.user.service ?? '',
       ),
+      // onglet Facturation électronique : droit « facturation » du service
+      voitFacturation: service.modules.includes('facturation'),
     }
   },
   component: PageOperations,
@@ -541,12 +545,16 @@ const ONGLETS = [
   'Terrain',
   'Informations diverses',
   'Contentieux',
+  'Facturation électronique',
 ] as const
 type Onglet = (typeof ONGLETS)[number]
 // Contentieux masqué : son code reste en place
-const ONGLETS_VISIBLES: ReadonlyArray<Onglet> = ONGLETS.filter(
-  (o) => o !== 'Contentieux',
-)
+const ongletsVisibles = (voitFacturation: boolean): ReadonlyArray<Onglet> =>
+  ONGLETS.filter(
+    (o) =>
+      o !== 'Contentieux' &&
+      (o !== 'Facturation électronique' || voitFacturation),
+  )
 
 type LigneTranche = Fiche['tranches'][number]
 type LigneStade = Awaited<ReturnType<typeof getStadesFn>>[number]
@@ -826,12 +834,14 @@ function OngletsTranche({
   synchro: boolean
   lectureSeule: boolean
 }) {
+  const { voitFacturation } = Route.useRouteContext()
+  const ONGLETS_VISIBLES = ongletsVisibles(voitFacturation)
   const [ongletStocke, setOnglet] = usePref<Onglet>(
     'onglet:operations',
     ONGLETS[0],
   )
   // un onglet renommé depuis l'enregistrement ne doit pas laisser la page vide
-  // … ni un onglet masqué
+  // … ni un onglet masqué ou interdit au service
   const onglet = ONGLETS_VISIBLES.includes(ongletStocke)
     ? ongletStocke
     : ONGLETS[0]
@@ -940,6 +950,10 @@ function OngletsTranche({
               </div>
             </Bloc>
           </div>
+        )}
+
+        {onglet === 'Facturation électronique' && (
+          <FacturationElectronique operationId={operationId} />
         )}
 
         {onglet === 'Contentieux' && (

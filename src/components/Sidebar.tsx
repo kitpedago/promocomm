@@ -51,10 +51,11 @@ const ROUTES_IMPLEMENTEES = {
   bilan: '/bilan',
   honoraires: '/honoraires',
   declarations: '/declarations',
-  facturation: '/facturation',
   sav: '/sav',
   parametres: '/parametres',
 } as const satisfies Partial<Record<Module, string>>
+const estImplemente = (m: Module): m is keyof typeof ROUTES_IMPLEMENTEES =>
+  m in ROUTES_IMPLEMENTEES
 
 function ModuleLink({ module }: { module: Module }) {
   const Icon = MODULE_ICONS[module]
@@ -64,7 +65,7 @@ function ModuleLink({ module }: { module: Module }) {
       {MODULE_LABELS[module]}
     </>
   )
-  if (module in ROUTES_IMPLEMENTEES) {
+  if (estImplemente(module)) {
     return (
       <Link to={ROUTES_IMPLEMENTEES[module]} className={itemClass}>
         {contenu}
@@ -109,11 +110,13 @@ export default function Sidebar({ service }: { service?: string | null }) {
 
       <p className="island-kicker px-3 pt-6 pb-2">Modules</p>
       <nav className="flex flex-col gap-0.5">
-        {MODULES.filter((m) => m !== 'parametres' && modules.includes(m)).map(
-          (m) => (
-            <ModuleLink key={m} module={m} />
-          ),
-        )}
+        {/* facturation : droit sans page (onglet d'Opérations) */}
+        {MODULES.filter(
+          (m) =>
+            m !== 'parametres' && m !== 'facturation' && modules.includes(m),
+        ).map((m) => (
+          <ModuleLink key={m} module={m} />
+        ))}
       </nav>
 
       {/* Suivi des tickets + changelog : visibles de tous les services */}

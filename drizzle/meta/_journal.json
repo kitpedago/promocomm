@@ -288,6 +288,13 @@
       "when": 1790948456442,
       "tag": "0040_gestionnaire_sccv_facturation_electronique",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1790952026932,
+      "tag": "0041_personne_est_exterieur",
+      "breakpoints": true
     }
   ]
 }

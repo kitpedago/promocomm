@@ -19,7 +19,6 @@ import { Route as AuthedParametresRouteImport } from './routes/_authed/parametre
 import { Route as AuthedOperationsRouteImport } from './routes/_authed/operations'
 import { Route as AuthedNouveautesRouteImport } from './routes/_authed/nouveautes'
 import { Route as AuthedHonorairesRouteImport } from './routes/_authed/honoraires'
-import { Route as AuthedFacturationRouteImport } from './routes/_authed/facturation'
 import { Route as AuthedDeclarationsRouteImport } from './routes/_authed/declarations'
 import { Route as AuthedComptaRouteImport } from './routes/_authed/compta'
 import { Route as AuthedCommercialisationRouteImport } from './routes/_authed/commercialisation'
@@ -79,11 +78,6 @@ const AuthedHonorairesRoute = AuthedHonorairesRouteImport.update({
   path: '/honoraires',
   getParentRoute: () => AuthedRoute,
 } as any)
-const AuthedFacturationRoute = AuthedFacturationRouteImport.update({
-  id: '/facturation',
-  path: '/facturation',
-  getParentRoute: () => AuthedRoute,
-} as any)
 const AuthedDeclarationsRoute = AuthedDeclarationsRouteImport.update({
   id: '/declarations',
   path: '/declarations',
@@ -139,7 +133,6 @@ export interface FileRoutesByFullPath {
   '/commercialisation': typeof AuthedCommercialisationRoute
   '/compta': typeof AuthedComptaRoute
   '/declarations': typeof AuthedDeclarationsRoute
-  '/facturation': typeof AuthedFacturationRoute
   '/honoraires': typeof AuthedHonorairesRoute
   '/nouveautes': typeof AuthedNouveautesRoute
   '/operations': typeof AuthedOperationsRoute
@@ -159,7 +152,6 @@ export interface FileRoutesByTo {
   '/commercialisation': typeof AuthedCommercialisationRoute
   '/compta': typeof AuthedComptaRoute
   '/declarations': typeof AuthedDeclarationsRoute
-  '/facturation': typeof AuthedFacturationRoute
   '/honoraires': typeof AuthedHonorairesRoute
   '/nouveautes': typeof AuthedNouveautesRoute
   '/operations': typeof AuthedOperationsRoute
@@ -182,7 +174,6 @@ export interface FileRoutesById {
   '/_authed/commercialisation': typeof AuthedCommercialisationRoute
   '/_authed/compta': typeof AuthedComptaRoute
   '/_authed/declarations': typeof AuthedDeclarationsRoute
-  '/_authed/facturation': typeof AuthedFacturationRoute
   '/_authed/honoraires': typeof AuthedHonorairesRoute
   '/_authed/nouveautes': typeof AuthedNouveautesRoute
   '/_authed/operations': typeof AuthedOperationsRoute
@@ -206,7 +197,6 @@ export interface FileRouteTypes {
     | '/commercialisation'
     | '/compta'
     | '/declarations'
-    | '/facturation'
     | '/honoraires'
     | '/nouveautes'
     | '/operations'
@@ -226,7 +216,6 @@ export interface FileRouteTypes {
     | '/commercialisation'
     | '/compta'
     | '/declarations'
-    | '/facturation'
     | '/honoraires'
     | '/nouveautes'
     | '/operations'
@@ -248,7 +237,6 @@ export interface FileRouteTypes {
     | '/_authed/commercialisation'
     | '/_authed/compta'
     | '/_authed/declarations'
-    | '/_authed/facturation'
     | '/_authed/honoraires'
     | '/_authed/nouveautes'
     | '/_authed/operations'
@@ -340,13 +328,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedHonorairesRouteImport
       parentRoute: typeof AuthedRoute
     }
-    '/_authed/facturation': {
-      id: '/_authed/facturation'
-      path: '/facturation'
-      fullPath: '/facturation'
-      preLoaderRoute: typeof AuthedFacturationRouteImport
-      parentRoute: typeof AuthedRoute
-    }
     '/_authed/declarations': {
       id: '/_authed/declarations'
       path: '/declarations'
@@ -420,7 +401,6 @@ interface AuthedRouteChildren {
   AuthedCommercialisationRoute: typeof AuthedCommercialisationRoute
   AuthedComptaRoute: typeof AuthedComptaRoute
   AuthedDeclarationsRoute: typeof AuthedDeclarationsRoute
-  AuthedFacturationRoute: typeof AuthedFacturationRoute
   AuthedHonorairesRoute: typeof AuthedHonorairesRoute
   AuthedNouveautesRoute: typeof AuthedNouveautesRoute
   AuthedOperationsRoute: typeof AuthedOperationsRoute
@@ -440,7 +420,6 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedCommercialisationRoute: AuthedCommercialisationRoute,
   AuthedComptaRoute: AuthedComptaRoute,
   AuthedDeclarationsRoute: AuthedDeclarationsRoute,
-  AuthedFacturationRoute: AuthedFacturationRoute,
   AuthedHonorairesRoute: AuthedHonorairesRoute,
   AuthedNouveautesRoute: AuthedNouveautesRoute,
   AuthedOperationsRoute: AuthedOperationsRoute,

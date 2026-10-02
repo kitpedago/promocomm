@@ -254,6 +254,9 @@ export const personne = pgTable('personne', {
   fonctionId: integer('fonction_id').references(() => fonction.id),
   equipePersonneId: integer('equipe_personne_id'),
   email: text(),
+  // comptable « extérieur » (module /facturation) : propre à l'application,
+  // remplace les fiches 19 et 22 codées en dur dans le legacy
+  estExterieur: boolean('est_exterieur').notNull().default(false),
 })
 
 // Banques (contacts Compte courant / Prêt — utilisés par la phase 6)

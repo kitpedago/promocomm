@@ -5,9 +5,6 @@
 export const ASSOCIE_KPI_ID = 1
 export const SEUIL_KPI = 0.05
 
-// Comptable « EXTERIEUR » : deux fiches personne dans le legacy (19 et 22)
-export const COMPTABLES_EXTERIEUR = [19, 22] as const
-
 /** « SCCV LES BLEUETS » → « LES BLEUETS » */
 export const sansPrefixeSccv = (rs: string) =>
   rs.replace(/^\s*SCCV\s+/i, '').trim()

@@ -315,6 +315,7 @@ const LISTES: Array<ConfigListe> = [
       { k: 'fonctionId', l: 'Fonction', t: 'select', options: [] },
       { k: 'equipePersonneId', l: 'Équipe', t: 'select', options: [] },
       { k: 'email', l: 'Email', t: 'texte' },
+      { k: 'estExterieur', l: 'Compta extérieure', t: 'bool' },
     ],
     selects: {
       fonctionId: 'fonctions',

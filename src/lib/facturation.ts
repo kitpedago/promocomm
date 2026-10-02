@@ -1,20 +1,19 @@
-// Server function du module Facturation électronique (sans équivalent
-// WinDev) : SCCV dont la compta est tenue à l'extérieur, immatriculées, où
-// l'associé KPI détient plus de 5 %, une ligne par opération (une SCCV sans
-// opération garde sa ligne). Les filtres d'écran (commune, compta, recherche)
-// se font côté client sur ces quelques dizaines de lignes.
+// Server function de l'onglet Facturation électronique d'Opérations (sans
+// équivalent WinDev) : fiche de la SCCV de l'opération si son comptable est
+// « extérieur » (personne.est_exterieur, Paramètres › Personnes), qu'elle est
+// immatriculée et que l'associé KPI y détient plus de 5 % ; null sinon.
 import { createServerFn } from '@tanstack/react-start'
-import { and, asc, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm'
+import { and, eq, isNotNull, sql } from 'drizzle-orm'
 
 import {
   gestionnaireSccv,
   operation,
+  personne,
   structureJuridique,
 } from '#/db/domaine.ts'
 import { db } from '#/db/index.ts'
 import {
   ASSOCIE_KPI_ID,
-  COMPTABLES_EXTERIEUR,
   SEUIL_KPI,
   adresseFacturation,
   libelleCompta,
@@ -24,17 +23,15 @@ import {
 import { requireSession } from '#/lib/session.server.ts'
 
 export const getFacturationFn = createServerFn({ method: 'GET' })
-  .validator((d: { liquidee?: boolean }) => d)
+  .validator((d: { operationId: number }) => d)
   .handler(async ({ data }) => {
     await requireSession()
     // pourcentage est un real : 0,05 y vaut 0,0500000007, qui passerait un
     // « > 0,05 » ; le cast en numeric rend la valeur saisie
     const partKpi = sql<number>`COALESCE((SELECT sum(p.pourcentage::numeric) FROM participation p
       WHERE p.structure_juridique_id = ${structureJuridique.id} AND p.associe_id = ${ASSOCIE_KPI_ID}), 0)`
-    const lignes = await db
+    const [l] = await db
       .select({
-        sccvId: structureJuridique.id,
-        operationId: operation.id,
         commune: operation.commune,
         operation: operation.libelle,
         rs: structureJuridique.rs,
@@ -43,62 +40,54 @@ export const getFacturationFn = createServerFn({ method: 'GET' })
         dateLiquidation: structureJuridique.dateLiquidation,
         capital: structureJuridique.capital,
         partKpi,
-        gestionnaireId: structureJuridique.gestionnaireSccvId,
         gestionnaire: gestionnaireSccv.libelle,
         gestionnaireCourt: gestionnaireSccv.libelleCourt,
         suffixe: gestionnaireSccv.suffixeFacturationElectronique,
         logiciel: gestionnaireSccv.logicielFacturationElectronique,
       })
-      .from(structureJuridique)
+      .from(operation)
+      .innerJoin(
+        structureJuridique,
+        eq(operation.structureJuridiqueId, structureJuridique.id),
+      )
+      .innerJoin(
+        personne,
+        eq(structureJuridique.personneComptableId, personne.id),
+      )
       .leftJoin(
         gestionnaireSccv,
         eq(structureJuridique.gestionnaireSccvId, gestionnaireSccv.id),
       )
-      .leftJoin(
-        operation,
-        eq(operation.structureJuridiqueId, structureJuridique.id),
-      )
       .where(
         and(
-          inArray(structureJuridique.personneComptableId, [
-            ...COMPTABLES_EXTERIEUR,
-          ]),
+          eq(operation.id, data.operationId),
+          eq(personne.estExterieur, true),
           isNotNull(structureJuridique.dateImmat),
-          data.liquidee
-            ? isNotNull(structureJuridique.dateLiquidation)
-            : isNull(structureJuridique.dateLiquidation),
           sql`${partKpi} > ${SEUIL_KPI}`,
         ),
       )
-      .orderBy(
-        asc(operation.commune),
-        asc(operation.libelle),
-        asc(structureJuridique.rs),
-      )
-    return lignes.map((l) => ({
-      id: `${l.sccvId}-${l.operationId ?? 0}`,
-      sccvId: l.sccvId,
-      gestionnaireId: l.gestionnaireId,
+      .limit(1)
+    if (!l) return null
+    return {
+      rs: l.rs,
+      sccv: sansPrefixeSccv(l.rs),
       commune: l.commune ?? '',
       operation: l.operation ?? '',
-      sccv: sansPrefixeSccv(l.rs),
       compta: libelleCompta(l.gestionnaire, l.gestionnaireCourt),
+      gestionnaire: l.gestionnaire ?? '',
       logiciel: l.logiciel ?? '',
       adresse: adresseFacturation(l.siret, l.suffixe),
-      // détail du volet de droite (lecture seule)
-      rs: l.rs,
       siret: l.siret ?? '',
       siren: siren(l.siret),
       suffixe: l.suffixe ?? '',
-      gestionnaire: l.gestionnaire ?? '',
       dateImmat: l.dateImmat,
       dateLiquidation: l.dateLiquidation,
       capital: l.capital,
       // numeric Postgres : rendu en texte par le driver
       partKpi: Number(l.partKpi),
-    }))
+    }
   })
 
-export type LigneFacturation = Awaited<
-  ReturnType<typeof getFacturationFn>
->[number]
+export type FicheFacturation = NonNullable<
+  Awaited<ReturnType<typeof getFacturationFn>>
+>
