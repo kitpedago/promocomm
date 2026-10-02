@@ -5,6 +5,7 @@ import {
   index,
   integer,
   jsonb,
+  numeric,
   pgTable,
   primaryKey,
   serial,
@@ -80,6 +81,36 @@ export const ticket = pgTable('ticket', {
   livreParIa: boolean('livre_par_ia').notNull().default(false),
   // Feature livrée retirée du changelog Nouveautés sans changer son statut
   masqueNouveautes: boolean('masque_nouveautes').notNull().default(false),
+  // Imputation (Administrateur) : contrat/avenant facturé + heures passées.
+  // Pas de CASCADE : un contrat référencé ne se supprime pas (réimputer d'abord).
+  contratId: integer('contrat_id').references(() => contrat.id),
+  // heures imputables au contrat (Σ = « H calculées » du contrat)
+  nbHeures: numeric('nb_heures', { precision: 6, scale: 2, mode: 'number' }),
+  // heures passées mais non facturables au contrat
+  heuresNonImputables: numeric('heures_non_imputables', {
+    precision: 6,
+    scale: 2,
+    mode: 'number',
+  }),
+})
+
+// Contrats & avenants (Paramètres > Système, Administrateur) : heures facturées
+// au client ; les heures « calculées » = Σ ticket.nb_heures imputées (jamais
+// stockées). Repris du SaaS isfectuteurs (tickets-contrats-imputation.sql).
+export const contrat = pgTable('contrat', {
+  id: serial().primaryKey(),
+  type: text().notNull().default('contrat'), // contrat | avenant
+  numRef: text('num_ref').notNull(),
+  dateSignature: date('date_signature'),
+  description: text().notNull().default(''),
+  nbHeuresFacturees: numeric('nb_heures_facturees', {
+    precision: 7,
+    scale: 2,
+    mode: 'number',
+  })
+    .notNull()
+    .default(0),
+  creeLe: timestamp('cree_le').defaultNow().notNull(),
 })
 
 export const ticketCommentaire = pgTable(

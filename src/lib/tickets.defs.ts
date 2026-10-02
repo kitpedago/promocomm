@@ -121,6 +121,10 @@ export type TicketDetail = TicketListItem & {
   doublonTitre: string | null
   /** « Demande une réponse » posée par le dev (levée quand le déposeur répond). */
   attenteReponse: boolean
+  /** Imputation (Administrateur seulement, null sinon) : contrat/avenant + heures. */
+  contratId: number | null
+  nbHeures: number | null
+  heuresNonImputables: number | null
   commentaires: Array<TicketCommentaire>
   captures: Array<TicketCaptureMeta>
 }

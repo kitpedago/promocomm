@@ -17,6 +17,7 @@ import { Button } from '#/components/ui/button'
 import { AlerteMailParam } from '#/components/AlerteMailParam'
 import { BoutonsTable, ErreurMutation } from '#/components/ChampsModale'
 import { champsTranche } from '#/components/champsTranche.ts'
+import { ContratsParam } from '#/components/ContratsParam'
 import DataTable from '#/components/DataTable'
 import ImportLots from '#/components/ImportLots'
 import { MiroirParam } from '#/components/MiroirParam'
@@ -583,6 +584,7 @@ const OTL = 'operations-tranches-lots'
 const DROITS = 'droits'
 const ALERTE_MAIL = 'alerte-mail'
 const BASE_MIROIR = 'base-miroir'
+const CONTRATS = 'contrats-avenants'
 
 const RUBRIQUES: Array<{ titre: string; listes: Array<ConfigListe> }> = [
   { titre: 'Listes', listes: LISTES },
@@ -615,7 +617,10 @@ function PageParametres() {
   const config =
     slugActif === OTL ||
     slugActif === DROITS ||
-    ((slugActif === ALERTE_MAIL || slugActif === BASE_MIROIR) && estAdmin)
+    ((slugActif === ALERTE_MAIL ||
+      slugActif === BASE_MIROIR ||
+      slugActif === CONTRATS) &&
+      estAdmin)
       ? null
       : (TOUTES.find((l) => l.slug === slugActif) ?? LISTES[0])
 
@@ -647,7 +652,9 @@ function PageParametres() {
         ? 'Alerte mail'
         : slugActif === BASE_MIROIR
           ? 'Base miroir (noms SQL Server)'
-          : 'Opérations, Tranches et Lots')
+          : slugActif === CONTRATS
+            ? 'Contrats & avenants'
+            : 'Opérations, Tranches et Lots')
 
   return (
     <div className="flex h-[calc(100vh-61px)] items-stretch">
@@ -678,6 +685,9 @@ function PageParametres() {
                 r.titre === 'Système' &&
                   estAdmin &&
                   boutonNav(BASE_MIROIR, 'Base miroir'),
+                r.titre === 'Système' &&
+                  estAdmin &&
+                  boutonNav(CONTRATS, 'Contrats & avenants'),
               ].filter(Boolean)
               if (entrees.length === 0) return []
               return [
@@ -710,6 +720,8 @@ function PageParametres() {
           <AlerteMailParam />
         ) : slugActif === BASE_MIROIR ? (
           <MiroirParam />
+        ) : slugActif === CONTRATS ? (
+          <ContratsParam />
         ) : (
           <VueOtl />
         )}

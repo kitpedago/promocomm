@@ -8,10 +8,21 @@
 // titre/description, réattribution du déposeur), archivage, masquage
 // Nouveautés, édition/suppression d'échanges, suppression définitive.
 import { createServerFn } from '@tanstack/react-start'
-import { and, desc, eq, ilike, isNotNull, isNull, notInArray, or, sql } from 'drizzle-orm'
+import {
+  and,
+  desc,
+  eq,
+  ilike,
+  isNotNull,
+  isNull,
+  notInArray,
+  or,
+  sql,
+} from 'drizzle-orm'
 
 import { db } from '#/db/index.ts'
 import {
+  contrat,
   ticket,
   ticketCapture,
   ticketCommentaire,
@@ -53,8 +64,7 @@ async function identite(): Promise<{
 }> {
   const session = await requireSession()
   const email = session.user.email.toLowerCase()
-  const nom =
-    getService(session.user.service)?.label ?? email.split('@')[0]
+  const nom = getService(session.user.service)?.label ?? email.split('@')[0]
   return { email, nom, estAdmin: session.user.service === 'admin' }
 }
 
@@ -98,7 +108,12 @@ const champsListe = (email: string) => ({
 
 export const listTicketsFn = createServerFn({ method: 'GET' })
   .validator(
-    (d: { statut?: string; type?: string; gravite?: string; search?: string }) => ({
+    (d: {
+      statut?: string
+      type?: string
+      gravite?: string
+      search?: string
+    }) => ({
       statut: d.statut ?? '',
       type: d.type ?? '',
       gravite: d.gravite ?? '',
@@ -151,7 +166,10 @@ export const listTicketsFn = createServerFn({ method: 'GET' })
       .from(ticket)
       .leftJoin(
         ticketLecture,
-        and(eq(ticketLecture.ticketId, ticket.id), eq(ticketLecture.courriel, email)),
+        and(
+          eq(ticketLecture.ticketId, ticket.id),
+          eq(ticketLecture.courriel, email),
+        ),
       )
       .where(and(...conditions))
       .orderBy(desc(ticket.id))
@@ -222,11 +240,20 @@ export const getTicketFn = createServerFn({ method: 'GET' })
         attenteReponse: ticket.attenteReponse,
         majLe: sql<string>`to_char(${ticket.majLe}, 'YYYY-MM-DD HH24:MI')`,
         doublonTitre: doublon,
+        // Imputation : réservée au dev (masquée aux autres appelants ci-dessous)
+        contratId: ticket.contratId,
+        nbHeures: ticket.nbHeures,
+        heuresNonImputables: ticket.heuresNonImputables,
       })
       .from(ticket)
       .where(eq(ticket.id, data.id))
     const t = rows.at(0)
     if (!t) return null
+    if (!estAdmin) {
+      t.contratId = null
+      t.nbHeures = null
+      t.heuresNonImputables = null
+    }
     const [commentaires, captures] = await Promise.all([
       db
         .select({
@@ -260,9 +287,10 @@ export const getTicketFn = createServerFn({ method: 'GET' })
     if (!estAdmin) t.livreParIa = false
     return {
       ...t,
-      commentaires: commentaires.map(
-        (c): TicketCommentaire => ({ ...c, estDev: c.auteurEmail === ADMIN_EMAIL }),
-      ),
+      commentaires: commentaires.map((c): TicketCommentaire => ({
+        ...c,
+        estDev: c.auteurEmail === ADMIN_EMAIL,
+      })),
       captures: captures satisfies Array<TicketCaptureMeta>,
     }
   })
@@ -273,7 +301,11 @@ export const getTicketCaptureFn = createServerFn({ method: 'GET' })
   .handler(
     async ({
       data,
-    }): Promise<{ nomFichier: string; description: string; dataUrl: string } | null> => {
+    }): Promise<{
+      nomFichier: string
+      description: string
+      dataUrl: string
+    } | null> => {
       await requireSession()
       const c = (
         await db
@@ -422,7 +454,8 @@ export const addTicketCommentaireFn = createServerFn({ method: 'POST' })
   )
   .handler(async ({ data }): Promise<{ ok: boolean }> => {
     const who = await identite()
-    if (!data.texte && !data.captures.length) throw new Error('Commentaire vide.')
+    if (!data.texte && !data.captures.length)
+      throw new Error('Commentaire vide.')
     if (data.captures.length > CAPTURES_MAX)
       throw new Error(`${CAPTURES_MAX} captures maximum par réponse.`)
     data.captures.forEach(decodeCapture)
@@ -557,6 +590,16 @@ export const renameTicketCaptureFn = createServerFn({ method: 'POST' })
 
 /* ── Qualification (Administrateur = le dev) ── */
 
+// Heures d'imputation : undefined = inchangé ; vide/null = effacé ; sinon ≥ 0
+const heures = (v: number | string | null | undefined) => {
+  if (v === undefined) return undefined
+  if (v == null || v === '') return null
+  const n = Number(String(v).replace(',', '.'))
+  if (!Number.isFinite(n) || n < 0)
+    throw new Error('Heures invalides (nombre ≥ 0).')
+  return n
+}
+
 export const updateTicketStatutFn = createServerFn({ method: 'POST' })
   .validator(
     (d: {
@@ -571,6 +614,10 @@ export const updateTicketStatutFn = createServerFn({ method: 'POST' })
       gravite?: string
       page?: string
       creeParEmail?: string
+      // Imputation (contrat + heures) : undefined = inchangé, null = effacé
+      idContrat?: number | null
+      nbHeures?: number | string | null
+      heuresNonImputables?: number | string | null
     }) => ({
       id: Number(d.id),
       statut: (d.statut && d.statut in TICKET_STATUTS
@@ -596,6 +643,9 @@ export const updateTicketStatutFn = createServerFn({ method: 'POST' })
         d.creeParEmail === undefined
           ? undefined
           : d.creeParEmail.trim().toLowerCase(),
+      idContrat: d.idContrat === undefined ? undefined : d.idContrat || null,
+      nbHeures: heures(d.nbHeures),
+      heuresNonImputables: heures(d.heuresNonImputables),
     }),
   )
   .handler(async ({ data }): Promise<{ ok: boolean }> => {
@@ -604,7 +654,9 @@ export const updateTicketStatutFn = createServerFn({ method: 'POST' })
     let idDoublon: number | null = null
     if (data.statut === 'doublon') {
       if (!data.idDoublon || data.idDoublon === data.id)
-        throw new Error("Statut « Doublon » : indiquez le n° du ticket d'origine.")
+        throw new Error(
+          "Statut « Doublon » : indiquez le n° du ticket d'origine.",
+        )
       const dup = await db
         .select({ id: ticket.id })
         .from(ticket)
@@ -644,6 +696,19 @@ export const updateTicketStatutFn = createServerFn({ method: 'POST' })
       if (typeEff === 'bug') set.gravite = data.gravite
     }
     if (data.page !== undefined) set.pageConcernee = data.page
+    if (data.idContrat !== undefined) {
+      if (data.idContrat != null) {
+        const c = await db
+          .select({ id: contrat.id })
+          .from(contrat)
+          .where(eq(contrat.id, data.idContrat))
+        if (!c.length) throw new Error('Contrat introuvable.')
+      }
+      set.contratId = data.idContrat
+    }
+    if (data.nbHeures !== undefined) set.nbHeures = data.nbHeures
+    if (data.heuresNonImputables !== undefined)
+      set.heuresNonImputables = data.heuresNonImputables
     // Réattribution du déposeur : parmi les comptes services (liste statique)
     if (data.creeParEmail !== undefined && data.creeParEmail !== '') {
       const service = SERVICES.find(

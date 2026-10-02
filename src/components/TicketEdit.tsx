@@ -54,6 +54,7 @@ import {
   updateTicketCommentaireFn,
   updateTicketStatutFn,
 } from '#/lib/tickets.ts'
+import { getContratOptionsFn } from '#/lib/contrats.ts'
 import { readCaptureFiles } from '#/lib/tickets.captures.ts'
 import {
   GRAVITE_BADGE,
@@ -93,6 +94,9 @@ function todayISO(): string {
 }
 
 /** Réattribution du déposeur : les comptes services (liste statique). */
+// Radix Select refuse la valeur vide : sentinelle pour « non imputé »
+const VIDE_CONTRAT = '__aucun__'
+
 const DEPOSANT_OPTIONS = SERVICES.map((s) => ({
   value: serviceEmail(s.slug),
   label: s.label,
@@ -132,7 +136,11 @@ function CaptureTile({
         className="relative block h-[70px] w-full cursor-zoom-in overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--cream)] transition hover:border-[var(--gold)]"
       >
         {c.miniature ? (
-          <img src={c.miniature} alt={label} className="h-full w-full object-cover" />
+          <img
+            src={c.miniature}
+            alt={label}
+            className="h-full w-full object-cover"
+          />
         ) : (
           <span className="flex h-full flex-col items-center justify-center gap-0.5 px-1 text-[var(--ink-faded)]">
             <ImageIcon size={20} />
@@ -233,8 +241,24 @@ export function TicketEdit({
   const [gravite, setGravite] = useState<TicketGravite | null>(null)
   const [page, setPage] = useState<string | null>(null)
   const [creePar, setCreePar] = useState<string | null>(null)
+  // Imputation contrat + heures passées (dev) — null = non touché
+  const [idContrat, setIdContrat] = useState<string | null>(null)
+  const [nbHeures, setNbHeures] = useState<string | null>(null)
+  const [heuresNonImp, setHeuresNonImp] = useState<string | null>(null)
+  const idContratEff = idContrat ?? String(t?.contratId ?? '')
+  const nbHeuresEff =
+    nbHeures ?? (t?.nbHeures != null ? String(t.nbHeures) : '')
+  const heuresNonImpEff =
+    heuresNonImp ??
+    (t?.heuresNonImputables != null ? String(t.heuresNonImputables) : '')
+  const contratsQ = useQuery({
+    queryKey: ['contrat-options'],
+    queryFn: () => getContratOptionsFn(),
+    enabled: estAdmin,
+  })
   const statutEff = statut ?? t?.statut ?? 'nouveau'
-  const avancementEff = avancement === '' ? String(t?.avancement ?? 0) : avancement
+  const avancementEff =
+    avancement === '' ? String(t?.avancement ?? 0) : avancement
   const idDoublonEff = idDoublon || String(t?.ticketDoublonId ?? '')
   const dateLivraisonEff = dateLivraison ?? t?.dateLivraison ?? ''
   const titreEff = titre ?? t?.titre ?? ''
@@ -250,7 +274,9 @@ export function TicketEdit({
       ? [
           {
             value: creeParEff,
-            label: t?.creeParNom ? `${t.creeParNom} · ${creeParEff}` : creeParEff,
+            label: t?.creeParNom
+              ? `${t.creeParNom} · ${creeParEff}`
+              : creeParEff,
           },
           ...DEPOSANT_OPTIONS,
         ]
@@ -273,9 +299,19 @@ export function TicketEdit({
           ...(gravite !== null ? { gravite } : {}),
           ...(page !== null ? { page } : {}),
           ...(creePar !== null && creePar ? { creeParEmail: creePar } : {}),
+          ...(idContrat !== null
+            ? { idContrat: idContrat ? Number(idContrat) : null }
+            : {}),
+          ...(nbHeures !== null ? { nbHeures } : {}),
+          ...(heuresNonImp !== null
+            ? { heuresNonImputables: heuresNonImp }
+            : {}),
         },
       }),
-    onSuccess: refetch,
+    onSuccess: () => {
+      refetch()
+      void qc.invalidateQueries({ queryKey: ['contrat-options'] })
+    },
     onError: erreurInfo('Mise à jour impossible'),
   })
 
@@ -283,7 +319,9 @@ export function TicketEdit({
   const [commentaire, setCommentaire] = useState('')
   // Coche du dev : « demande une réponse » au déposeur (levée à sa réponse)
   const [demandeReponse, setDemandeReponse] = useState(false)
-  const [reponseCaptures, setReponseCaptures] = useState<Array<CaptureDraft>>([])
+  const [reponseCaptures, setReponseCaptures] = useState<Array<CaptureDraft>>(
+    [],
+  )
   async function addReponseFiles(files: Array<File>) {
     const r = await readCaptureFiles(files, reponseCaptures.length)
     if (r.captures.length) setReponseCaptures((c) => [...c, ...r.captures])
@@ -330,7 +368,8 @@ export function TicketEdit({
   })
 
   const archiveMut = useMutation({
-    mutationFn: (archive: boolean) => archiverTicketFn({ data: { id, archive } }),
+    mutationFn: (archive: boolean) =>
+      archiverTicketFn({ data: { id, archive } }),
     onSuccess: refetch,
     onError: erreurInfo('Archivage impossible'),
   })
@@ -412,7 +451,10 @@ export function TicketEdit({
         <DialogHeader>
           <DialogTitle>
             <span className="flex min-w-0 items-center gap-2">
-              <TicketIcon size={18} className="flex-none text-[var(--gold-deep)]" />
+              <TicketIcon
+                size={18}
+                className="flex-none text-[var(--gold-deep)]"
+              />
               <span className="truncate">
                 Ticket #{id}
                 {t?.titre ? ` — ${t.titre}` : ''}
@@ -434,7 +476,10 @@ export function TicketEdit({
             <div className="space-y-4">
               {/* Badges + méta */}
               <div className="flex flex-wrap items-center gap-2">
-                <TicketBadge label={TICKET_TYPES[t.type]} cls={TYPE_BADGE[t.type]} />
+                <TicketBadge
+                  label={TICKET_TYPES[t.type]}
+                  cls={TYPE_BADGE[t.type]}
+                />
                 {/* Gravité : bugs seulement (sans objet pour une feature) */}
                 {t.type === 'bug' && (
                   <TicketBadge
@@ -485,7 +530,9 @@ export function TicketEdit({
                 <span className="ml-auto text-[12px] text-[var(--ink-faded)]">
                   {t.pageConcernee && (
                     <>
-                      page <b className="text-[var(--ink)]">{t.pageConcernee}</b> ·{' '}
+                      page{' '}
+                      <b className="text-[var(--ink)]">{t.pageConcernee}</b>{' '}
+                      ·{' '}
                     </>
                   )}
                   par <b>{t.creeParNom}</b> le {fmtTicketDate(t.creeLe)}
@@ -498,7 +545,9 @@ export function TicketEdit({
               {!estAdmin && (
                 <div className="rounded-[10px] border border-[var(--line)] bg-[var(--paper)] px-3.5 py-2.5 text-[13.5px] leading-relaxed whitespace-pre-line text-[var(--ink)]">
                   {t.description || (
-                    <span className="text-[var(--muted)]">Pas de description.</span>
+                    <span className="text-[var(--muted)]">
+                      Pas de description.
+                    </span>
                   )}
                 </div>
               )}
@@ -517,7 +566,9 @@ export function TicketEdit({
                         canRename={estAdmin || c.auteurEmail === userEmail}
                         loading={apercuLoading === c.id}
                         onOpen={() => void ouvrirCapture(c.id)}
-                        onRename={(d) => renameMut.mutate({ id: c.id, description: d })}
+                        onRename={(d) =>
+                          renameMut.mutate({ id: c.id, description: d })
+                        }
                       />
                     ))}
                   </div>
@@ -623,13 +674,13 @@ export function TicketEdit({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {(Object.keys(TICKET_TYPES) as Array<TicketType>).map(
-                              (v) => (
-                                <SelectItem key={v} value={v}>
-                                  {TICKET_TYPES[v]}
-                                </SelectItem>
-                              ),
-                            )}
+                            {(
+                              Object.keys(TICKET_TYPES) as Array<TicketType>
+                            ).map((v) => (
+                              <SelectItem key={v} value={v}>
+                                {TICKET_TYPES[v]}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </ChampForm>
@@ -639,14 +690,18 @@ export function TicketEdit({
                         <ChampForm libelle="Gravité">
                           <Select
                             value={graviteEff}
-                            onValueChange={(v) => setGravite(v as TicketGravite)}
+                            onValueChange={(v) =>
+                              setGravite(v as TicketGravite)
+                            }
                           >
                             <SelectTrigger className="h-9 w-full text-[13px]">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                               {(
-                                Object.keys(TICKET_GRAVITES) as Array<TicketGravite>
+                                Object.keys(
+                                  TICKET_GRAVITES,
+                                ) as Array<TicketGravite>
                               ).map((v) => (
                                 <SelectItem key={v} value={v}>
                                   {TICKET_GRAVITES[v]}
@@ -705,13 +760,13 @@ export function TicketEdit({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {(Object.keys(TICKET_STATUTS) as Array<TicketStatut>).map(
-                              (s) => (
-                                <SelectItem key={s} value={s}>
-                                  {TICKET_STATUTS[s]}
-                                </SelectItem>
-                              ),
-                            )}
+                            {(
+                              Object.keys(TICKET_STATUTS) as Array<TicketStatut>
+                            ).map((s) => (
+                              <SelectItem key={s} value={s}>
+                                {TICKET_STATUTS[s]}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </ChampForm>
@@ -761,6 +816,65 @@ export function TicketEdit({
                     >
                       Enregistrer
                     </Button>
+                  </div>
+                  {/* Imputation : contrat/avenant facturé + heures passées
+                      (Paramètres > Système > Contrats & avenants) */}
+                  <div className="flex flex-wrap items-end gap-3">
+                    <div className="w-[300px]">
+                      <ChampForm libelle="Imputation contrat">
+                        <Select
+                          value={idContratEff || VIDE_CONTRAT}
+                          onValueChange={(v) =>
+                            setIdContrat(v === VIDE_CONTRAT ? '' : v)
+                          }
+                        >
+                          <SelectTrigger className="h-9 w-full text-[13px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={VIDE_CONTRAT}>
+                              {contratsQ.isLoading
+                                ? 'Chargement…'
+                                : (contratsQ.data ?? []).length === 0
+                                  ? 'Aucun contrat (Paramètres > Contrats & avenants)'
+                                  : '— non imputé —'}
+                            </SelectItem>
+                            {(contratsQ.data ?? []).map((o) => (
+                              <SelectItem key={o.id} value={String(o.id)}>
+                                {o.libelle}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </ChampForm>
+                    </div>
+                    <div
+                      className="w-[120px]"
+                      title="Heures passées sur ce ticket — comptées dans « H calculées » du contrat imputé, ou dans « Heures non imputées » sinon."
+                    >
+                      <ChampForm libelle="Heures">
+                        <Input
+                          inputMode="decimal"
+                          value={nbHeuresEff}
+                          onChange={(e) => setNbHeures(e.target.value)}
+                          placeholder="ex. 2,5"
+                          className="h-9 text-[13px]"
+                        />
+                      </ChampForm>
+                    </div>
+                    <div
+                      className="w-[150px]"
+                      title="Heures passées mais non facturables au contrat."
+                    >
+                      <ChampForm libelle="H non imputables">
+                        <Input
+                          inputMode="decimal"
+                          value={heuresNonImpEff}
+                          onChange={(e) => setHeuresNonImp(e.target.value)}
+                          className="h-9 text-[13px]"
+                        />
+                      </ChampForm>
+                    </div>
                   </div>
                   <ErreurMutation erreur={saveMut.error} />
                 </div>
@@ -816,7 +930,9 @@ export function TicketEdit({
                             <button
                               type="button"
                               title="Supprimer cet échange (et ses captures jointes)"
-                              onClick={() => supprimerEchange(c.id, c.auteurNom)}
+                              onClick={() =>
+                                supprimerEchange(c.id, c.auteurNom)
+                              }
                               className="rounded p-0.5 text-[var(--ink-faded)] transition hover:bg-[var(--danger-tint)] hover:text-[var(--danger)]"
                             >
                               <Trash2 size={13} />
@@ -843,7 +959,10 @@ export function TicketEdit({
                                 editTexte.trim() === c.texte.trim()
                               }
                               onClick={() =>
-                                editMut.mutate({ id: c.id, texte: editTexte.trim() })
+                                editMut.mutate({
+                                  id: c.id,
+                                  texte: editTexte.trim(),
+                                })
                               }
                             >
                               Enregistrer
@@ -874,7 +993,9 @@ export function TicketEdit({
                             <CaptureTile
                               key={x.id}
                               c={x}
-                              canRename={estAdmin || x.auteurEmail === userEmail}
+                              canRename={
+                                estAdmin || x.auteurEmail === userEmail
+                              }
                               loading={apercuLoading === x.id}
                               onOpen={() => void ouvrirCapture(x.id)}
                               onRename={(d) =>
@@ -913,19 +1034,24 @@ export function TicketEdit({
                         <CaptureThumbs
                           captures={reponseCaptures}
                           onRemove={(i) =>
-                            setReponseCaptures((c) => c.filter((_, j) => j !== i))
+                            setReponseCaptures((c) =>
+                              c.filter((_, j) => j !== i),
+                            )
                           }
                         />
                         <label className="flex w-fit cursor-pointer items-center gap-1.5 text-[12px] text-[var(--ink-faded)] transition hover:text-[var(--ink)]">
                           <ImagePlus size={13} />
-                          Joindre une capture à la réponse (ou Ctrl+V dans le texte)
+                          Joindre une capture à la réponse (ou Ctrl+V dans le
+                          texte)
                           <input
                             type="file"
                             accept="image/*"
                             multiple
                             className="hidden"
                             onChange={(e) => {
-                              void addReponseFiles(Array.from(e.target.files ?? []))
+                              void addReponseFiles(
+                                Array.from(e.target.files ?? []),
+                              )
                               e.target.value = ''
                             }}
                           />
