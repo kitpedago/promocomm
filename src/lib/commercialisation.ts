@@ -27,7 +27,6 @@ import { operationVisuel } from '#/db/schema.ts'
 import { alias } from 'drizzle-orm/pg-core'
 
 import { db } from '#/db/index.ts'
-import { construireCsv } from '#/lib/csv.ts'
 import { requireDroit, requireSession } from '#/lib/session.server.ts'
 
 // Liste maître : toutes les opérations (le filtre « Contient » et la case
@@ -755,7 +754,7 @@ export const updateTrancheAdresseFn = createServerFn({ method: 'POST' })
       .where(eq(tranche.id, data.trancheId))
   })
 
-// --- Export CSV de l'opération (BTN_Exporter / REQ_InterfaceCommercialisation_Lot) ---
+// --- Export de l'opération (BTN_Exporter / REQ_InterfaceCommercialisation_Lot) ---
 // Iso-WinDev : toutes les tranches de l'opération, familles de bien hors
 // « AUTRES », colonnes et intitulés du fichier d'interface conservés. Les
 // champs cur* du lot legacy (cache de la commercialisation courante, non
@@ -914,10 +913,7 @@ export const getExportCommFn = createServerFn({ method: 'GET' })
     return {
       nomFichier: `${op.libelle}_Commercialisation_${new Date()
         .toLocaleDateString('fr-FR')
-        .replaceAll('/', '-')}.csv`.replaceAll(/[\\/]/g, '-'),
-      csv: construireCsv([
-        entetes,
-        ...lignes.map((l) => entetes.map((e) => l[e])),
-      ]),
+        .replaceAll('/', '-')}`.replaceAll(/[\\/]/g, '-'),
+      lignes: [entetes, ...lignes.map((l) => entetes.map((e) => l[e]))],
     }
   })

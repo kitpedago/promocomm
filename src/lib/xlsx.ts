@@ -250,7 +250,7 @@ function lettres(i: number) {
   return s
 }
 
-function cellule(v: unknown, ref: string) {
+function cellule(v: unknown, ref: string, style = '') {
   if (v == null || v === '') return ''
   // date : numéro de série Excel (jours depuis le 30/12/1899), lu en UTC comme
   // les timestamps de la base ; style 1 = format date de styles.xml
@@ -259,20 +259,32 @@ function cellule(v: unknown, ref: string) {
   if (typeof v === 'number')
     return Number.isFinite(v) ? `<c r="${ref}"><v>${v}</v></c>` : ''
   const chaine = typeof v === 'boolean' ? (v ? 'Oui' : 'Non') : String(v)
-  return `<c r="${ref}" t="inlineStr"><is><t xml:space="preserve">${echapper(chaine)}</t></is></c>`
+  return `<c r="${ref}"${style} t="inlineStr"><is><t xml:space="preserve">${echapper(chaine)}</t></is></c>`
 }
 
 const XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
 const NS = 'http://schemas.openxmlformats.org'
 const TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml'
 
+// Première ligne = en-tête : gras sur fond gris clair, figée au défilement
+// (style 2 de styles.xml) ; largeur des colonnes ajustée au contenu.
 export async function ecrireXlsx(lignes: Array<Array<unknown>>): Promise<Blob> {
   const feuille = lignes
     .map(
       (l, i) =>
-        `<row r="${i + 1}">${l.map((v, j) => cellule(v, lettres(j) + (i + 1))).join('')}</row>`,
+        `<row r="${i + 1}">${l.map((v, j) => cellule(v, lettres(j) + (i + 1), i === 0 ? ' s="2"' : '')).join('')}</row>`,
     )
     .join('')
+  const largeurs = lignes.reduce<Array<number>>((acc, l) => {
+    l.forEach((v, j) => {
+      const n = v instanceof Date ? 10 : String(v ?? '').length
+      acc[j] = Math.min(60, Math.max(acc[j] ?? 0, n + 2))
+    })
+    return acc
+  }, [])
+  const cols = largeurs.length
+    ? `<cols>${largeurs.map((w, j) => `<col min="${j + 1}" max="${j + 1}" width="${w}" customWidth="1"/>`).join('')}</cols>`
+    : ''
   return new Blob(
     (await archiver({
       '[Content_Types].xml':
@@ -295,17 +307,23 @@ export async function ecrireXlsx(lignes: Array<Array<unknown>>): Promise<Blob> {
         `<Relationship Id="rId1" Type="${NS}/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>` +
         `<Relationship Id="rId2" Type="${NS}/officeDocument/2006/relationships/styles" Target="styles.xml"/>` +
         '</Relationships>',
-      // style 0 : standard ; style 1 : date courte (format 14)
+      // style 0 : standard ; style 1 : date courte (format 14) ;
+      // style 2 : en-tête (gras, fond gris clair)
       'xl/styles.xml':
         `${XML}<styleSheet xmlns="${NS}/spreadsheetml/2006/main">` +
-        '<fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>' +
-        '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>' +
+        '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>' +
+        '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' +
+        '<fill><patternFill patternType="solid"><fgColor rgb="FFE7E6E6"/></patternFill></fill></fills>' +
         '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
         '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-        '<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
-        '<xf numFmtId="14" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs>' +
+        '<cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+        '<xf numFmtId="14" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+        '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs>' +
         '</styleSheet>',
-      'xl/worksheets/sheet1.xml': `${XML}<worksheet xmlns="${NS}/spreadsheetml/2006/main"><sheetData>${feuille}</sheetData></worksheet>`,
+      'xl/worksheets/sheet1.xml':
+        `${XML}<worksheet xmlns="${NS}/spreadsheetml/2006/main">` +
+        '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' +
+        `${cols}<sheetData>${feuille}</sheetData></worksheet>`,
     })) as Array<BlobPart>,
     { type: `${TYPE}.sheet` },
   )

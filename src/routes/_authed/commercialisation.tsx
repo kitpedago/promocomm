@@ -64,7 +64,7 @@ import {
   calculerRemise,
   tauxDepuisTexte,
 } from '#/lib/commercialisation.helpers.ts'
-import { telechargerCsv } from '#/lib/csv.ts'
+import MenuExporter from '#/components/MenuExporter.tsx'
 import { enFraction, enPourcent } from '#/lib/sccv.helpers.ts'
 import {
   selectionARejouer,
@@ -893,34 +893,19 @@ const COLONNES_VERSEMENTS: Array<ColumnDef<LigneVersement, any>> = [
 ]
 
 // ---------------------------------------------------------------------------
-// Export CSV de l'opération (BTN_Exporter — fichier d'interface
+// Export de l'opération (BTN_Exporter — fichier d'interface
 // REQ_InterfaceCommercialisation_Lot, toutes tranches confondues)
 // ---------------------------------------------------------------------------
 
 function BoutonExporter({ operationId }: { operationId: number }) {
   const restreint = useDroitsComm()
-  const exporter = useMutation({
-    mutationFn: () => getExportCommFn({ data: { operationId } }),
-    onSuccess: (r) => telechargerCsv(r.nomFichier, r.csv),
-  })
   if (restreint('BTN_Exporter')) return null
   return (
-    <span className="ml-auto flex items-center gap-2">
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => exporter.mutate()}
-        disabled={exporter.isPending}
-        title="Exporter la commercialisation de l'opération (toutes tranches) en CSV"
-      >
-        {exporter.isPending ? 'Export en cours…' : 'Exporter'}
-      </Button>
-      {exporter.isError && (
-        <span className="text-[12px] text-[var(--danger)]">
-          Export impossible.
-        </span>
-      )}
-    </span>
+    <MenuExporter
+      className="ml-auto"
+      charger={() => getExportCommFn({ data: { operationId } })}
+      title="Exporter la commercialisation de l'opération (toutes tranches)"
+    />
   )
 }
 

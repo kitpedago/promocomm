@@ -21,7 +21,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsUpDown,
-  Download,
   Search,
   SlidersHorizontal,
 } from 'lucide-react'
@@ -35,7 +34,7 @@ import {
   SelectValue,
 } from '#/components/ui/select'
 import { Switch } from '#/components/ui/switch'
-import { construireCsv, telechargerCsv } from '#/lib/csv.ts'
+import MenuExporter from '#/components/MenuExporter.tsx'
 import { usePref } from '#/lib/preferences.ts'
 import { sansAccents } from '#/lib/utils.ts'
 
@@ -250,18 +249,20 @@ export default function DataTable<T>({
     return t
   }, [lignesFiltrees, countFor])
 
-  // Export CSV des lignes filtrées/triées (colonnes visibles, séparateur
-  // « ; » et BOM UTF-8 pour Excel français) — remplace l'export Excel WinDev
-  const exporterCsv = () => {
+  // Export des lignes filtrées/triées, colonnes visibles (remplace l'export
+  // Excel WinDev)
+  const lignesExport = () => {
     const colonnes = table.getVisibleLeafColumns()
     const entetes = colonnes.map((c) =>
       typeof c.columnDef.header === 'string' ? c.columnDef.header : c.id,
     )
-    const csv = construireCsv([
-      entetes,
-      ...lignesFiltrees.map((r) => colonnes.map((c) => r.getValue(c.id))),
-    ])
-    telechargerCsv(`${id}.csv`, csv)
+    return {
+      nomFichier: id,
+      lignes: [
+        entetes,
+        ...lignesFiltrees.map((r) => colonnes.map((c) => r.getValue(c.id))),
+      ],
+    }
   }
 
   const deplacerColonne = (colId: string, delta: -1 | 1) => {
@@ -320,14 +321,7 @@ export default function DataTable<T>({
         )}
 
         <Outils dans={emplacementOutils}>
-          <button
-            onClick={exporterCsv}
-            className="ml-auto flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--input-border)] bg-[var(--card)] px-2.5 text-[13px] font-medium text-[var(--ink-soft)] transition-colors hover:border-[var(--ink)] hover:text-[var(--ink)]"
-            title="Exporter les lignes affichées en CSV (Excel)"
-          >
-            <Download className="h-3.5 w-3.5" aria-hidden />
-            Exporter
-          </button>
+          <MenuExporter charger={lignesExport} className="ml-auto" />
           <PopoverPrimitive.Root>
             <PopoverPrimitive.Trigger className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--input-border)] bg-[var(--card)] px-2.5 text-[13px] font-medium text-[var(--ink-soft)] transition-colors hover:border-[var(--ink)] hover:text-[var(--ink)]">
               <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />

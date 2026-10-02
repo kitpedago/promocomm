@@ -563,7 +563,7 @@ export const getExportEnqueteFn = createServerFn({ method: 'GET' }).handler(
     // classeur écrit par le navigateur (ecrireXlsx) : les lignes suffisent
     const entetes = Object.keys(colonnes) as Array<keyof typeof colonnes>
     return {
-      nomFichier: 'HFOperation_Acquereurs.xlsx',
+      nomFichier: 'HFOperation_Acquereurs',
       lignes: [entetes, ...lignes.map((l) => entetes.map((e) => l[e]))],
     }
   },

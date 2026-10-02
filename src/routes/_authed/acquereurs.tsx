@@ -59,11 +59,10 @@ import {
   calculerMenage,
   trancheAgePourAges,
 } from '#/lib/acquereurs.helpers.ts'
-import { telecharger } from '#/lib/csv.ts'
 import { SELECTION_VIDE, usePref } from '#/lib/preferences.ts'
 import { enFraction, enPourcent } from '#/lib/sccv.helpers.ts'
 import { getService } from '#/lib/services'
-import { ecrireXlsx } from '#/lib/xlsx.ts'
+import MenuExporter from '#/components/MenuExporter.tsx'
 
 import type {
   ChampEnquete,
@@ -731,12 +730,6 @@ function PageAcquereurs() {
   })
 
   // BTN_VousEcoute : toutes opérations, sans tenir compte des filtres
-  const exporterEnquete = useMutation({
-    mutationFn: async () => {
-      const r = await getExportEnqueteFn()
-      telecharger(r.nomFichier, await ecrireXlsx(r.lignes))
-    },
-  })
 
   // saisie directe des enquêtes : la ligne est mise à jour tout de suite dans
   // la liste (pas de rechargement des ~3 000 lignes), rétablie si refus
@@ -830,17 +823,13 @@ function PageAcquereurs() {
               confirmation="Supprimer cet acquéreur ? (refusé s'il est dans une commercialisation)"
             />
           )}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => exporterEnquete.mutate()}
-            disabled={exporterEnquete.isPending}
-            title="Exporter les acquéreurs pour l'enquête de satisfaction (Excel)"
-          >
-            {exporterEnquete.isPending ? 'Export en cours…' : 'Vous écoute'}
-          </Button>
+          <MenuExporter
+            charger={() => getExportEnqueteFn()}
+            libelle="Vous écoute"
+            title="Exporter les acquéreurs pour l'enquête de satisfaction"
+          />
         </div>
-        <ErreurMutation erreur={supprimer.error ?? exporterEnquete.error} />
+        <ErreurMutation erreur={supprimer.error} />
         {toast}
 
         <SaisieEnquete
