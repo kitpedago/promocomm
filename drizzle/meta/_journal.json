@@ -309,6 +309,13 @@
       "when": 1791229467625,
       "tag": "0043_facture_prestataire_kpi",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1791229795830,
+      "tag": "0044_stade_avancement_copie_previ_compta",
+      "breakpoints": true
     }
   ]
 }

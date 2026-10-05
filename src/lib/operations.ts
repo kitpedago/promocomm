@@ -3,7 +3,19 @@
 // tranches, lots. Les onglets Stade d'avancement / Terrain / Infos diverses
 // attendent l'ETL de la phase 3 (voir docs/plan-implementation.md).
 import { createServerFn } from '@tanstack/react-start'
-import { and, asc, count, eq, inArray, ne, sql } from 'drizzle-orm'
+import {
+  and,
+  asc,
+  count,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  lt,
+  max,
+  ne,
+  sql,
+} from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 
 import {
@@ -32,7 +44,12 @@ import {
 } from '#/db/domaine.ts'
 import { db } from '#/db/index.ts'
 import { synchroniserDates } from '#/lib/operations.helpers.ts'
-import { requireEcriture, requireSession } from '#/lib/session.server.ts'
+import { SERVICES_PREVI_COMPTA } from '#/lib/services.ts'
+import {
+  requireEcriture,
+  requireServices,
+  requireSession,
+} from '#/lib/session.server.ts'
 import { recalculerStades } from '#/lib/tranche.server.ts'
 
 const archiMandataire = alias(architecte, 'archi_mandataire')
@@ -247,6 +264,100 @@ export const getStadesFn = createServerFn({ method: 'GET' })
   })
 
 const versDate = (s: string | null | undefined) => (s ? new Date(s) : null)
+
+// ---------------------------------------------------------------------------
+// Copie annuelle « prévi. promo → Date prévi 01/N » (sans équivalent WinDev) :
+// toutes les dates prévi. promo de l'année en cours, toutes opérations
+// confondues, recopiées dans la prévi. compta de début d'année. Un seul
+// niveau d'annulation : chaque ligne copiée garde sa valeur d'avant
+// (date_previ_compta_sauvegarde) et la date de la copie, qui la désigne aussi
+// quand cette valeur était vide.
+// ---------------------------------------------------------------------------
+
+// les dates sont stockées à minuit UTC (versDate)
+const previPromoDeLAnnee = (annee: number) =>
+  and(
+    gte(stadeAvancement.datePreviMajPromo, new Date(Date.UTC(annee, 0, 1))),
+    lt(stadeAvancement.datePreviMajPromo, new Date(Date.UTC(annee + 1, 0, 1))),
+  )
+const copiee = isNotNull(stadeAvancement.datePreviComptaCopieLe)
+
+// Ce que ferait la copie (nombre de dates, dont cibles vides) et la copie
+// précédente, annulable
+export const getCopiePreviComptaFn = createServerFn({ method: 'GET' }).handler(
+  async () => {
+    await requireServices(SERVICES_PREVI_COMPTA)
+    const annee = new Date().getFullYear()
+    const compta = stadeAvancement.datePreviComptaDebutAnnee
+    const [aCopier] = await db
+      .select({
+        total: count(),
+        vides: sql<number>`(count(*) FILTER (WHERE ${compta} IS NULL))::int`,
+        identiques: sql<number>`(count(*) FILTER (WHERE ${compta} = ${stadeAvancement.datePreviMajPromo}))::int`,
+      })
+      .from(stadeAvancement)
+      .where(previPromoDeLAnnee(annee))
+    const [derniere] = await db
+      .select({
+        nb: count(),
+        le: max(stadeAvancement.datePreviComptaCopieLe),
+      })
+      .from(stadeAvancement)
+      .where(copiee)
+    return { annee, ...aCopier, derniereCopie: derniere.le ? derniere : null }
+  },
+)
+
+export const copierPreviComptaFn = createServerFn({ method: 'POST' }).handler(
+  async () => {
+    await requireServices(SERVICES_PREVI_COMPTA)
+    const annee = new Date().getFullYear()
+    const maintenant = new Date()
+    return db.transaction(async (tx) => {
+      // à droite du SET, PostgreSQL lit les valeurs d'avant la mise à jour
+      const copiees = await tx
+        .update(stadeAvancement)
+        .set({
+          datePreviComptaSauvegarde: sql`${stadeAvancement.datePreviComptaDebutAnnee}`,
+          datePreviComptaDebutAnnee: sql`${stadeAvancement.datePreviMajPromo}`,
+          datePreviComptaCopieLe: maintenant,
+        })
+        .where(previPromoDeLAnnee(annee))
+        .returning({ id: stadeAvancement.id })
+      // la sauvegarde de la copie précédente est abandonnée — sauf si rien
+      // n'a été copié : elle reste alors annulable
+      if (copiees.length > 0)
+        await tx
+          .update(stadeAvancement)
+          .set({
+            datePreviComptaSauvegarde: null,
+            datePreviComptaCopieLe: null,
+          })
+          .where(
+            and(copiee, ne(stadeAvancement.datePreviComptaCopieLe, maintenant)),
+          )
+      return { annee, nb: copiees.length }
+    })
+  },
+)
+
+// Bouton Annuler : les lignes de la dernière copie retrouvent leur valeur
+// d'avant (vide compris)
+export const annulerCopiePreviComptaFn = createServerFn({
+  method: 'POST',
+}).handler(async () => {
+  await requireServices(SERVICES_PREVI_COMPTA)
+  const retablies = await db
+    .update(stadeAvancement)
+    .set({
+      datePreviComptaDebutAnnee: sql`${stadeAvancement.datePreviComptaSauvegarde}`,
+      datePreviComptaSauvegarde: null,
+      datePreviComptaCopieLe: null,
+    })
+    .where(copiee)
+    .returning({ id: stadeAvancement.id })
+  return { nb: retablies.length }
+})
 
 // « Synchro. dates » (REQ_SynchroTrancheDate) : le même stade sur les autres
 // tranches de l'opération — vide si l'opération ou le stade ne se synchronise

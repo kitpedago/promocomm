@@ -62,10 +62,13 @@ import {
   synchroniserDates,
 } from '#/lib/operations.helpers.ts'
 import {
+  annulerCopiePreviComptaFn,
+  copierPreviComptaFn,
   deleteContentieuxFn,
   deleteFactureFn,
   deleteStadeFn,
   getContentieuxFn,
+  getCopiePreviComptaFn,
   getFacturesFn,
   getOperationFicheFn,
   getStadesFn,
@@ -86,7 +89,7 @@ import {
   useMemoriserSelection,
   usePref,
 } from '#/lib/preferences.ts'
-import { getService } from '#/lib/services'
+import { SERVICES_PREVI_COMPTA, getService } from '#/lib/services'
 import { fmtDate, fmtEuro } from '#/lib/utils.ts'
 
 import type { ValeursFiche } from '#/components/ModaleFiche'
@@ -113,7 +116,7 @@ export const Route = createFileRoute('/_authed/operations')({
       lectureSeule: context.session.user.service === 'consultation',
       // TABLE_REQ_StadeAvancement_Operation.COL_DatePrevComptaDebutAnnee :
       // visible des seuls services Comptabilité et Administrateur (iso-WinDev)
-      voitDatePreviCompta: ['compta', 'admin'].includes(
+      voitDatePreviCompta: SERVICES_PREVI_COMPTA.includes(
         context.session.user.service ?? '',
       ),
       // onglet Facturation électronique : droit « facturation » du service
@@ -1130,6 +1133,7 @@ function OngletStades({
   const [selection, setSelection] = useState<number | null>(null)
   const [domaine, setDomaine] = useState(TOUS)
   const [modale, setModale] = useState<LigneStade | 'creation' | null>(null)
+  const [copiePrevi, setCopiePrevi] = useState(false)
   const [facturesRepliees, setFacturesRepliees] = usePref(
     'factures-repliees:operations',
     false,
@@ -1276,6 +1280,17 @@ function OngletStades({
             </SelectContent>
           </Select>
         </label>
+        {voitDatePreviCompta && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setCopiePrevi(true)}
+            title="Copier les dates prévi. promo de l'année en cours dans « Date prévi 01/N », toutes opérations confondues"
+          >
+            Copie prévi. promo → 01/N…
+          </Button>
+        )}
         <span
           className={`badge-pill ml-auto font-bold ${
             synchro
@@ -1356,7 +1371,122 @@ function OngletStades({
         }}
         onSuccess={invalider}
       />
+      {voitDatePreviCompta && (
+        <ModaleCopiePreviCompta
+          open={copiePrevi}
+          onOpenChange={setCopiePrevi}
+        />
+      )}
     </div>
+  )
+}
+
+const nbDates = (n: number) => `${n} date${n > 1 ? 's' : ''}`
+
+// Copie annuelle des dates prévi. promo de l'année en cours vers « Date prévi
+// 01/N », toutes opérations confondues, et annulation de la dernière copie
+// (Comptabilité, Administrateur — sans équivalent WinDev)
+function ModaleCopiePreviCompta({
+  open,
+  onOpenChange,
+}: {
+  open: boolean
+  onOpenChange: (o: boolean) => void
+}) {
+  const queryClient = useQueryClient()
+  const etat = useQuery({
+    queryKey: ['copie-previ-compta'],
+    queryFn: () => getCopiePreviComptaFn(),
+    enabled: open,
+  })
+  const [fait, setFait] = useState<string | null>(null)
+  const apres = (texte: string) => {
+    setFait(texte)
+    void queryClient.invalidateQueries({ queryKey: ['copie-previ-compta'] })
+    void queryClient.invalidateQueries({ queryKey: ['stades'] })
+  }
+  const copier = useMutation({
+    mutationFn: () => copierPreviComptaFn(),
+    onSuccess: ({ nb }) => apres(`${nbDates(nb)} copiée${nb > 1 ? 's' : ''}.`),
+  })
+  const annuler = useMutation({
+    mutationFn: () => annulerCopiePreviComptaFn(),
+    onSuccess: ({ nb }) =>
+      apres(`Copie annulée : ${nbDates(nb)} rétablie${nb > 1 ? 's' : ''}.`),
+  })
+  const enCours = copier.isPending || annuler.isPending
+  const e = etat.data
+  const remplacees = e ? e.total - e.vides - e.identiques : 0
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) setFait(null)
+        onOpenChange(o)
+      }}
+    >
+      <DialogContent className="max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Copie prévi. promo → Date prévi 01/N</DialogTitle>
+        </DialogHeader>
+        {!e ? (
+          <p className="text-[13px] text-[var(--muted)]">
+            {etat.isError ? 'Lecture impossible.' : 'Chargement…'}
+          </p>
+        ) : (
+          <div className="flex flex-col gap-3 text-[13px]">
+            <p>
+              <span className="font-semibold tabular-nums">
+                {nbDates(e.total)}
+              </span>{' '}
+              prévi. promo en {e.annee}, toutes opérations confondues, à copier
+              dans « Date prévi 01/N » :
+            </p>
+            <ul className="list-disc pl-5 tabular-nums">
+              <li>{e.vides} dans un champ vide ;</li>
+              <li>{remplacees} à la place d’une date différente ;</li>
+              <li>{e.identiques} déjà identiques.</li>
+            </ul>
+            <p className="text-[var(--ink-soft)]">
+              {e.derniereCopie
+                ? `Dernière copie le ${fmtDate(e.derniereCopie.le)} : ${nbDates(e.derniereCopie.nb)}. Annuler rétablit leurs valeurs d’avant ; une nouvelle copie remplace cette sauvegarde.`
+                : 'Aucune copie à annuler.'}
+            </p>
+            {fait && (
+              <p className="font-semibold text-[var(--ink)]" role="status">
+                {fait}
+              </p>
+            )}
+          </div>
+        )}
+        <ErreurMutation erreur={copier.error ?? annuler.error} />
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button type="button" size="sm" variant="outline">
+              Fermer
+            </Button>
+          </DialogClose>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={enCours || !e?.derniereCopie}
+            onClick={() => annuler.mutate()}
+          >
+            Annuler la dernière copie
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            disabled={enCours || !e?.total}
+            onClick={() => copier.mutate()}
+          >
+            Copier{e?.total ? ` ${nbDates(e.total)}` : ''}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 

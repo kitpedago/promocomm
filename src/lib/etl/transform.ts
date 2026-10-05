@@ -798,6 +798,19 @@ export const copies: Array<Copy> = [
         s."Ordre", s."PourcentageAvancementReel", s."MontantPrevi", s."Commentaire",
         s."LienHypertexte", s."AvecAppelFondClientSuppl"
       FROM legacy."tStadeAvancement" s`,
+    // sauvegarde de la copie annuelle prévi. promo → prévi. compta
+    horsLegacy: [
+      {
+        col: 'date_previ_compta_sauvegarde',
+        legacy: 'DatePrevComptaDebutAnnee_Sauvegarde',
+        type: 'timestamp without time zone',
+      },
+      {
+        col: 'date_previ_compta_copie_le',
+        legacy: 'DatePrevComptaDebutAnnee_CopieLe',
+        type: 'timestamp without time zone',
+      },
+    ],
   },
   {
     target: 'subvention',

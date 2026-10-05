@@ -798,6 +798,11 @@ export const stadeAvancement = pgTable('stade_avancement', {
     () => listeAvancement.id,
   ),
   datePreviComptaDebutAnnee: timestamp('date_previ_compta_debut_annee'),
+  // copie annuelle des prévi. promo vers la prévi. compta (propre à
+  // l'application) : valeur d'avant la dernière copie, et date de cette copie
+  // — renseignée sur les seules lignes copiées, y compris parties de vide
+  datePreviComptaSauvegarde: timestamp('date_previ_compta_sauvegarde'),
+  datePreviComptaCopieLe: timestamp('date_previ_compta_copie_le'),
   datePreviMajPromo: timestamp('date_previ_maj_promo'),
   dateReelle: timestamp('date_reelle'),
   ordre: integer(),

@@ -110,6 +110,11 @@ export const SERVICES_SGA_940: ReadonlyArray<string> = ['compta', 'admin']
 export const peutSgaEt940 = (slug: string | null | undefined) =>
   SERVICES_SGA_940.includes(slug ?? '')
 
+// Opérations › Stade d'avancement : la « Date prévi 01/N » (prévi. compta de
+// début d'année) et sa copie annuelle sont réservées à la Comptabilité et à
+// l'Administrateur (colonne masquée aux autres services dans WinDev)
+export const SERVICES_PREVI_COMPTA: ReadonlyArray<string> = ['compta', 'admin']
+
 // Comptes Better Auth techniques : un utilisateur par service
 export const serviceEmail = (slug: string) => `${slug}@promocomm.local`
 
