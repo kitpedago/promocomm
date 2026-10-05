@@ -57,7 +57,10 @@ import { Switch } from '#/components/ui/switch'
 import { useToast } from '#/components/ui/toast'
 import { dateFr, lireSaisie } from '#/lib/compta.helpers.ts'
 import { getHonorairesNomenclaturesFn } from '#/lib/honoraires.ts'
-import { synchroniserDates } from '#/lib/operations.helpers.ts'
+import {
+  PRESTATAIRE_KPI_ID,
+  synchroniserDates,
+} from '#/lib/operations.helpers.ts'
 import {
   deleteContentieuxFn,
   deleteFactureFn,
@@ -1719,7 +1722,8 @@ function ModaleFacture({
     dateFacture: null as string | null,
     montantHt: null as number | null,
     typeMissionId: null as number | null,
-    prestataireId: null as number | null,
+    // KPI par défaut, modifiable
+    prestataireId: PRESTATAIRE_KPI_ID as number | null,
     partiel: false,
     nbMois: null as number | null,
     commentaire: '',

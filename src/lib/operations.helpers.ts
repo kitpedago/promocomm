@@ -88,3 +88,6 @@ export function cachesStades(stades: Array<StadeTranche>) {
     listeAvancementSuiviProchainId: suiviProchain,
   }
 }
+
+// Prestataire « KPI » : proposé d'office sur une nouvelle facture de mission
+export const PRESTATAIRE_KPI_ID = 1
