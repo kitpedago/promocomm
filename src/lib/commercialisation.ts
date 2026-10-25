@@ -153,6 +153,9 @@ export const getLotsCommFn = createServerFn({ method: 'GET' })
         commercial: sql<
           string | null
         >`NULLIF(TRIM(CONCAT_WS(' ', ${commercial.prenom}, ${commercial.denomination})), '')`,
+        // adresse actuelle de l'acquéreur (onglet Livraison)
+        adresseActuelle: sql<string | null>`NULLIF(TRIM(CONCAT_WS(' ',
+          ${acquereur.adresseActuelle}, ${acquereur.cpActuel}, ${acquereur.communeActuelle})), '')`,
         destination: destination.libelle,
         natureAchat: natureAchat.libelle,
         dateResa: commCourante.dateResa,
