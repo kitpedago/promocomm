@@ -1,9 +1,7 @@
 // Règles pures du module Facturation électronique (testées sans base)
 
-// Associé KPI (associe.id = 1, cf. curPourcKPI dans etl/transform.ts) : seules
-// les SCCV où il détient plus de 5 % entrent dans le module
+// Associé KPI (associe.id = 1, cf. curPourcKPI dans etl/transform.ts)
 export const ASSOCIE_KPI_ID = 1
-export const SEUIL_KPI = 0.05
 
 /** « SCCV LES BLEUETS » → « LES BLEUETS » */
 export const sansPrefixeSccv = (rs: string) =>

@@ -1,20 +1,17 @@
 // Server function de l'onglet Facturation électronique d'Opérations (sans
-// équivalent WinDev) : fiche de la SCCV de l'opération si son comptable est
-// « extérieur » (personne.est_exterieur, Paramètres › Personnes), qu'elle est
-// immatriculée et que l'associé KPI y détient plus de 5 % ; null sinon.
+// équivalent WinDev) : fiche de la SCCV de l'opération, hors périmètre si elle
+// n'est pas immatriculée ou est liquidée ; null si l'opération n'a pas de SCCV.
 import { createServerFn } from '@tanstack/react-start'
-import { and, eq, isNotNull, sql } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 
 import {
   gestionnaireSccv,
   operation,
-  personne,
   structureJuridique,
 } from '#/db/domaine.ts'
 import { db } from '#/db/index.ts'
 import {
   ASSOCIE_KPI_ID,
-  SEUIL_KPI,
   adresseFacturation,
   libelleCompta,
   sansPrefixeSccv,
@@ -26,8 +23,7 @@ export const getFacturationFn = createServerFn({ method: 'GET' })
   .validator((d: { operationId: number }) => d)
   .handler(async ({ data }) => {
     await requireSession()
-    // pourcentage est un real : 0,05 y vaut 0,0500000007, qui passerait un
-    // « > 0,05 » ; le cast en numeric rend la valeur saisie
+    // pourcentage est un real : le cast en numeric rend la valeur saisie
     const partKpi = sql<number>`COALESCE((SELECT sum(p.pourcentage::numeric) FROM participation p
       WHERE p.structure_juridique_id = ${structureJuridique.id} AND p.associe_id = ${ASSOCIE_KPI_ID}), 0)`
     const [l] = await db
@@ -50,22 +46,11 @@ export const getFacturationFn = createServerFn({ method: 'GET' })
         structureJuridique,
         eq(operation.structureJuridiqueId, structureJuridique.id),
       )
-      .innerJoin(
-        personne,
-        eq(structureJuridique.personneComptableId, personne.id),
-      )
       .leftJoin(
         gestionnaireSccv,
         eq(structureJuridique.gestionnaireSccvId, gestionnaireSccv.id),
       )
-      .where(
-        and(
-          eq(operation.id, data.operationId),
-          eq(personne.estExterieur, true),
-          isNotNull(structureJuridique.dateImmat),
-          sql`${partKpi} > ${SEUIL_KPI}`,
-        ),
-      )
+      .where(eq(operation.id, data.operationId))
       .limit(1)
     if (!l) return null
     return {
@@ -76,6 +61,7 @@ export const getFacturationFn = createServerFn({ method: 'GET' })
       compta: libelleCompta(l.gestionnaire, l.gestionnaireCourt),
       gestionnaire: l.gestionnaire ?? '',
       logiciel: l.logiciel ?? '',
+      horsPerimetre: !l.dateImmat || !!l.dateLiquidation,
       adresse: adresseFacturation(l.siret, l.suffixe),
       siret: l.siret ?? '',
       siren: siren(l.siret),

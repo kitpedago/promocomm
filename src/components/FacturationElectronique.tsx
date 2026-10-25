@@ -1,8 +1,8 @@
 // Onglet Facturation électronique d'Opérations (propre à l'application) :
-// fiche en lecture seule de la SCCV de l'opération quand elle est à compta
-// extérieure, immatriculée et que KPI y détient plus de 5 %, avec l'adresse
-// de facturation électronique (SIREN_suffixe du gestionnaire, saisi dans
-// Paramètres > Gestionnaire SCCV).
+// fiche en lecture seule de la SCCV de l'opération avec l'adresse de
+// facturation électronique (SIREN_suffixe du gestionnaire, saisi dans
+// Paramètres > Gestionnaire SCCV), hors périmètre si la SCCV n'est pas
+// immatriculée ou est liquidée.
 import { useQuery } from '@tanstack/react-query'
 
 import Champ from '#/components/Champ'
@@ -25,7 +25,7 @@ export default function FacturationElectronique({
       <p className="text-[13px] text-[var(--muted)]">
         {fiche.isLoading
           ? 'Chargement…'
-          : 'Hors périmètre : la facturation électronique concerne les SCCV à compta extérieure, immatriculées, où KPI détient plus de 5 %.'}
+          : "Pas de SCCV rattachée à l'opération."}
       </p>
     )
   }
@@ -33,9 +33,13 @@ export default function FacturationElectronique({
     <div className="flex max-w-[720px] flex-col gap-3">
       <SousTitre>{f.rs}</SousTitre>
       <Champ libelle="Adresse de facturation électronique">
-        <span className="font-mono text-[14px] font-bold tabular-nums">
-          {f.adresse || '—'}
-        </span>
+        {f.horsPerimetre ? (
+          'Hors périmètre, structure non immatriculée ou liquidée'
+        ) : (
+          <span className="font-mono text-[14px] font-bold tabular-nums">
+            {f.adresse || '—'}
+          </span>
+        )}
       </Champ>
       <div className="grid grid-cols-2 gap-x-6 gap-y-3 md:grid-cols-3">
         <Champ libelle="SIREN">{f.siren || '—'}</Champ>
