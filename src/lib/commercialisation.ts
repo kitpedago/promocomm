@@ -149,6 +149,10 @@ export const getLotsCommFn = createServerFn({ method: 'GET' })
         acquereur: sql<
           string | null
         >`COALESCE(${acquereur.nomComplet}, ${acquereur.rs})`,
+        // conseiller commercial de l'acquéreur (même source que l'export)
+        commercial: sql<
+          string | null
+        >`NULLIF(TRIM(CONCAT_WS(' ', ${commercial.prenom}, ${commercial.denomination})), '')`,
         destination: destination.libelle,
         natureAchat: natureAchat.libelle,
         dateResa: commCourante.dateResa,
@@ -166,6 +170,7 @@ export const getLotsCommFn = createServerFn({ method: 'GET' })
       .innerJoin(tranche, eq(lot.trancheId, tranche.id))
       .leftJoin(commCourante, eq(commCourante.lotId, lot.id))
       .leftJoin(acquereur, eq(commCourante.acquereurId, acquereur.id))
+      .leftJoin(commercial, eq(acquereur.conseillerCommercialId, commercial.id))
       .leftJoin(natureAchat, eq(commCourante.natureAchatId, natureAchat.id))
       .leftJoin(destination, eq(lot.destinationId, destination.id))
       .where(

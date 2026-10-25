@@ -129,6 +129,12 @@ const COLONNES_LOTS: Array<ColumnDef<LigneLot, any>> = [
     cell: (c) => c.getValue() ?? '—',
   },
   {
+    accessorKey: 'commercial',
+    header: 'Commercial',
+    size: 160,
+    cell: (c) => c.getValue() ?? '—',
+  },
+  {
     accessorKey: 'destination',
     header: 'Destination',
     size: 120,
