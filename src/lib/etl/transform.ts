@@ -439,8 +439,8 @@ export const copies: Array<Copy> = [
     'IDStructureJuridique_Stade',
   ),
   {
-    // colonnes de facturation électronique propres à l'application
-    // (module /facturation), ajoutées à la base miroir
+    // libellé court propre à l'application (colonne Compta de la
+    // facturation électronique), ajouté à la base miroir
     ...nomenclature(
       'gestionnaire_sccv',
       'GestionnaireSCCV',
@@ -450,16 +450,6 @@ export const copies: Array<Copy> = [
       {
         col: 'libelle_court',
         legacy: 'LibelleCourt',
-        type: 'character varying(255)',
-      },
-      {
-        col: 'suffixe_facturation_electronique',
-        legacy: 'SuffixeFacturationElectronique',
-        type: 'character varying(25)',
-      },
-      {
-        col: 'logiciel_facturation_electronique',
-        legacy: 'LogicielFacturationElectronique',
         type: 'character varying(255)',
       },
     ],
@@ -542,6 +532,24 @@ export const copies: Array<Copy> = [
         s."InterlocuteurSIE", s."DateMandatSIE",
         s."GestionnaireSCCV"
       FROM legacy."tStructureJuridique" s`,
+    // volet Facturation électronique propre à l'application
+    horsLegacy: [
+      {
+        col: 'suffixe_facturation_electronique',
+        legacy: 'SuffixeFacturationElectronique',
+        type: 'character varying(25)',
+      },
+      {
+        col: 'logiciel_facturation_electronique',
+        legacy: 'LogicielFacturationElectronique',
+        type: 'character varying(255)',
+      },
+      {
+        col: 'commentaire_facturation_electronique',
+        legacy: 'CommentaireFacturationElectronique',
+        type: 'text',
+      },
+    ],
     calculees: [
       { legacy: 'curPourcKPI', expr: partAssocies('= 1') },
       { legacy: 'curPourcKGI', expr: partAssocies('= 18') },

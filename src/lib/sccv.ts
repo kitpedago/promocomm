@@ -247,6 +247,7 @@ export const getSccvNomenclaturesFn = createServerFn({ method: 'GET' }).handler(
       motifs,
       indexTauxListe,
       interlocuteursSie,
+      logicielsFacturation,
     ] = await Promise.all([
       db
         .select()
@@ -297,6 +298,14 @@ export const getSccvNomenclaturesFn = createServerFn({ method: 'GET' }).handler(
         .from(structureJuridique)
         .where(isNotNull(structureJuridique.interlocuteurSie))
         .orderBy(asc(structureJuridique.interlocuteurSie)),
+      // logiciel de facturation électronique : liste auto-alimentée
+      db
+        .selectDistinct({
+          valeur: structureJuridique.logicielFacturationElectronique,
+        })
+        .from(structureJuridique)
+        .where(isNotNull(structureJuridique.logicielFacturationElectronique))
+        .orderBy(asc(structureJuridique.logicielFacturationElectronique)),
     ])
     return {
       stades,
@@ -312,6 +321,9 @@ export const getSccvNomenclaturesFn = createServerFn({ method: 'GET' }).handler(
       motifs,
       indexTaux: indexTauxListe,
       interlocuteursSie: interlocuteursSie.map((i) => i.valeur).filter(Boolean),
+      logicielsFacturation: logicielsFacturation
+        .map((l) => l.valeur)
+        .filter(Boolean),
       // legacy Periodicite : codes texte sans ID
       periodicites: ['ANNUEL', 'TRIM'],
     }
@@ -351,9 +363,36 @@ interface FicheSccv {
   civiliteId?: number | null
   interlocuteurSie?: string | null
   dateMandatSie?: string | null
+  // volet Facturation électronique (modale de l'onglet 5, même server function)
+  suffixeFacturationElectronique?: string | null
+  logicielFacturationElectronique?: string | null
+  commentaireFacturationElectronique?: string | null
 }
 
 const versDate = (s: string | null | undefined) => (s ? new Date(s) : null)
+
+// Suffixe de facturation électronique : accolé au SIREN pour former l'adresse
+// de facturation, 25 caractères au plus et unique (index
+// structure_juridique_suffixe_idx ; contrôle ici pour un message en clair).
+// Vide → NULL, l'index unique laisse passer plusieurs NULL.
+async function validerSuffixe(saisi: string | null | undefined, id?: number) {
+  const suffixe = (saisi ?? '').trim()
+  if (!suffixe) return null
+  if (suffixe.length > 25)
+    throw new Error(
+      'Le suffixe de facturation électronique dépasse 25 caractères',
+    )
+  const doublon = await db
+    .select({ id: structureJuridique.id, rs: structureJuridique.rs })
+    .from(structureJuridique)
+    .where(eq(structureJuridique.suffixeFacturationElectronique, suffixe))
+    .then((l) => l.find((x) => x.id !== id))
+  if (doublon)
+    throw new Error(
+      `Suffixe de facturation électronique déjà utilisé par ${doublon.rs}`,
+    )
+  return suffixe
+}
 
 // Create/update de la fiche SCCV (un seul UPSERT — pas le double Save()
 // legacy, dont le seul but était de dénormaliser le libellé gestionnaire).
@@ -394,6 +433,14 @@ export const saveSccvFn = createServerFn({ method: 'POST' })
       civiliteId: data.civiliteId ?? null,
       interlocuteurSie: data.interlocuteurSie || null,
       dateMandatSie: versDate(data.dateMandatSie),
+      suffixeFacturationElectronique: await validerSuffixe(
+        data.suffixeFacturationElectronique,
+        data.id,
+      ),
+      logicielFacturationElectronique:
+        data.logicielFacturationElectronique?.trim() || null,
+      commentaireFacturationElectronique:
+        data.commentaireFacturationElectronique || null,
     }
     if (data.id) {
       const touchees = await db

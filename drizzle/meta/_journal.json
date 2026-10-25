@@ -316,6 +316,13 @@
       "when": 1791229795830,
       "tag": "0044_stade_avancement_copie_previ_compta",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1792927091421,
+      "tag": "0045_sccv_facturation_electronique",
+      "breakpoints": true
     }
   ]
 }

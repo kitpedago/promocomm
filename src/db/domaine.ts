@@ -183,26 +183,13 @@ export const structureJuridiqueStade = pgTable('structure_juridique_stade', {
   libelle: text().notNull(),
 })
 
-// Compta d'une SCCV. Les colonnes de facturation électronique (module
-// /facturation) n'existent pas dans le legacy : libellé court affiché à la
-// place du libellé, suffixe (≤ 25 caractères, unique) accolé au SIREN pour
-// former l'adresse de facturation, logiciel (texte libre, suggestions des
-// valeurs déjà saisies).
-export const gestionnaireSccv = pgTable(
-  'gestionnaire_sccv',
-  {
-    id: id(),
-    libelle: text().notNull(),
-    libelleCourt: text('libelle_court'),
-    suffixeFacturationElectronique: text('suffixe_facturation_electronique'),
-    logicielFacturationElectronique: text('logiciel_facturation_electronique'),
-  },
-  (t) => [
-    uniqueIndex('gestionnaire_sccv_suffixe_idx').on(
-      t.suffixeFacturationElectronique,
-    ),
-  ],
-)
+// Compta d'une SCCV. Libellé court (absent du legacy) : affiché à la place du
+// libellé dans la colonne Compta de la facturation électronique.
+export const gestionnaireSccv = pgTable('gestionnaire_sccv', {
+  id: id(),
+  libelle: text().notNull(),
+  libelleCourt: text('libelle_court'),
+})
 
 export const partenariat = pgTable('partenariat', {
   id: id(),
@@ -450,46 +437,64 @@ export const archiveStadeAvancement = pgTable('archive_stade_avancement', {
 // Colonne vertébrale : structure juridique > opération > tranche > lot
 // ---------------------------------------------------------------------------
 
-export const structureJuridique = pgTable('structure_juridique', {
-  id: id(),
-  rs: text().notNull(), // raison sociale
-  numTvaIntra: text('num_tva_intra'),
-  siret: text(),
-  dateDebutActivite: timestamp('date_debut_activite'),
-  dateImmat: timestamp('date_immat'),
-  dateLiquidation: timestamp('date_liquidation'),
-  capital: integer(),
-  nbPart: integer('nb_part'),
-  montantPart: integer('montant_part'),
-  sccvHf: boolean('sccv_hf'),
-  sccvHlm: boolean('sccv_hlm'),
-  // volet gestion (phase 4)
-  stadeId: integer('stade_id').references(() => structureJuridiqueStade.id),
-  personneComptableId: integer('personne_comptable_id').references(
-    () => personne.id,
-  ),
-  gestionnaireSccvId: integer('gestionnaire_sccv_id').references(
-    () => gestionnaireSccv.id,
-  ),
-  partenariatId: integer('partenariat_id').references(() => partenariat.id),
-  hfsga: boolean(),
-  dateBilanDebutPremierExercice: timestamp('date_bilan_debut_premier_exercice'),
-  dateBilanFinPremierExercice: timestamp('date_bilan_fin_premier_exercice'),
-  // texte en legacy (saisies libres), repris tels quels
-  dateModifCloture: text('date_modif_cloture'),
-  datePlanningCloture: text('date_planning_cloture'),
-  dateLiberationCapital: timestamp('date_liberation_capital'),
-  // volet Centre des impôts
-  ediTva: boolean('edi_tva'),
-  ediLiasse: boolean('edi_liasse'),
-  cpteFiscal: boolean('cpte_fiscal'),
-  sieId: integer('sie_id').references(() => sie.id),
-  civiliteId: integer('civilite_id').references(() => civilite.id),
-  interlocuteurSie: text('interlocuteur_sie'),
-  dateMandatSie: timestamp('date_mandat_sie'),
-  // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
-  gestionnaireSccvLegacy: text('gestionnaire_sccv_legacy'),
-})
+export const structureJuridique = pgTable(
+  'structure_juridique',
+  {
+    id: id(),
+    rs: text().notNull(), // raison sociale
+    numTvaIntra: text('num_tva_intra'),
+    siret: text(),
+    dateDebutActivite: timestamp('date_debut_activite'),
+    dateImmat: timestamp('date_immat'),
+    dateLiquidation: timestamp('date_liquidation'),
+    capital: integer(),
+    nbPart: integer('nb_part'),
+    montantPart: integer('montant_part'),
+    sccvHf: boolean('sccv_hf'),
+    sccvHlm: boolean('sccv_hlm'),
+    // volet gestion (phase 4)
+    stadeId: integer('stade_id').references(() => structureJuridiqueStade.id),
+    personneComptableId: integer('personne_comptable_id').references(
+      () => personne.id,
+    ),
+    gestionnaireSccvId: integer('gestionnaire_sccv_id').references(
+      () => gestionnaireSccv.id,
+    ),
+    partenariatId: integer('partenariat_id').references(() => partenariat.id),
+    hfsga: boolean(),
+    dateBilanDebutPremierExercice: timestamp(
+      'date_bilan_debut_premier_exercice',
+    ),
+    dateBilanFinPremierExercice: timestamp('date_bilan_fin_premier_exercice'),
+    // texte en legacy (saisies libres), repris tels quels
+    dateModifCloture: text('date_modif_cloture'),
+    datePlanningCloture: text('date_planning_cloture'),
+    dateLiberationCapital: timestamp('date_liberation_capital'),
+    // volet Centre des impôts
+    ediTva: boolean('edi_tva'),
+    ediLiasse: boolean('edi_liasse'),
+    cpteFiscal: boolean('cpte_fiscal'),
+    sieId: integer('sie_id').references(() => sie.id),
+    civiliteId: integer('civilite_id').references(() => civilite.id),
+    interlocuteurSie: text('interlocuteur_sie'),
+    dateMandatSie: timestamp('date_mandat_sie'),
+    // volet Facturation électronique (absent du legacy) : suffixe (≤ 25
+    // caractères, unique) accolé au SIREN pour former l'adresse de facturation,
+    // logiciel (texte libre, suggestions des valeurs déjà saisies), commentaire
+    suffixeFacturationElectronique: text('suffixe_facturation_electronique'),
+    logicielFacturationElectronique: text('logiciel_facturation_electronique'),
+    commentaireFacturationElectronique: text(
+      'commentaire_facturation_electronique',
+    ),
+    // repris tels quels du legacy pour la base miroir (pas d'écran dans l'application)
+    gestionnaireSccvLegacy: text('gestionnaire_sccv_legacy'),
+  },
+  (t) => [
+    uniqueIndex('structure_juridique_suffixe_idx').on(
+      t.suffixeFacturationElectronique,
+    ),
+  ],
+)
 
 // Parts des associés dans les SCCV (onglet Associés)
 export const participation = pgTable('participation', {

@@ -38,8 +38,8 @@ export const getFacturationFn = createServerFn({ method: 'GET' })
         partKpi,
         gestionnaire: gestionnaireSccv.libelle,
         gestionnaireCourt: gestionnaireSccv.libelleCourt,
-        suffixe: gestionnaireSccv.suffixeFacturationElectronique,
-        logiciel: gestionnaireSccv.logicielFacturationElectronique,
+        suffixe: structureJuridique.suffixeFacturationElectronique,
+        logiciel: structureJuridique.logicielFacturationElectronique,
       })
       .from(operation)
       .innerJoin(
@@ -65,7 +65,6 @@ export const getFacturationFn = createServerFn({ method: 'GET' })
       adresse: adresseFacturation(l.siret, l.suffixe),
       siret: l.siret ?? '',
       siren: siren(l.siret),
-      suffixe: l.suffixe ?? '',
       dateImmat: l.dateImmat,
       dateLiquidation: l.dateLiquidation,
       capital: l.capital,

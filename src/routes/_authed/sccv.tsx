@@ -1,8 +1,8 @@
 // Module SCCV (FEN_TABLE_StructureJuridique + FEN_Fiche_StructureJuridique)
 // — phase 4, CRUD complet. Filtres + table principale, détail sous la table
-// en 4 onglets (Associés, Opérations, Comptes bancaires, Centre des impôts),
-// et les 4 modales d'édition (fiche, participation, compte bancaire, centre
-// des impôts).
+// en 5 onglets (Associés, Opérations, Comptes bancaires, Centre des impôts,
+// Facturation électronique), et les 5 modales d'édition (fiche, participation,
+// compte bancaire, centre des impôts, facturation électronique).
 // Référence : docs/plan-implementation.md (module SCCV).
 import { useEffect, useState } from 'react'
 import {
@@ -53,6 +53,10 @@ import {
   saveParticipationFn,
   saveSccvFn,
 } from '#/lib/sccv.ts'
+import {
+  adresseFacturation,
+  sansPrefixeSccv,
+} from '#/lib/facturation.helpers.ts'
 import { normaliserSiret, siretInvalide } from '#/lib/sccv.helpers.ts'
 import { getService } from '#/lib/services'
 import { fmtDate, fmtEuro } from '#/lib/utils.ts'
@@ -463,6 +467,9 @@ interface EntreeFicheSccv {
   civiliteId?: number | null
   interlocuteurSie?: string | null
   dateMandatSie?: string | null
+  suffixeFacturationElectronique?: string | null
+  logicielFacturationElectronique?: string | null
+  commentaireFacturationElectronique?: string | null
 }
 
 const FICHE_VIDE: EntreeFicheSccv = {
@@ -494,6 +501,9 @@ const FICHE_VIDE: EntreeFicheSccv = {
   civiliteId: null,
   interlocuteurSie: null,
   dateMandatSie: null,
+  suffixeFacturationElectronique: null,
+  logicielFacturationElectronique: null,
+  commentaireFacturationElectronique: null,
 }
 
 function versEntreeFiche(f: FicheSccvBrute): EntreeFicheSccv {
@@ -528,6 +538,9 @@ function versEntreeFiche(f: FicheSccvBrute): EntreeFicheSccv {
     civiliteId: f.civiliteId,
     interlocuteurSie: f.interlocuteurSie,
     dateMandatSie: versInputDate(f.dateMandatSie),
+    suffixeFacturationElectronique: f.suffixeFacturationElectronique,
+    logicielFacturationElectronique: f.logicielFacturationElectronique,
+    commentaireFacturationElectronique: f.commentaireFacturationElectronique,
   }
 }
 
@@ -960,8 +973,8 @@ function PageSccv() {
 }
 
 // ---------------------------------------------------------------------------
-// Détail : fiche + 4 onglets (Associés / Opérations / Comptes bancaires /
-// Centre des impôts)
+// Détail : fiche + 5 onglets (Associés / Opérations / Comptes bancaires /
+// Centre des impôts / Facturation électronique, propre à l'application)
 // ---------------------------------------------------------------------------
 
 const FEN_SCCV = 'FEN_TABLE_StructureJuridique'
@@ -971,6 +984,7 @@ const ONGLETS_SCCV = [
   'Opérations',
   'Comptes bancaires',
   'Centre des impôts',
+  'Facturation électronique',
 ] as const
 type OngletSccv = (typeof ONGLETS_SCCV)[number]
 
@@ -1552,6 +1566,126 @@ function ModaleCentreImpots({
   )
 }
 
+// ---------------------------------------------------------------------------
+// Modale « Facturation électronique » (volet propre à l'application, même
+// mécanique que ModaleCentreImpots). Suffixe proposé à vide : nom de la SCCV
+// sans préfixe ; l'adresse SIREN_suffixe s'affiche en aperçu.
+// ---------------------------------------------------------------------------
+
+function ModaleFacturationElectronique({
+  fiche,
+  open,
+  onOpenChange,
+  nomenclatures,
+}: {
+  fiche: FicheSccvBrute
+  open: boolean
+  onOpenChange: (o: boolean) => void
+  nomenclatures: Nomenclatures | undefined
+}) {
+  const queryClient = useQueryClient()
+  const volet = (f: FicheSccvBrute) => ({
+    suffixeFacturationElectronique:
+      f.suffixeFacturationElectronique ?? sansPrefixeSccv(f.rs).slice(0, 25),
+    logicielFacturationElectronique: f.logicielFacturationElectronique ?? '',
+    commentaireFacturationElectronique:
+      f.commentaireFacturationElectronique ?? '',
+  })
+  const [valeurs, setValeurs] = useState(() => volet(fiche))
+  const enregistrer = useMutation({
+    mutationFn: () =>
+      saveSccvFn({
+        data: { ...versEntreeFiche(fiche), ...valeurs, id: fiche.id },
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['sccv-detail', fiche.id],
+      })
+      // le logiciel saisi rejoint les suggestions
+      void queryClient.invalidateQueries({ queryKey: ['sccv-nomenclatures'] })
+      void queryClient.invalidateQueries({ queryKey: ['facturation'] })
+      onOpenChange(false)
+    },
+  })
+  useEffect(() => {
+    // dépendance sur fiche.id, cf. ModaleCentreImpots
+    if (open) {
+      setValeurs(volet(fiche))
+      enregistrer.reset()
+    }
+  }, [open, fiche.id])
+
+  const set =
+    <TCle extends keyof typeof valeurs>(k: TCle) =>
+    (v: (typeof valeurs)[TCle]) =>
+      setValeurs((s) => ({ ...s, [k]: v }))
+
+  const datalistId = 'sccv-logiciels-facturation'
+  const suffixe = valeurs.suffixeFacturationElectronique.trim()
+  const adresse = adresseFacturation(fiche.siret, suffixe)
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Facturation électronique</DialogTitle>
+        </DialogHeader>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            enregistrer.mutate()
+          }}
+        >
+          <div className="flex flex-col gap-3">
+            <ChampSaisie
+              libelle="Suffixe (25 car. max, unique)"
+              value={valeurs.suffixeFacturationElectronique}
+              onChange={set('suffixeFacturationElectronique')}
+              aide={`Adresse : ${adresse || '— (SIRET ou suffixe manquant)'}`}
+              avertissement={
+                suffixe.length > 25
+                  ? `${suffixe.length} caractères : 25 au plus`
+                  : undefined
+              }
+            />
+            <ChampSaisie
+              libelle="Logiciel"
+              value={valeurs.logicielFacturationElectronique}
+              onChange={set('logicielFacturationElectronique')}
+              list={datalistId}
+            />
+            <datalist id={datalistId}>
+              {(nomenclatures?.logicielsFacturation ?? [])
+                .filter((s): s is string => s != null)
+                .map((s) => (
+                  <option key={s} value={s} />
+                ))}
+            </datalist>
+            <ChampTexteLong
+              libelle="Commentaire"
+              value={valeurs.commentaireFacturationElectronique}
+              onChange={set('commentaireFacturationElectronique')}
+            />
+          </div>
+
+          <ErreurMutation erreur={enregistrer.error} />
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" size="sm" variant="outline">
+                Annuler
+              </Button>
+            </DialogClose>
+            <Button type="submit" size="sm" disabled={enregistrer.isPending}>
+              Valider
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 function DetailSccv({
   sccvId,
   nomenclatures,
@@ -1598,6 +1732,7 @@ function DetailSccv({
     'creation' | LigneCompteSccv | null
   >(null)
   const [centreImpotsOuvert, setCentreImpotsOuvert] = useState(false)
+  const [facturationOuverte, setFacturationOuverte] = useState(false)
 
   // sans remontage (pas de key), une sélection de l'ancienne SCCV pointerait
   // vers des lignes d'une autre société — reset au changement
@@ -1607,6 +1742,7 @@ function DetailSccv({
     setCompteSelectionne(null)
     setCompteModale(null)
     setCentreImpotsOuvert(false)
+    setFacturationOuverte(false)
   }, [sccvId])
 
   const supprimerParticipation = useMutation({
@@ -1822,6 +1958,34 @@ function DetailSccv({
             </div>
           </div>
         )}
+
+        {onglet === 'Facturation électronique' && (
+          <div className="flex flex-col gap-3">
+            {!lectureSeule && !restreint('BTN_Modifier') && (
+              <div>
+                <Button size="sm" onClick={() => setFacturationOuverte(true)}>
+                  Modifier
+                </Button>
+              </div>
+            )}
+            <div className="grid gap-x-8 gap-y-4 md:grid-cols-2 xl:grid-cols-3">
+              <Champ libelle="Suffixe">
+                {f.suffixeFacturationElectronique}
+              </Champ>
+              <Champ libelle="Adresse de facturation électronique">
+                {adresseFacturation(f.siret, f.suffixeFacturationElectronique)}
+              </Champ>
+              <Champ libelle="Logiciel">
+                {f.logicielFacturationElectronique}
+              </Champ>
+              <Champ libelle="Commentaire">
+                <span className="whitespace-pre-line">
+                  {f.commentaireFacturationElectronique}
+                </span>
+              </Champ>
+            </div>
+          </div>
+        )}
       </div>
 
       <ModaleParticipation
@@ -1849,6 +2013,12 @@ function DetailSccv({
         fiche={f}
         open={centreImpotsOuvert}
         onOpenChange={setCentreImpotsOuvert}
+        nomenclatures={nomenclatures}
+      />
+      <ModaleFacturationElectronique
+        fiche={f}
+        open={facturationOuverte}
+        onOpenChange={setFacturationOuverte}
         nomenclatures={nomenclatures}
       />
     </section>

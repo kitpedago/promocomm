@@ -235,22 +235,7 @@ const LISTES: Array<ConfigListe> = [
     slug: 'gestionnaires-sccv',
     titre: 'Gestionnaire SCCV',
     unite: 'gestionnaire',
-    champs: [
-      ...LIBELLE,
-      { k: 'libelleCourt', l: 'Libellé court', t: 'texte' },
-      {
-        k: 'suffixeFacturationElectronique',
-        l: 'Suffixe facturation électronique (25 car. max, unique)',
-        t: 'texte',
-      },
-      {
-        k: 'logicielFacturationElectronique',
-        l: 'Logiciel facturation électronique',
-        t: 'texte',
-      },
-    ],
-    // logiciel : liste auto-alimentée des valeurs déjà saisies
-    suggestions: ['logicielFacturationElectronique'],
+    champs: [...LIBELLE, { k: 'libelleCourt', l: 'Libellé court', t: 'texte' }],
   },
   { slug: 'labels', titre: 'Labels', unite: 'label', champs: LIBELLE },
   {

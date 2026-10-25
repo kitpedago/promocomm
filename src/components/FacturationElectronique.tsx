@@ -1,7 +1,7 @@
 // Onglet Facturation électronique d'Opérations (propre à l'application) :
 // fiche en lecture seule de la SCCV de l'opération avec l'adresse de
-// facturation électronique (SIREN_suffixe du gestionnaire, saisi dans
-// Paramètres > Gestionnaire SCCV), hors périmètre si la SCCV n'est pas
+// facturation électronique (SIREN_suffixe, suffixe et logiciel saisis dans
+// SCCV > Facturation électronique), hors périmètre si la SCCV n'est pas
 // immatriculée ou est liquidée.
 import { useQuery } from '@tanstack/react-query'
 
@@ -43,7 +43,6 @@ export default function FacturationElectronique({
       </Champ>
       <div className="grid grid-cols-2 gap-x-6 gap-y-3 md:grid-cols-3">
         <Champ libelle="SIREN">{f.siren || '—'}</Champ>
-        <Champ libelle="Suffixe">{f.suffixe || '—'}</Champ>
         <Champ libelle="SIRET">{f.siret || '—'}</Champ>
         <Champ libelle="SCCV">{f.sccv || '—'}</Champ>
         <Champ libelle="Compta">{f.compta || '—'}</Champ>

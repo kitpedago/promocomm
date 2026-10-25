@@ -13,7 +13,7 @@ export const siren = (siret: string | null | undefined) => {
   return chiffres.length >= 9 ? chiffres.slice(0, 9) : ''
 }
 
-/** Adresse de facturation électronique : SIREN, « _ », suffixe du gestionnaire,
+/** Adresse de facturation électronique : SIREN, « _ », suffixe de la SCCV,
  *  vide si l'un des deux manque */
 export const adresseFacturation = (
   siret: string | null | undefined,
