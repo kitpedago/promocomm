@@ -210,6 +210,7 @@ function PageOperations() {
               <h1 className="text-xl leading-tight font-bold tracking-tight text-[var(--ink)]">
                 {d.libelle}
                 {d.commune ? ` — ${d.commune}` : ''}
+                {d.sccv ? ` — ${d.sccv}` : ''}
               </h1>
               {d.sccvHlm && (
                 <span className="badge-pill bg-[var(--ok-tint)] font-bold text-[var(--ink)]">

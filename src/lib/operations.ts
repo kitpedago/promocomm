@@ -99,6 +99,7 @@ export const getOperationFicheFn = createServerFn({ method: 'GET' })
           masquerPromo: operation.masquerPromo,
           synchroniserDatesEntreTranche:
             operation.synchroniserDatesEntreTranche,
+          sccv: structureJuridique.rs,
           sccvHlm: structureJuridique.sccvHlm,
           // chargés d'opération (phase 3)
           chargeOpe1: sql<
