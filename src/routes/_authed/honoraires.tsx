@@ -320,17 +320,17 @@ const COLONNES_FACTURES: Array<ColumnDef<LigneFacture, any>> = [
   colDate('dateFacture', 'Date de facture', 120),
   colTexte('prestataire', 'Prestataire', 140),
   colTexte('bareme', 'Barème', 110),
-  groupe('Loc accession', T_VERT, [
-    colEntier('nbCla', 'Nb CLA', 80),
-    colEuro('montantCla', 'Montant CLA', 120),
-    colEntier('nbLeveeOption', 'Nb levée option', 110),
-    colEuro('montantLeveeOption', 'Montant levée option', 150),
-  ]),
   groupe('VEFA', T_BLEU, [
     colEntier('nbResa', 'Nb résa', 80),
     colEuro('montantResa', 'Montant résa', 120),
     colEntier('nbActe', 'Nb acte', 80),
     colEuro('montantActe', 'Montant Acte', 120),
+  ]),
+  groupe('Loc accession', T_VERT, [
+    colEntier('nbCla', 'Nb CLA', 80),
+    colEuro('montantCla', 'Montant CLA', 120),
+    colEntier('nbLeveeOption', 'Nb levée option', 110),
+    colEuro('montantLeveeOption', 'Montant levée option', 150),
   ]),
   {
     id: 'totalFacture',
@@ -1292,29 +1292,6 @@ function ModaleFacture({
               onChange={set('baremeHonoCommId')}
               options={nomenclatures?.baremesHonoComm ?? []}
             />
-            <SousTitre>Loc. accession</SousTitre>
-            <ChampNombre
-              libelle="Nb contrats loc accession"
-              step="1"
-              value={valeurs.nbCla}
-              onChange={set('nbCla')}
-            />
-            <ChampNombre
-              libelle="Montant CLA"
-              value={valeurs.montantCla}
-              onChange={set('montantCla')}
-            />
-            <ChampNombre
-              libelle="Nb levées option"
-              step="1"
-              value={valeurs.nbLeveeOption}
-              onChange={set('nbLeveeOption')}
-            />
-            <ChampNombre
-              libelle="Montant levée option"
-              value={valeurs.montantLeveeOption}
-              onChange={set('montantLeveeOption')}
-            />
             <SousTitre>VEFA</SousTitre>
             <ChampNombre
               libelle="Nb réservations"
@@ -1337,6 +1314,29 @@ function ModaleFacture({
               libelle="Montant acte"
               value={valeurs.montantActe}
               onChange={set('montantActe')}
+            />
+            <SousTitre>Loc. accession</SousTitre>
+            <ChampNombre
+              libelle="Nb contrats loc accession"
+              step="1"
+              value={valeurs.nbCla}
+              onChange={set('nbCla')}
+            />
+            <ChampNombre
+              libelle="Montant CLA"
+              value={valeurs.montantCla}
+              onChange={set('montantCla')}
+            />
+            <ChampNombre
+              libelle="Nb levées option"
+              step="1"
+              value={valeurs.nbLeveeOption}
+              onChange={set('nbLeveeOption')}
+            />
+            <ChampNombre
+              libelle="Montant levée option"
+              value={valeurs.montantLeveeOption}
+              onChange={set('montantLeveeOption')}
             />
             <div className="sm:col-span-2">
               <ChampTexteLong
